@@ -1,0 +1,39 @@
+.navLeftLine {
+  position: absolute;
+  height: calc(100% - 12px);
+  left: 16px;
+  width: 2px;
+  background: light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1));
+  z-index: -1;
+}
+
+.navLabelDot {
+    display: block;
+    height: 4px;
+    width: 4px;
+    border-radius: 4px;
+    background: var(--mantine-color-brand-5);
+    position: absolute;
+    left: 15px;
+    top: 6px;
+}
+
+.navContainer {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.navTopSection {
+  flex-shrink: 0;
+  padding-top: 0;
+}
+
+.navBottomSection {
+  flex-shrink: 0;
+}
+
+.navScrollArea {
+  flex: 1;
+  min-height: 0;
+}

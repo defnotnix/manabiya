@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(package.json \")",
+      "Bash(findstr:*)",
+      "Bash(dir:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(pnpm i)",
+      "Bash(npm install:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}
