@@ -163,3 +163,8 @@
   height: 56px;
   font-size: 18px;
 }
+
+.step_content_container {
+  margin-top: 24px;
+  width: 100%;
+}
