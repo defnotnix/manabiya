@@ -1,3 +1,41 @@
+/**
+ * Performs a case-insensitive search across all fields of an array of objects.
+ *
+ * Searches through every value in each object and returns items that contain
+ * the search term in any of their fields. The search is case-insensitive and
+ * works with any data type by converting values to strings.
+ *
+ * @template T - The type of objects in the data array
+ * @param {T[]} data - Array of objects to search through
+ * @param {string} search - Search term to find (case-insensitive)
+ *
+ * @returns {T[]} Filtered array containing only items that match the search term
+ *
+ * @example
+ * // Search through user data
+ * const users = [
+ *   { id: 1, name: "John Doe", email: "john@example.com" },
+ *   { id: 2, name: "Jane Smith", email: "jane@example.com" },
+ *   { id: 3, name: "Bob Johnson", email: "bob@example.com" }
+ * ];
+ *
+ * const results = autoSearch(users, "john");
+ * // Returns: [{ id: 1, name: "John Doe", ... }, { id: 3, name: "Bob Johnson", ... }]
+ *
+ * @example
+ * // Empty or no search term
+ * autoSearch(users, "");  // Returns empty array
+ * autoSearch([], "test"); // Returns empty array
+ *
+ * @example
+ * // Search works on all field types
+ * const products = [
+ *   { id: 1, name: "Laptop", price: 999 },
+ *   { id: 2, name: "Mouse", price: 25 }
+ * ];
+ * autoSearch(products, "999");  // Finds laptop by price
+ * autoSearch(products, "lap");   // Finds laptop by name
+ */
 export function autoSearch<T>(data: T[], search: string): T[] {
   // Normalize the search term to lowercase for case-insensitive comparison.
   const normalizedSearchTerm = search.toLowerCase();

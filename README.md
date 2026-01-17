@@ -1,135 +1,325 @@
-# Turborepo starter
+# Settle Framework
 
-This Turborepo starter is maintained by the Turborepo core team.
+A comprehensive TypeScript-based React/Next.js component library and admin UI framework for building powerful admin dashboards and data-driven applications with ease.
 
-## Using this example
+## Overview
 
-Run the following command:
+**Settle** is a production-ready monorepo framework that provides reusable form management, data table handling, and admin dashboard components. Built on modern technologies including React 19, Next.js 16, Mantine 8, and managed with Turborepo, Settle accelerates development of complex admin interfaces and form-heavy applications.
 
-```sh
-npx create-turbo@latest
-```
+## Key Features
 
-## What's inside?
+- **Multi-Step Form Management** - Advanced form handling with step validation, error mapping, and API integration
+- **Data Table Management** - Powerful data tables with filtering, pagination, sorting, and CRUD operations
+- **Admin Dashboard Layouts** - Pre-built shells for admin interfaces, configuration pages, and data tables
+- **User Preferences Management** - Automatic preference syncing with cookies and backend
+- **Role-Based Permissions** - Simple permission system for controlling module access
+- **Notification System** - Context-aware notifications for forms, lists, and authentication
+- **Type-Safe** - Full TypeScript support with comprehensive type definitions
+- **Modular Architecture** - Use only what you need with tree-shakable exports
 
-This Turborepo includes the following packages/apps:
+## Tech Stack
 
-### Apps and Packages
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| **TypeScript** | 5.9.3 | Type-safe development |
+| **React** | 19.2.3 | UI library |
+| **Next.js** | 16.1.0 | React framework |
+| **Mantine** | 8.3.10 | Component library |
+| **Turborepo** | 2.7.1 | Monorepo build system |
+| **pnpm** | 9.0.0 | Package manager |
+| **React Query** | 5.90.12 | Server state management |
+| **Zustand** | 5.0.9 | Client state management |
+| **Zod** | 4.2.1 | Schema validation |
+| **Axios** | 1.13.2 | HTTP client |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
+## Project Structure
 
 ```
-cd my-turborepo
-
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build
-yarn dlx turbo build
-pnpm exec turbo build
+settle/
+├── packages/
+│   ├── @settle/core      - Core business logic, wrappers, and helpers
+│   ├── @settle/admin     - UI components, layouts, and pre-built pages
+│   ├── @repo/eslint-config       - Shared ESLint configuration
+│   └── @repo/typescript-config   - Shared TypeScript configuration
+├── apps/
+│   └── admin-test        - Test application
+├── package.json          - Root workspace configuration
+├── pnpm-workspace.yaml   - pnpm monorepo setup
+├── turbo.json            - Turborepo build configuration
+└── README.md             - This file
 ```
 
-You can build a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Installation
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo build --filter=docs
+### Prerequisites
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo build --filter=docs
-yarn exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
+- Node.js 18+
+- pnpm 9.0.0+
 
-### Develop
+### Setup
 
-To develop all apps and packages, run the following command:
+```bash
+# Clone the repository
+git clone <repository-url>
+cd settle
 
-```
-cd my-turborepo
+# Install dependencies
+pnpm install
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev
+# Build all packages
+pnpm build
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev
-yarn exec turbo dev
-pnpm exec turbo dev
+# Start development mode
+pnpm dev
 ```
 
-You can develop a specific package by using a [filter](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters):
+## Quick Start
+
+### 1. Multi-Step Form with FormWrapper
+
+```tsx
+import { FormWrapper } from "@settle/core";
+import { FormShell } from "@settle/admin";
+import { triggerNotification } from "@settle/admin";
+
+export function MyForm() {
+  return (
+    <FormWrapper
+      formName="user-form"
+      initial={{ firstName: "", lastName: "", email: "" }}
+      steps={2}
+      validation={[
+        { firstName: (val) => val.length > 0 },
+        { email: (val) => val.includes("@") }
+      ]}
+      notifications={{
+        isLoading: (props) => triggerNotification.form.isLoading(props),
+        isSuccess: (props) => triggerNotification.form.isSuccess(props),
+        isError: (props) => triggerNotification.form.isError(props),
+      }}
+      apiSubmitFn={async (data) => {
+        const response = await fetch("/api/users", {
+          method: "POST",
+          body: JSON.stringify(data),
+        });
+        return response.json();
+      }}
+    >
+      <FormShell
+        title="Create User"
+        description="Fill in the user details"
+        stepperConfig={{
+          labels: ["Personal Info", "Contact Info"],
+        }}
+      >
+        {/* Your form fields here */}
+      </FormShell>
+    </FormWrapper>
+  );
+}
+```
+
+### 2. Data Table with DataTableWrapper
+
+```tsx
+import { DataTableWrapper } from "@settle/core";
+import { DataTableShell } from "@settle/admin";
+
+export function UsersTable() {
+  return (
+    <DataTableWrapper
+      queryKey="users.list"
+      queryGetFn={async () => {
+        const response = await fetch("/api/users");
+        return response.json();
+      }}
+      dataKey="results"
+    >
+      <DataTableShell
+        moduleInfo={{ name: "Users", term: "User" }}
+        idAccessor="id"
+        columns={[
+          { accessor: "firstName", title: "First Name" },
+          { accessor: "lastName", title: "Last Name" },
+          { accessor: "email", title: "Email" },
+        ]}
+        onEditClick={(record) => console.log("Edit", record)}
+        onDeleteClick={(ids) => console.log("Delete", ids)}
+      />
+    </DataTableWrapper>
+  );
+}
+```
+
+### 3. Admin Layout with AdminShell
+
+```tsx
+import { AdminShell } from "@settle/admin";
+
+export function AdminLayout({ children }) {
+  return (
+    <AdminShell
+      navItems={[
+        { label: "Dashboard", href: "/dashboard", icon: <DashboardIcon /> },
+        { label: "Users", href: "/users", icon: <UsersIcon /> },
+        { label: "Settings", href: "/settings", icon: <SettingsIcon /> },
+      ]}
+    >
+      {children}
+    </AdminShell>
+  );
+}
+```
+
+## Core Packages
+
+### @settle/core
+
+Core business logic and wrappers for form and data management:
+
+- **FormWrapper** - Multi-step form management with API integration
+- **DataTableWrapper** - Data table state and query management
+- **PreferenceWrapper** - User preferences with cookie/backend sync
+- **RolePermsWrapper** - Role-based permission management
+- **Helpers** - Utility functions for API calls, data formatting, and search
+
+📖 [Full Core Documentation](./packages/core/README.md)
+
+### @settle/admin
+
+UI components, layouts, and pre-built pages:
+
+- **Layouts** - FormShell, AdminShell, ConfigShell, DataTableShell
+- **Components** - Stepper, Tabs, FormSubmitButton
+- **Pre-built Pages** - PageSignIn (with OAuth support)
+- **Notification System** - Context-aware notifications
+
+📖 [Full Admin Documentation](./packages/admin/README.md)
+
+## Documentation
+
+### Core Package Documentation
+- [FormWrapper Usage Guide](./packages/core/src/wrappers/FormWrapper/USAGE.md)
+- [DataTableWrapper Usage Guide](./packages/core/src/wrappers/DataTableWrapper/USAGE.md)
+- [PreferenceWrapper Usage Guide](./packages/core/src/wrappers/PreferenceWrapper/USAGE.md)
+- [RolePermsWrapper Usage Guide](./packages/core/src/wrappers/RolePermsWrapper/USAGE.md)
+- [Core Helpers Documentation](./packages/core/src/helpers/README.md)
+
+### Admin Package Documentation
+- [AdminShell Documentation](./packages/admin/src/layouts/AdminShell/USAGE.md)
+- [ConfigShell Documentation](./packages/admin/src/layouts/ConfigShell/USAGE.md)
+- [DataTableShell Documentation](./packages/admin/src/layouts/DataTableShell/USAGE.md)
+- [DataTableModalShell Documentation](./packages/admin/src/layouts/DataTableModalShell/USAGE.md)
+- [FormShell Documentation](./packages/admin/src/layouts/FormShell/FORMSHELL_USAGE.md)
+- [Stepper Component](./packages/admin/src/components/Stepper/README.md)
+- [Tabs Component](./packages/admin/src/components/Tabs/USAGE.md)
+- [FormSubmitButton Component](./packages/admin/src/components/FormSubmitButton/USAGE.md)
+- [Notification System](./packages/admin/src/helpers/triggerNotification/USAGE.md)
+- [PageSignIn](./packages/admin/src/pre-built/PageSignIn/docs/USAGE.md)
+
+### API Reference
+- [Complete API Reference](./docs/API.md)
+
+### Contributing
+- [Contributing Guidelines](./CONTRIBUTING.md)
+- [Development Rules](./.claude/rules.md)
+
+### Changelog
+- [Version History](./CHANGELOG.md)
+
+## Development
+
+### Available Scripts
+
+```bash
+# Build all packages
+pnpm build
+
+# Start development mode
+pnpm dev
+
+# Run linting
+pnpm lint
+
+# Format code
+pnpm format
+
+# Type checking
+pnpm check-types
+```
+
+### Working with Specific Packages
+
+```bash
+# Build only core package
+pnpm build --filter=@settle/core
+
+# Develop only admin package
+pnpm dev --filter=@settle/admin
+
+# Type check core package
+pnpm check-types --filter=@settle/core
+```
+
+## Architecture
+
+Settle follows a **Context-Based Wrapper Pattern** for state management:
+
+1. **Wrappers** provide React Context for state management
+2. **Custom Hooks** access wrapper context and state
+3. **Layout Shells** compose wrappers with pre-built UI
+4. **Components** are modular and tree-shakable
+
+### Example Architecture Flow
 
 ```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo dev --filter=web
-
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo dev --filter=web
-yarn exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+FormWrapper (State + Context)
+    ↓
+FormShell (Layout)
+    ↓
+Stepper + Form Fields (Components)
+    ↓
+FormSubmitButton (Component using context)
 ```
 
-### Remote Caching
+## Key Architectural Patterns
 
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
+1. **Context-Based Wrappers** - React Context for state sharing
+2. **Store Management** - Zustand for persistent state
+3. **Hook-Based APIs** - Custom hooks for accessing wrapper data
+4. **Component Composition** - Layout shells that compose smaller components
+5. **Notification Callbacks** - Centralized notification handling
+6. **Type Safety** - Full TypeScript with Zod schemas
 
-Turborepo can use a technique known as [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
+## Browser Support
 
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
 
-```
-cd my-turborepo
+## License
 
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo login
+[Add your license here]
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo login
-yarn exec turbo login
-pnpm exec turbo login
-```
+## Contributing
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
+We welcome contributions! Please see our [Contributing Guidelines](./CONTRIBUTING.md) for details.
 
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
+## Support
 
-```
-# With [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation) installed (recommended)
-turbo link
+- Documentation: [Full Documentation](./docs/)
+- Issues: [GitHub Issues](https://github.com/your-org/settle/issues)
+- Discussions: [GitHub Discussions](https://github.com/your-org/settle/discussions)
 
-# Without [global `turbo`](https://turborepo.com/docs/getting-started/installation#global-installation), use your package manager
-npx turbo link
-yarn exec turbo link
-pnpm exec turbo link
-```
+## Acknowledgments
 
-## Useful Links
+Built with:
+- [Mantine](https://mantine.dev) - React Component Library
+- [React Query](https://tanstack.com/query) - Data Fetching
+- [Zustand](https://zustand-demo.pmnd.rs/) - State Management
+- [Turborepo](https://turbo.build/repo) - Monorepo Build System
 
-Learn more about the power of Turborepo:
+---
 
-- [Tasks](https://turborepo.com/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.com/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.com/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.com/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.com/docs/reference/configuration)
-- [CLI Usage](https://turborepo.com/docs/reference/command-line-reference)
+**Made with ❤️ by the Settle Team**
