@@ -1,7 +1,15 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Button, ButtonGroup, Group, Menu, Stack, Text } from "@mantine/core";
+import {
+  Badge,
+  Button,
+  ButtonGroup,
+  Group,
+  Menu,
+  Stack,
+  Text,
+} from "@mantine/core";
 import {
   ArrowClockwiseIcon,
   CaretDownIcon,
@@ -48,16 +56,32 @@ export function DataTableShellHeader({
 
   return (
     <div suppressHydrationWarning>
-      <Stack p="md" gap="sm">
-        <Group justify="space-between">
+      <Stack gap="sm">
+        <Group justify="space-between" px="md" h={80}>
           <div>
-            <Text size="xl">{moduleInfo.label}</Text>
+            <Group gap={8}>
+              <div>
+                <Text size="xl" fw={900}>
+                  <span
+                    style={{
+                      fontWeight: 300,
+                    }}
+                  >
+                    Manage
+                  </span>{" "}
+                  {moduleInfo.label}
+                </Text>
+              </div>
+              <Badge variant="outline" color="gray" size="xs">
+                XXXX entries
+              </Badge>
+            </Group>
             <Text size="xs" opacity={0.5}>
               {moduleInfo.description}
             </Text>
           </div>
 
-          <Group gap={4} suppressHydrationWarning>
+          <Group gap={4}>
             <div suppressHydrationWarning>
               <Menu>
                 <Menu.Target>

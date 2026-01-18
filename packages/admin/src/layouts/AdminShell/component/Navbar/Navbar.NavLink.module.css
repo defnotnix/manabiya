@@ -1,25 +1,41 @@
 .root {
-  border-radius: var(--mantine-radius-sm);
+  border-radius: 0;
 
   display: flex;
   justify-content: center;
   align-items: center;
 
   border: 1px solid transparent !important;
+  opacity: 0.6;
+}
 
-  &:hover {
-    border: 1px solid rgba(0, 0, 0, 0.1) !important;
-  }
+[data-mantine-color-scheme="light"] .root:hover {
+  background: var(--mantine-color-gray-2);
+}
 
-  &[data-active] {
-    background: light-dark(white, var(--mantine-color-dark-7));
-    border: 1px solid light-dark(rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 0.1)) !important;
+[data-mantine-color-scheme="dark"] .root:hover {
+  background: var(--mantine-color-dark-7);
+}
+
+.root[data-active] {
+  opacity: 1;
+}
+
+[data-mantine-color-scheme="light"] .root[data-active] {
+  background: var(--mantine-color-brand-light);
+
+  svg {
+    color: var(--mantine-color-brand-6) !important;
   }
+}
+
+[data-mantine-color-scheme="dark"] .root[data-active] {
+  background: var(--mantine-color-brand-light);
 }
 
 .label {
   font-size: var(--mantine-font-size-xs);
-  font-weight: 600;
+  font-weight: 800;
   display: block;
 }
 

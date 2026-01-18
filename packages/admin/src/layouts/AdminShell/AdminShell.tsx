@@ -1,30 +1,20 @@
 "use client";
 
 //mantine
-import {
-  ActionIcon,
-  AppShell,
-  Breadcrumbs,
-  Card,
-  Divider,
-  Group,
-  Paper,
-  Text,
-} from "@mantine/core";
+import { AppShell } from "@mantine/core";
 //hooks
 import { useDisclosure } from "@mantine/hooks";
 import { AdminShellNavbarWrapper } from "./component/Navbar/Navbar.dynamic";
 //props
 import { PropAdminNavLayout } from "./AdminShell.type";
 
-import "mantine-datatable/styles.layer.css";
-import { AdminShellHeader } from "./component/Header";
-import { CaretLeftIcon } from "@phosphor-icons/react";
+import "mantine-datatable/styles.css";
 
 export function AdminShell({
   children,
   navItems = [],
   navModules,
+  navConfig,
   essentials,
   softwareInfo,
   onLogout,
@@ -37,20 +27,16 @@ export function AdminShell({
     <>
       <AppShell
         navbar={{
-          width: 300,
+          width: 330,
           breakpoint: "sm",
           // collapsed: { mobile: !opened },
         }}
-        header={{ height: 50 }}
       >
-        <AppShell.Header bg="none">
-          <AdminShellHeader navModules={navModules} />
-        </AppShell.Header>
-
         <AppShell.Navbar bg="none">
           <AdminShellNavbarWrapper
             navItems={navItems}
             navModules={navModules}
+            navConfig={navConfig}
           />
         </AppShell.Navbar>
 

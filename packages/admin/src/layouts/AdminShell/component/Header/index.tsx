@@ -10,7 +10,12 @@ import {
   Menu,
   Text,
 } from "@mantine/core";
-import { CaretUpDownIcon, AvocadoIcon } from "@phosphor-icons/react";
+import {
+  CaretUpDownIcon,
+  AvocadoIcon,
+  HouseIcon,
+  HouseSimpleIcon,
+} from "@phosphor-icons/react";
 import { usePathname, useRouter } from "next/navigation";
 import type { PropAdminNavModule } from "../../AdminShell.type";
 import classes from "./Header.module.css";
@@ -52,7 +57,7 @@ export function AdminShellHeader({ navModules }: AdminShellHeaderProps) {
           e.preventDefault();
           router.push(item.href);
         }}
-        size="sm"
+        size="xs"
         c="gray.6"
         className={classes.breadcrumbLink}
       >
@@ -67,8 +72,8 @@ export function AdminShellHeader({ navModules }: AdminShellHeaderProps) {
       <Group
         px="lg"
         h={50}
-        gap="xs"
-        w={299}
+        gap={4}
+        w={300}
         style={{
           borderRight:
             "1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-gray-8))",
@@ -76,10 +81,13 @@ export function AdminShellHeader({ navModules }: AdminShellHeaderProps) {
         }}
       >
         <Text fw={900} size="sm" c="brand.6">
-          REA
+          settle
         </Text>
-        <Text fw={600} size="sm">
-          Admin Portal
+        <Text fw={800} size="sm">
+          framework
+        </Text>
+        <Text fw={800} size="sm" c="dimmed">
+          alpha 1.0.1
         </Text>
       </Group>
 
@@ -92,10 +100,16 @@ export function AdminShellHeader({ navModules }: AdminShellHeaderProps) {
         wrap="nowrap"
         style={{ flex: 1, minWidth: 0 }}
       >
+        <Text size="xs" fw={800} c="dimmed">
+          settle.admin - the framework built to build.
+        </Text>
+
         <Breadcrumbs separatorMargin={8}>
-          <Text fw={600} size="xs">
-            REA.Admin
-          </Text>
+          <HouseSimpleIcon
+            color="var(--mantine-color-brand-6)"
+            size={12}
+            weight="fill"
+          />
           {breadcrumbs}
         </Breadcrumbs>
 

@@ -1,28 +1,35 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import {
-  Container,
-  Stack,
-  TextInput,
-  PasswordInput,
-  Button,
-  Group,
-  Text,
   Anchor,
-  Divider,
+  Button,
   Center,
+  Container,
+  Divider,
+  Group,
+  Paper,
+  PasswordInput,
+  SimpleGrid,
+  Stack,
+  Text,
+  TextInput,
+  Title,
 } from "@mantine/core";
 import { useForm } from "@mantine/form";
-import { AppleLogo, DiscordLogo } from "@phosphor-icons/react";
+import {
+  AppleLogoIcon,
+  DiscordLogoIcon,
+  EnvelopeIcon,
+  KeyIcon,
+  BowlSteamIcon,
+} from "@phosphor-icons/react";
 import { apiDispatch } from "@settle/core";
+import { useState } from "react";
 import { triggerNotification } from "../../helpers";
 import { PageSignInProps } from "./PageSignIn.type";
 
 /**
  * Storage keys for authentication tokens
- * NOTE: In production, consider using HTTP-only cookies instead of sessionStorage
- * for better security against XSS attacks. These keys should match backend expectations.
  */
 const AUTH_TOKEN_KEYS = {
   ACCESS_TOKEN: "kcatoken",
@@ -31,11 +38,6 @@ const AUTH_TOKEN_KEYS = {
 
 /**
  * GoogleIcon Component
- *
- * Renders the Google logo as an SVG icon.
- * Used in the Google OAuth sign-in button.
- *
- * @returns SVG element with Google's official colors
  */
 function GoogleIcon() {
   return (
@@ -68,154 +70,96 @@ function GoogleIcon() {
 
 /**
  * SignInForm Component
- *
- * Handles email and password authentication form using Mantine's useForm hook.
- * Features:
- * - Built-in form state management via Mantine Form
- * - Automatic field-level validation
- * - Hydration-safe rendering to prevent SSR mismatches
- *
- * @param onSubmit - Callback fired when form is submitted with valid credentials
- * @param isLoading - Loading state to disable inputs during submission
  */
 function SignInForm({
   onSubmit,
   isLoading,
+  onForgotPassword,
 }: {
   onSubmit: (email: string, password: string) => void;
   isLoading: boolean;
+  onForgotPassword?: () => void;
 }) {
-  const [mounted, setMounted] = useState(false);
-
-  /**
-   * Initialize form using Mantine Form's useForm hook
-   * Provides built-in state management, validation, and error handling
-   *
-   * Features:
-   * - Automatic field value tracking
-   * - Validation on change/submit
-   * - Error state management
-   * - Form reset capability
-   */
   const form = useForm({
     initialValues: {
       email: "",
       password: "",
     },
     validate: {
-      /**
-       * Email field validation
-       * Checks:
-       * 1. Required field
-       * 2. Valid email format
-       */
       email: (value: string) => {
-        if (!value.trim()) {
-          return "Email is required";
-        }
-        // Basic email validation regex
-        // For production, consider using a more robust email validation library
+        if (!value.trim()) return "Email is required";
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value)) {
+        if (!emailRegex.test(value))
           return "Please enter a valid email address";
-        }
         return null;
       },
-      /**
-       * Password field validation
-       * Checks: Required field
-       */
       password: (value: string) => {
-        if (!value) {
-          return "Password is required";
-        }
+        if (!value) return "Password is required";
         return null;
       },
     },
-    validateInputOnChange: true,
-    validateInputOnBlur: true,
   });
 
-  /**
-   * Ensures client-side rendering only to avoid hydration mismatch with Mantine's useId hook.
-   * Mantine Form uses useId internally, which can cause SSR hydration issues if rendered
-   * with different IDs on server vs client. We render a disabled placeholder on initial mount.
-   */
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  /**
-   * Handles form submission.
-   * Validates all fields before calling the onSubmit callback.
-   * Validation is handled automatically by Mantine Form's validate object.
-   */
   const handleSubmit = form.onSubmit((values) => {
     onSubmit(values.email, values.password);
   });
 
-  /**
-   * Server-side placeholder rendering.
-   * Renders a disabled form during server rendering to prevent hydration mismatches.
-   * The actual interactive form is shown only after client-side hydration.
-   */
-  if (!mounted) {
-    return (
-      <form>
-        <Stack gap="md">
-          <TextInput
-            label="Email"
-            placeholder="Enter your email"
-            type="email"
-            required
-            disabled
-          />
-          <PasswordInput
-            label="Password"
-            placeholder="Enter your password"
-            required
-            disabled
-          />
-          <Button type="submit" disabled fullWidth>
-            Sign In
-          </Button>
-        </Stack>
-      </form>
-    );
-  }
-
-  /**
-   * Client-side form rendering with full interactivity.
-   * Uses Mantine Form's form bindings for state management and validation.
-   * All inputs are connected to form state automatically.
-   */
   return (
     <form onSubmit={handleSubmit}>
       <Stack gap="md">
-        {/* Email Input Field */}
         <TextInput
-          label="Email"
-          placeholder="Enter your email"
+          size="md"
+          radius="md"
+          placeholder="email@example.com"
           type="email"
           required
           {...form.getInputProps("email")}
           disabled={isLoading}
-          aria-label="Email address input"
+          rightSection={
+            <EnvelopeIcon size={16} weight="duotone" style={{ opacity: 0.5 }} />
+          }
         />
 
-        {/* Password Input Field */}
         <PasswordInput
-          label="Password"
-          placeholder="Enter your password"
+          size="md"
+          radius="md"
+          placeholder="Password"
           required
           {...form.getInputProps("password")}
           disabled={isLoading}
-          aria-label="Password input"
+          leftSection={
+            <KeyIcon size={16} weight="duotone" style={{ opacity: 0.5 }} />
+          }
         />
 
-        {/* Submit Button */}
-        <Button type="submit" loading={isLoading} disabled={isLoading} fullWidth>
-          Sign In
+        <Group justify="space-between" my="xs">
+          <Text size="xs" c="dimmed">
+            No account?{" "}
+            <Anchor size="xs" href="/register">
+              Sign up
+            </Anchor>
+          </Text>
+          <Anchor
+            component="button"
+            type="button"
+            size="xs"
+            c="dimmed"
+            onClick={() => onForgotPassword?.()}
+          >
+            Forgot Password?
+          </Anchor>
+        </Group>
+
+        <Button
+          type="submit"
+          loading={isLoading}
+          fullWidth
+          size="md"
+          radius="md"
+          color="black"
+          h={50}
+        >
+          Continue
         </Button>
       </Stack>
     </form>
@@ -224,14 +168,6 @@ function SignInForm({
 
 /**
  * PageSignIn Component
- *
- * Pre-built sign-in page component with support for:
- * - Email/password authentication
- * - Social OAuth logins (Google, Apple, Discord)
- * - Magic link authentication
- *
- * The component handles UI rendering, form validation, and authentication API calls.
- * Success/error handling and redirects are managed through the provided callbacks.
  */
 export function PageSignIn({
   loginApi,
@@ -253,19 +189,6 @@ export function PageSignIn({
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  /**
-   * Handles email/password sign-in flow.
-   *
-   * Process:
-   * 1. Shows loading notification
-   * 2. Calls login API with credentials
-   * 3. Stores tokens if successful
-   * 4. Fires success callback and redirects
-   * 5. Shows error notification on failure
-   *
-   * @param email - User's email address
-   * @param password - User's password
-   */
   const handleSignIn = async (email: string, password: string) => {
     setIsLoading(true);
     triggerNotification.auth.isLoading({
@@ -277,9 +200,9 @@ export function PageSignIn({
       const response = await apiDispatch.post({
         endpoint: loginApi,
         body: { email, password },
+        noAuthorization: true,
       });
 
-      // Handle API error response
       if (response.err) {
         triggerNotification.auth.isError({
           title: "Authentication Failed",
@@ -289,77 +212,51 @@ export function PageSignIn({
         });
         onError?.(response);
       } else {
-        // Store authentication tokens in sessionStorage
-        // NOTE: For security-sensitive applications, prefer HTTP-only cookies
         if (response.data?.access) {
-          sessionStorage.setItem(AUTH_TOKEN_KEYS.ACCESS_TOKEN, response.data.access);
+          sessionStorage.setItem(
+            AUTH_TOKEN_KEYS.ACCESS_TOKEN,
+            response.data.access,
+          );
         }
         if (response.data?.refresh) {
-          sessionStorage.setItem(AUTH_TOKEN_KEYS.REFRESH_TOKEN, response.data.refresh);
+          sessionStorage.setItem(
+            AUTH_TOKEN_KEYS.REFRESH_TOKEN,
+            response.data.refresh,
+          );
         }
 
-        // Fire custom success handler before redirecting
         onSuccess?.(response.data);
 
-        // Show success notification
         triggerNotification.auth.isSuccess({
           title: "Sign In Successful!",
           message: "Redirecting to dashboard...",
         });
 
-        // Redirect after a short delay to allow notification display
         setTimeout(() => {
           window.location.href = successRedirectUrl;
         }, 1000);
       }
     } catch (error: unknown) {
-      // Handle unexpected errors (network issues, parsing errors, etc.)
-      const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "An unexpected error occurred";
       triggerNotification.auth.isError({
         title: "Authentication Failed",
         message: errorMessage,
       });
       onError?.(error);
     } finally {
-      // Always reset loading state, except when redirecting
       setIsLoading(false);
     }
   };
 
-  /**
-   * Handles social authentication login initiation.
-   *
-   * Triggers the provider-specific OAuth flow via the callback.
-   * The provider parameter documents which service is being used but isn't
-   * strictly needed since each button has its own callback.
-   *
-   * @param provider - OAuth provider type (google, apple, or discord)
-   * @param callback - Callback function to initiate provider's OAuth flow
-   */
   const handleSocialLogin = (
     provider: "google" | "apple" | "discord",
-    callback?: () => void
-  ): void => {
-    // Trigger the provider-specific callback
-    // The provider name can be used for analytics/logging if needed
+    callback?: () => void,
+  ) => {
     callback?.();
   };
 
-  /**
-   * Handles magic link sign-in flow.
-   *
-   * Process:
-   * 1. Validates email format
-   * 2. Shows loading notification
-   * 3. Calls magic link handler with email
-   * 4. Shows success/error notification based on result
-   * 5. Clears form on success
-   *
-   * NOTE: The callback is expected to handle the actual API call.
-   * Consider awaiting the callback and catching errors properly.
-   */
   const handleMagicLinkSubmit = async (): Promise<void> => {
-    // Validate email before submission
     if (!magicLinkEmail.trim()) {
       triggerNotification.auth.isError({
         title: "Invalid Email",
@@ -374,22 +271,17 @@ export function PageSignIn({
     });
 
     try {
-      // Call the magic link handler
-      // If this is an async function, it should be properly awaited
       await Promise.resolve(onMagicLinkLogin?.(magicLinkEmail));
-
       triggerNotification.auth.isSuccess({
         title: "Magic Link Sent!",
         message: "Check your email for the sign-in link.",
       });
       setMagicLinkEmail("");
     } catch (error: unknown) {
-      // Handle magic link submission errors
       const errorMessage =
         error instanceof Error
           ? error.message
           : "Please try again or use another sign-in method.";
-
       triggerNotification.auth.isError({
         title: "Failed to Send Magic Link",
         message: errorMessage,
@@ -397,157 +289,182 @@ export function PageSignIn({
     }
   };
 
+  const hasAnySocial =
+    hasGoogleLogin || hasAppleLogin || hasDiscordLogin || hasMagicLinkLogin;
+
   return (
     <Container
-      size="sm"
+      size="xs"
       h="100vh"
       display="flex"
-      style={{
-        alignItems: "center",
-        justifyContent: "center",
-      }}
+      style={{ alignItems: "center" }}
     >
-      <Stack w="100%" maw={400} gap="lg">
-        {/* Page Header */}
-        <Stack gap={0} mb="md">
-          <Text component="h1" fw={700} size="xl">
-            Sign In
-          </Text>
-          <Text c="dimmed" size="sm">
-            Welcome back! Please sign in to your account
+      <Paper w="100%" withBorder p={{ base: "xl", lg: "4rem" }} radius="md">
+        <Stack gap="md" w="100%">
+          <Center>
+            <BowlSteamIcon weight="fill" size={32} />
+          </Center>
+
+          {/* Header */}
+          <Stack gap="xs" align="center">
+            {/* Placeholder for Logo if needed, otherwise just text */}
+            <Title order={2} ta="center" fw={900} lh="100%">
+              Welcome Back!
+              <br />
+              <span style={{ opacity: 0.5 }}>
+                {" "}
+                to your organize-it-better portal.
+              </span>
+            </Title>
+            <Text c="dimmed" size="xs" ta="center" maw={400}>
+              Enter your credentials to access your account.
+            </Text>
+          </Stack>
+
+          <Paper p={0} bg="transparent">
+            <Stack gap="lg">
+              {!showMagicLink ? (
+                <>
+                  {/* Social OAuth Login Options at Top */}
+                  {hasAnySocial && (
+                    <SimpleGrid cols={3} spacing="xs">
+                      {hasGoogleLogin && (
+                        <Button
+                          variant="default"
+                          size="md"
+                          radius="md"
+                          leftSection={<GoogleIcon />}
+                          onClick={() =>
+                            handleSocialLogin("google", onGoogleLogin)
+                          }
+                          fullWidth
+                          styles={{
+                            inner: { justifyContent: "center" },
+                            label: { fontWeight: 600 },
+                          }}
+                        >
+                          Google
+                        </Button>
+                      )}
+                      {hasAppleLogin && (
+                        <Button
+                          variant="default"
+                          size="md"
+                          radius="md"
+                          leftSection={
+                            <AppleLogoIcon weight="fill" size={20} />
+                          }
+                          onClick={() =>
+                            handleSocialLogin("apple", onAppleLogin)
+                          }
+                          fullWidth
+                        >
+                          Apple
+                        </Button>
+                      )}
+                      {hasDiscordLogin && (
+                        <Button
+                          variant="default"
+                          size="md"
+                          radius="md"
+                          leftSection={
+                            <DiscordLogoIcon
+                              color="var(--mantine-color-indigo-6)"
+                              weight="fill"
+                              size={20}
+                            />
+                          }
+                          onClick={() =>
+                            handleSocialLogin("discord", onDiscordLogin)
+                          }
+                          fullWidth
+                        >
+                          Discord
+                        </Button>
+                      )}
+                      {hasMagicLinkLogin && (
+                        <Button
+                          variant="light"
+                          size="md"
+                          radius="md"
+                          h={50}
+                          onClick={() => setShowMagicLink(true)}
+                          fullWidth
+                        >
+                          Sign in with Magic Link
+                        </Button>
+                      )}
+                    </SimpleGrid>
+                  )}
+
+                  <Divider label="or" labelPosition="center" my="xs" />
+
+                  <SignInForm
+                    onSubmit={handleSignIn}
+                    isLoading={isLoading}
+                    onForgotPassword={onForgotPassword}
+                  />
+                </>
+              ) : (
+                <Stack gap="md">
+                  <Stack gap={0} mb="xs">
+                    <Text fw={600} size="lg" ta="center">
+                      Magic Link
+                    </Text>
+                    <Text c="dimmed" size="sm" ta="center">
+                      We'll email you a link to sign in instantly.
+                    </Text>
+                  </Stack>
+
+                  <TextInput
+                    size="md"
+                    radius="md"
+                    label="Email"
+                    placeholder="name@example.com"
+                    type="email"
+                    required
+                    value={magicLinkEmail}
+                    onChange={(e) => setMagicLinkEmail(e.currentTarget.value)}
+                  />
+
+                  <Button
+                    size="md"
+                    radius="md"
+                    color="black"
+                    onClick={handleMagicLinkSubmit}
+                    disabled={!magicLinkEmail.trim()}
+                    fullWidth
+                    h={50}
+                  >
+                    Send Magic Link
+                  </Button>
+
+                  <Button
+                    variant="subtle"
+                    size="sm"
+                    radius="md"
+                    c="dimmed"
+                    onClick={() => {
+                      setShowMagicLink(false);
+                      setMagicLinkEmail("");
+                    }}
+                    fullWidth
+                  >
+                    Back to Sign In
+                  </Button>
+                </Stack>
+              )}
+            </Stack>
+          </Paper>
+
+          <Text ta="center" size="xs" c="dimmed" mt="auto">
+            By signing in, you agree to our{" "}
+            <Anchor href="/terms">Terms of Service</Anchor> and{" "}
+            <Anchor href="/privacy">Privacy Policy</Anchor>.
+            {/* Add logos here if available */}
           </Text>
         </Stack>
-
-        {/* Conditional rendering: Show standard auth or magic link form */}
-        {!showMagicLink ? (
-          <>
-            {/* Email/Password Authentication Form */}
-            <SignInForm onSubmit={handleSignIn} isLoading={isLoading} />
-
-            {/* Forgot Password Link */}
-            <Center>
-              <Anchor
-                component="button"
-                type="button"
-                size="sm"
-                onClick={() => onForgotPassword?.()}
-              >
-                Forgot Password?
-              </Anchor>
-            </Center>
-
-            {/* Social OAuth Login Options */}
-            {/* Only render if at least one social login method is enabled */}
-            {(hasGoogleLogin ||
-              hasAppleLogin ||
-              hasDiscordLogin ||
-              hasMagicLinkLogin) && (
-              <>
-                <Divider label="Or continue with" />
-
-                <Stack gap="sm">
-                  {/* Social Provider Buttons */}
-                  <Group grow>
-                    {/* Google OAuth Button */}
-                    {hasGoogleLogin && (
-                      <Button
-                        variant="default"
-                        leftSection={<GoogleIcon />}
-                        onClick={() =>
-                          handleSocialLogin("google", onGoogleLogin)
-                        }
-                        fullWidth
-                      >
-                        Google
-                      </Button>
-                    )}
-                    {/* Apple OAuth Button */}
-                    {hasAppleLogin && (
-                      <Button
-                        variant="default"
-                        leftSection={<AppleLogo size={20} />}
-                        onClick={() => handleSocialLogin("apple", onAppleLogin)}
-                        fullWidth
-                      >
-                        Apple
-                      </Button>
-                    )}
-                    {/* Discord OAuth Button */}
-                    {hasDiscordLogin && (
-                      <Button
-                        variant="default"
-                        leftSection={<DiscordLogo size={20} />}
-                        onClick={() =>
-                          handleSocialLogin("discord", onDiscordLogin)
-                        }
-                        fullWidth
-                      >
-                        Discord
-                      </Button>
-                    )}
-                  </Group>
-
-                  {/* Magic Link Button - Alternative authentication method */}
-                  {hasMagicLinkLogin && (
-                    <Button
-                      variant="light"
-                      onClick={() => setShowMagicLink(true)}
-                      fullWidth
-                      aria-label="Sign in with a magic link sent to your email"
-                    >
-                      ✨ Magic Link
-                    </Button>
-                  )}
-                </Stack>
-              </>
-            )}
-          </>
-        ) : (
-          /* Magic Link Authentication Form */
-          /* Shown when user clicks "Magic Link" button */
-          <Stack gap="md">
-            {/* Magic Link Form Header */}
-            <Stack gap={0}>
-              <Text fw={600} size="sm">
-                Sign in with Magic Link
-              </Text>
-              <Text c="dimmed" size="xs">
-                Enter your email and we'll send you a sign-in link
-              </Text>
-            </Stack>
-
-            {/* Email Input for Magic Link */}
-            <TextInput
-              label="Email"
-              placeholder="Enter your email"
-              type="email"
-              required
-              value={magicLinkEmail}
-              onChange={(e) => setMagicLinkEmail(e.currentTarget.value)}
-              aria-label="Email address for magic link sign-in"
-            />
-
-            {/* Action Buttons: Send Magic Link and Back */}
-            <Group grow>
-              <Button
-                onClick={handleMagicLinkSubmit}
-                disabled={!magicLinkEmail.trim()}
-              >
-                Send Magic Link
-              </Button>
-              <Button
-                variant="default"
-                onClick={() => {
-                  setShowMagicLink(false);
-                  setMagicLinkEmail("");
-                }}
-              >
-                Back
-              </Button>
-            </Group>
-          </Stack>
-        )}
-      </Stack>
+      </Paper>
     </Container>
   );
 }

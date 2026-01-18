@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useMantineColorScheme } from "@mantine/core";
+import { Divider, useMantineColorScheme } from "@mantine/core";
 
 import { sortBy } from "lodash";
 import { DataTable, DataTableSortStatus } from "mantine-datatable";
@@ -23,7 +23,6 @@ export function DataTableShellDataTable({
 }: PropDataTableShellDataTable) {
   //* CONTEXT
 
-  const { colorScheme } = useMantineColorScheme();
   const {
     data,
     isLoading: isFetching,
@@ -87,18 +86,32 @@ export function DataTableShellDataTable({
     [customColumns]
   );
 
+  // Transform columns to mantine-datatable format
+  const transformedColumns = useMemo(
+    () =>
+      visibleColumns.map((col: any) => ({
+        accessor: col.accessor,
+        title: col.header || col.label, // Support both 'header' and 'label'
+        width: col.size,
+        render: col.render, // Custom render function if provided
+        cellsStyle: col.cellsStyle, // Pass through cellsStyle property
+      })),
+    [visibleColumns]
+  );
+
   // Final columns passed to DataTable
   const tableColumnConfig = useMemo(
     () => [
       {
         accessor: "#",
         title: "#",
-        width: 50,
+        width: 32,
+        textAlign: "center" as const,
         render: (_row: any, index: number) => <>{index + 1}</>,
       },
-      ...visibleColumns,
+      ...transformedColumns,
     ],
-    [visibleColumns, disableActions]
+    [transformedColumns]
   );
 
   const totalRecords = useMemo(
@@ -137,26 +150,19 @@ export function DataTableShellDataTable({
 
   return (
     <>
+      <Divider />
       <DataTable
-        withTableBorder
+        striped
+        withColumnBorders
         idAccessor={idAccessor}
-        records={visibleRecords}
         columns={tableColumnConfig}
+        records={visibleRecords}
         emptyState={<DataTableEmptyState />}
         fetching={isFetching}
         fz="xs"
         fw={500}
-        horizontalSpacing="lg"
-        striped
+        horizontalSpacing="xs"
         highlightOnHover
-        styles={{
-          header: {
-            background:
-              colorScheme === "dark"
-                ? "var(--mantine-color-dark-6)"
-                : "var(--mantine-color-gray-1)",
-          },
-        }}
         rowStyle={rowStyle}
         sortStatus={sortStatus}
         onSortStatusChange={setSortStatus}

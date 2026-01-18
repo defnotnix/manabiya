@@ -1,12 +1,20 @@
 "use client";
 
-import { Group, Button, Box } from "@mantine/core";
-import { ArrowLeft, ArrowRight, Check, X } from "@phosphor-icons/react";
+import { Group, Button, Box, CheckIcon } from "@mantine/core";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ArrowRightIcon,
+  Check,
+  X,
+  XIcon,
+} from "@phosphor-icons/react";
 import { FormWrapper } from "@settle/core";
+import { Step } from "../../FormShell.type";
 
 interface FooterProps {
   withStepper?: boolean;
-  steps?: string[];
+  steps?: (string | Step)[];
   onStepBack?: () => void;
   onStepNext?: () => void;
   onSubmit?: () => void;
@@ -49,9 +57,9 @@ export function FormShellFooter({
     <Box
       style={{
         borderTop: "1px solid var(--mantine-color-gray-2)",
-        backgroundColor: "var(--mantine-color-gray-0)",
       }}
-      p="md"
+      py="md"
+      mt="md"
     >
       <Group justify="space-between">
         {/* Left side - Back button for stepper */}
@@ -72,8 +80,9 @@ export function FormShellFooter({
         <Group gap="sm">
           {onCancel && (
             <Button
+              size="xs"
               variant="default"
-              leftSection={<X size={16} />}
+              leftSection={<XIcon size={16} />}
               onClick={onCancel}
               disabled={isLoading}
             >
@@ -83,7 +92,8 @@ export function FormShellFooter({
 
           {withStepper && !isLastStep && (
             <Button
-              rightSection={<ArrowRight size={16} />}
+              size="xs"
+              rightSection={<ArrowRightIcon size={16} />}
               onClick={handleStepNext}
               loading={isLoading}
             >
@@ -93,8 +103,9 @@ export function FormShellFooter({
 
           {(isLastStep || !withStepper) && (
             <Button
+              size="xs"
               color="teal"
-              leftSection={<Check size={16} />}
+              leftSection={<CheckIcon size={16} />}
               onClick={handleSubmit}
               type="submit"
               loading={isLoading}

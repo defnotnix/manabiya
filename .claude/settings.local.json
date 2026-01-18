@@ -8,7 +8,14 @@
       "Bash(ls:*)",
       "Bash(pnpm i)",
       "Bash(npm install:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(ls -la \"c:\\\\Projects\\\\settle\\\\apps\\\\admin-test\\\\modules\\\\auth\"\" 2>&1 || echo \"Directory not found \")",
+      "Bash(tree:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "Bash(pnpm build:*)",
+      "Bash(pnpm --filter @settle/admin build:*)",
+      "Bash(echo:*)"
     ]
   }
 }

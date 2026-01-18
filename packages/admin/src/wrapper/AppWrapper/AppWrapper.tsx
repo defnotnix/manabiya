@@ -29,7 +29,7 @@ export function AppWrapper({
       <head>
         <ColorSchemeScript
           nonce="8IBTHwOdqNKAWeKl7plt8g=="
-          defaultColorScheme={"auto"}
+          defaultColorScheme={defaultColorScheme}
         />
         <title>{title}</title>
         {extraHeadTags}
@@ -38,9 +38,8 @@ export function AppWrapper({
         className={cx(classes.root, {
           [classNames.body]: classNames.body,
         })}
-        suppressHydrationWarning
       >
-        <MantineProvider theme={theme} defaultColorScheme={"auto"}>
+        <MantineProvider theme={theme} defaultColorScheme={defaultColorScheme}>
           <ModalsProvider>
             <Notifications />
             {children}

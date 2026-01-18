@@ -80,7 +80,7 @@ export function DataTableShell({
 
   return (
     <DataTableShellContext.Provider value={contextValue}>
-      <Stack gap={0}>
+      <Stack gap={0} h="100%">
         <DataTableShellHeader
           moduleInfo={moduleInfo}
           newButtonHref={newButtonHref}
@@ -89,12 +89,14 @@ export function DataTableShell({
         />
 
         {/* Tabs */}
-        <Tabs
-          px={0}
-          active={activeTab}
-          onTabChange={setActiveTab}
-          tabs={tabs}
-        />
+        {tabs.length > 0 && (
+          <Tabs
+            px={0}
+            active={activeTab}
+            onTabChange={setActiveTab}
+            tabs={tabs}
+          />
+        )}
 
         {/* Toolbar */}
         <DataTableShellToolbar
@@ -108,9 +110,7 @@ export function DataTableShell({
         {/* Table */}
         <Box
           pos="relative"
-          h={{
-            lg: "calc(100vh - 260px)",
-          }}
+          style={{ flex: 1, overflow: "hidden" }}
         >
           <DataTableShellDataTable
             idAccessor={idAccessor}

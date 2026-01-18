@@ -1,4 +1,5 @@
 import { PropDataTableShell } from "../DataTableShell/DataTableShell.type";
+import { Step } from "../FormShell/FormShell.type";
 
 // ─────────────────────────────────────────────
 // Shared Modal Types
@@ -6,7 +7,7 @@ import { PropDataTableShell } from "../DataTableShell/DataTableShell.type";
 
 export type PropDataTableModalFormConfig = {
   initial?: Record<string, any>;
-  steps?: string[];
+  steps?: (string | Step)[];
   validation?: any[];
 };
 

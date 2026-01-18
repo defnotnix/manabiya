@@ -1,69 +1,19 @@
 "use client";
 
-import { Box, Container, Stack } from "@mantine/core";
-import { PropFormShell } from "./FormShell.type";
-import { FormShellHeader } from "./components/Header";
-import { FormShellStepper } from "./components/Stepper";
-import { FormShellFooter } from "./components/Footer";
-import { Context as FormShellContext } from "./FormShell.context";
+import {
+  Box,
+  Container,
+  Divider,
+  Grid,
+  Paper,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { FormWrapper } from "@settle/core";
-
-function FormShellContent({
-  bread,
-  moduleInfo,
-  title,
-  children,
-  steps = [],
-  disabledSteps = [],
-  showStepper = true,
-  onStepBack,
-  onStepNext,
-  onCancel,
-  isLoading = false,
-}: PropFormShell) {
-  const contextValue = {
-    selectedRecords: [],
-    setSelectedRecords: () => {},
-  };
-
-  const formProps = FormWrapper.useFormProps();
-  const currentStep = formProps?.current || 0;
-
-  return (
-    <FormShellContext.Provider value={contextValue}>
-      <Stack gap={0} h="100vh">
-        {/* Header */}
-        <FormShellHeader bread={bread} moduleInfo={moduleInfo} title={title} />
-
-        {/* Stepper */}
-        {showStepper && steps.length > 0 && (
-          <FormShellStepper
-            steps={steps}
-            currentStep={currentStep}
-            disabledSteps={disabledSteps}
-          />
-        )}
-
-        {/* Form Content */}
-        <Box component="div" flex={1}>
-          <Container size="sm" py="lg">
-            {children}
-          </Container>
-        </Box>
-
-        {/* Footer with Submit/Next/Back buttons */}
-        <FormShellFooter
-          withStepper={showStepper && steps.length > 0}
-          steps={steps}
-          onStepBack={onStepBack}
-          onStepNext={onStepNext}
-          onCancel={onCancel}
-          isLoading={isLoading}
-        />
-      </Stack>
-    </FormShellContext.Provider>
-  );
-}
+import { FormShellHeader } from "./components/Header";
+import { Context as FormShellContext } from "./FormShell.context";
+import { PropFormShell } from "./FormShell.type";
+import { FormShellFooter, FormShellStepper } from "./components";
 
 export function FormShell({
   bread,
@@ -76,21 +26,63 @@ export function FormShell({
   onStepBack,
   onStepNext,
   onCancel,
-  isLoading,
+  isLoading = false,
+  enableStepClick,
+  enableStepCompleteClickOnly,
+  enableStepTracking,
+  iconActive,
+  iconComplete,
+  iconIncomplete,
 }: PropFormShell) {
+  const contextValue = {
+    selectedRecords: [],
+    setSelectedRecords: () => {},
+  };
+
+  const formProps = FormWrapper.useFormProps();
+  const currentStep = formProps?.current || 0;
+
   return (
-    <FormShellContent
-      bread={bread}
-      moduleInfo={moduleInfo}
-      title={title}
-      children={children}
-      steps={steps}
-      disabledSteps={disabledSteps}
-      showStepper={showStepper}
-      onStepBack={onStepBack}
-      onStepNext={onStepNext}
-      onCancel={onCancel}
-      isLoading={isLoading}
-    />
+    <FormShellContext.Provider value={contextValue}>
+      {/* Header */}
+      <FormShellHeader bread={bread} moduleInfo={moduleInfo} title={title} />
+
+      <Paper radius={0}>
+        {showStepper && steps.length > 0 && (
+          <FormShellStepper
+            steps={steps}
+            currentStep={currentStep}
+            disabledSteps={disabledSteps}
+            enableStepClick={enableStepClick}
+            enableStepCompleteClickOnly={enableStepCompleteClickOnly}
+            enableStepTracking={enableStepTracking}
+            iconActive={iconActive}
+            iconComplete={iconComplete}
+            iconIncomplete={iconIncomplete}
+          />
+        )}
+
+        <Container size="sm" py={100}>
+          <Box component="div" flex={1}>
+            {children}
+          </Box>
+
+          {/* Footer with Submit/Next/Back buttons */}
+        </Container>
+
+        <Container size="sm" py="sm">
+          <FormShellFooter
+            withStepper={showStepper && steps.length > 0}
+            steps={steps}
+            onStepBack={onStepBack}
+            onStepNext={onStepNext}
+            onCancel={onCancel}
+            isLoading={isLoading}
+          />
+        </Container>
+      </Paper>
+
+      {/* Stepper */}
+    </FormShellContext.Provider>
   );
 }

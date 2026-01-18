@@ -12,6 +12,8 @@ import {
   Stack,
   Text,
   TextInput,
+  useMantineColorScheme,
+  useMantineTheme,
 } from "@mantine/core";
 import {
   CaretDownIcon,
@@ -39,6 +41,8 @@ export function DataTableShellToolbar({
 
   // * STATE
 
+  const { colorScheme } = useMantineColorScheme();
+
   const [svalue, setSValue] = useState<string>("");
   const [debouncedSearch] = useDebouncedValue(svalue, 200);
 
@@ -52,84 +56,96 @@ export function DataTableShellToolbar({
 
   return (
     <>
-      <Group gap="xs" justify="space-between" px="md" py="xs">
+      <Group
+        gap="xs"
+        justify="space-between"
+        px="sm"
+        h={40}
+        bg={colorScheme == "dark" ? "dark.7" : "gray.1"}
+      >
         <Group gap={4}>
           {/* Search */}
-          <TextInput
-            miw={500}
-            leftSection={<MagnifyingGlassIcon />}
-            //  rightSection={<Loader size={12}/>}
-            size="xs"
-            placeholder="Search ..."
-            value={svalue}
-            onChange={(e) => setSValue(e.target.value)}
-          />
+          <div suppressHydrationWarning>
+            <TextInput
+             
+              miw={500}
+              leftSection={<MagnifyingGlassIcon />}
+              //  rightSection={<Loader size={12}/>}
+              size="xs"
+              placeholder="Search ..."
+              value={svalue}
+              onChange={(e) => setSValue(e.target.value)}
+            />
+          </div>
+         
 
           <DataTableShellFilter filterList={filterList} />
         </Group>
 
         <Group gap={4}>
-          <Popover withArrow shadow="md">
-            <Popover.Target>
-              <Button
-                color="dark"
-                variant="white"
-                style={{
-                  border: "1px solid var(--mantine-color-gray-3)",
-                }}
-                size="xs"
-                leftSection={<GearSixIcon />}
-                rightSection={<CaretDownIcon />}
-              >
-                Manage Columns
-              </Button>
-            </Popover.Target>
-            <Popover.Dropdown p={0} w={200}>
-              <Stack gap={0}>
-                <Text px="sm" py="xs" size="xs" opacity={0.5}>
-                  Select columns to view
-                </Text>
-
-                <Divider />
-
-                {customColumns.map((column: any, index: number) => {
-                  const checked = column.visible;
-
-                  return (
-                    <Button
-                      c="dark.9"
-                      justify="left"
-                      radius={0}
-                      variant="subtle"
-                      key={column.accessor ?? index}
-                      size="xs"
-                      leftSection={<Checkbox checked={checked} size="xs" />}
-                      onClick={() => onToggleColumn(index)}
-                    >
-                      {column.title}
-                    </Button>
-                  );
-                })}
-
-                <Divider />
-
+          <div suppressHydrationWarning>
+            <Popover withArrow shadow="md">
+              <Popover.Target>
                 <Button
-                  size="xs"
-                  variant="subtle"
-                  justify="left"
-                  leftSection={<XIcon weight="bold" />}
-                  styles={{
-                    label: {
-                      paddingLeft: 4,
-                    },
+                  color="dark"
+                  variant="white"
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
                   }}
-                  onClick={onResetColumns}
+                  size="xs"
+                  leftSection={<GearSixIcon />}
+                  rightSection={<CaretDownIcon />}
                 >
-                  Reset to default.
+                  Manage Columns
                 </Button>
-              </Stack>
-            </Popover.Dropdown>
-          </Popover>
+              </Popover.Target>
+              <Popover.Dropdown p={0} w={200}>
+                <Stack gap={0}>
+                  <Text px="sm" py="xs" size="xs" opacity={0.5}>
+                    Select columns to view
+                  </Text>
+
+                  <Divider />
+
+                  {customColumns.map((column: any, index: number) => {
+                    const checked = column.visible;
+
+                    return (
+                      <Button
+                        c="dark.9"
+                        justify="left"
+                        radius={0}
+                        variant="subtle"
+                        key={column.accessor ?? index}
+                        size="xs"
+                        leftSection={<Checkbox checked={checked} size="xs" />}
+                        onClick={() => onToggleColumn(index)}
+                      >
+                        {column.title}
+                      </Button>
+                    );
+                  })}
+
+                  <Divider />
+
+                  <Button
+                    size="xs"
+                    variant="subtle"
+                    justify="left"
+                    leftSection={<XIcon weight="bold" />}
+                    styles={{
+                      label: {
+                        paddingLeft: 4,
+                      },
+                    }}
+                    onClick={onResetColumns}
+                  >
+                    Reset to default.
+                  </Button>
+                </Stack>
+              </Popover.Dropdown>
+            </Popover>
+          </div>
         </Group>
       </Group>
 

@@ -1,15 +1,33 @@
 import { JSX, ReactNode } from "react";
 import { Icon } from "@phosphor-icons/react";
 import { MantineColor, TreeNodeData } from "@mantine/core";
+import { NavConfig } from "./AdminShell.nav.types";
 
-type PropAdminNavItems = {
+type PropAdminNavItemLink = {
+  divider?: false;
   label: string;
   value?: string;
-  divider?: boolean;
   roles?: string[];
   icon?: Icon;
   children?: PropAdminNavItems[];
+  // Module-level properties (for top-level items that represent groups)
+  description?: string;
+  color?: MantineColor;
 };
+
+type PropAdminNavItemDivider = {
+  divider: true;
+  dividerLabel?: string;
+  label?: never;
+  value?: never;
+  roles?: never;
+  icon?: never;
+  children?: never;
+  description?: never;
+  color?: never;
+};
+
+type PropAdminNavItems = PropAdminNavItemLink | PropAdminNavItemDivider;
 
 type PropAdminNavModule = {
   icon: Icon;
@@ -28,6 +46,7 @@ type PropAdminNavSideNav = {
   essentials?: JSX.Element;
   navItems?: PropAdminNavItems[];
   navModules?: PropAdminNavModule[];
+  navConfig?: NavConfig; // Added new prop
   onLogout?: () => void;
 };
 
@@ -47,4 +66,9 @@ type PropAdminNavGeneral = {
 export type PropAdminNavLayout = PropAdminNavStyles &
   PropAdminNavGeneral &
   PropAdminNavSideNav;
-export type { PropAdminNavItems, PropAdminNavSideNav, PropAdminNavModule };
+export type {
+  PropAdminNavItems,
+  PropAdminNavItemLink,
+  PropAdminNavSideNav,
+  PropAdminNavModule,
+};

@@ -16,7 +16,7 @@ const AdminShellNavbarDynamic = dynamic(
         <Skeleton height={40} mb="md" />
       </div>
     ),
-  }
+  },
 );
 
 export function AdminShellNavbarWrapper(props: PropAdminNavSideNav) {

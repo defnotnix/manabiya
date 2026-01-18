@@ -1,16 +1,14 @@
 import {
-  ActionIcon,
   Avatar,
+  Box,
   Group,
   Indicator,
   Menu,
-  Paper,
   Text,
   useMantineColorScheme,
 } from "@mantine/core";
 import {
   BellSlashIcon,
-  CaretRightIcon,
   CircleIcon,
   GearIcon,
   MoonIcon,
@@ -20,49 +18,49 @@ import {
   SunIcon,
 } from "@phosphor-icons/react";
 
-import classes from "../Navbar.module.css";
-
 export function UserInfoPopover() {
   const { colorScheme, setColorScheme } = useMantineColorScheme();
 
   return (
-    <Menu shadow="md" position="right" withArrow>
+    <Menu shadow="md" position="right-end" withArrow offset={8}>
       <Menu.Target>
-        <Paper
-          px="md"
-          py={"xs"}
-          radius={0}
-          className={classes.userInfoButton}
-          style={{
-            cursor: "pointer",
-          }}
-        >
-          <Group wrap="nowrap" justify="space-between">
-            <Group gap="sm" wrap="nowrap">
-              <Indicator position="bottom-end" withBorder>
-                <Avatar
-                  radius="sm"
-                  variant="filled"
-                  name="Kevin Dukkon"
-                  color="orange"
-                  size="sm"
-                />
-              </Indicator>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <Text fw={600} size="xs" truncate>
-                  Kevin Dukkon
-                </Text>
-                <Text size="10px" opacity={0.6} truncate>
-                  Admin | kevin@strove.io
-                </Text>
-              </div>
-            </Group>
-            <CaretRightIcon weight="bold" size={14} />
-          </Group>
-        </Paper>
+        <Box style={{ cursor: "pointer" }}>
+          <Indicator position="bottom-end" withBorder size={8} offset={2}>
+            <Avatar
+              radius="md"
+              variant="filled"
+              name="Kevin Dukkon"
+              color="orange"
+              size="sm"
+            />
+          </Indicator>
+        </Box>
       </Menu.Target>
 
-      <Menu.Dropdown>
+      <Menu.Dropdown miw={220}>
+        {/* User Info Header */}
+        <Menu.Item closeMenuOnClick={false} style={{ cursor: "default" }}>
+          <Group gap="sm" wrap="nowrap">
+            <Avatar
+              radius="sm"
+              variant="filled"
+              name="Kevin Dukkon"
+              color="orange"
+              size="sm"
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <Text fw={600} size="sm" truncate>
+                Kevin Dukkon
+              </Text>
+              <Text size="xs" c="dimmed" truncate>
+                kevin@strove.io
+              </Text>
+            </div>
+          </Group>
+        </Menu.Item>
+
+        <Menu.Divider />
+
         {/* Status Section */}
         <Menu.Item
           leftSection={

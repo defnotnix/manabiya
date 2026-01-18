@@ -1,7 +1,17 @@
 "use client";
 
-import { Box, Container, Breadcrumbs, Text, Stack, Group } from "@mantine/core";
+import {
+  Box,
+  Container,
+  Breadcrumbs,
+  Text,
+  Stack,
+  Group,
+  ActionIcon,
+  Button,
+} from "@mantine/core";
 import { PropFormShellHeader } from "../../FormShell.type";
+import { ArrowLeftIcon, HouseIcon } from "@phosphor-icons/react";
 
 export function FormShellHeader({
   bread,
@@ -9,47 +19,39 @@ export function FormShellHeader({
   title,
 }: PropFormShellHeader) {
   return (
-    <Box
-      py="md"
-      bg="var(--mantine-color-gray-0)"
-      style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
-    >
-      <Container size="sm">
-        <Stack gap="sm">
+    <>
+      <Box
+        bg="var(--mantine-color-gray-0)"
+        style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+      >
+        <Group pr="lg" h={40} justify="space-between">
           {/* Breadcrumbs */}
-          {bread && bread.length > 0 && (
-            <Breadcrumbs>
-              {bread.map((item, idx) =>
-                item.link ? (
-                  <Text key={idx} size="sm" component="a" href={item.link}>
-                    {item.label}
-                  </Text>
-                ) : (
-                  <Text key={idx} size="sm">
-                    {item.label}
-                  </Text>
-                )
-              )}
-            </Breadcrumbs>
-          )}
+
+          <Group gap="xs" justify="space-between">
+            <Button
+              h={40}
+              radius={0}
+              variant="light"
+              size="xs"
+              leftSection={<ArrowLeftIcon />}
+            >
+              Back to Applicants
+            </Button>
+            <Text fw={800} size="xs">
+              {title}
+            </Text>
+            <Text fw={800} size="xs" c="dimmed">
+              Description for the page.
+            </Text>
+          </Group>
+
+          <Text fw={800} size="xs" c="dimmed">
+            Please make sure all fields are fielld with proper values.
+          </Text>
 
           {/* Title & Module Info */}
-          <Group justify="space-between" align="flex-start">
-            <div>
-              {title && (
-                <Text fw={700} size="lg">
-                  {title}
-                </Text>
-              )}
-              {moduleInfo?.name && (
-                <Text size="sm" opacity={0.7}>
-                  {moduleInfo.name}
-                </Text>
-              )}
-            </div>
-          </Group>
-        </Stack>
-      </Container>
-    </Box>
+        </Group>
+      </Box>
+    </>
   );
 }

@@ -1,9 +1,32 @@
 "use client";
 
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 
-async function handleTokenExpiry() {
-  const refreshToken = sessionStorage.getItem("kcrtoken");
+// Type definitions
+interface ApiResponse<T = any> {
+  err: boolean;
+  data: T | null;
+  error?: string;
+}
+
+interface ApiErrorResponse {
+  message?: string;
+}
+
+const TOKEN_KEYS = {
+  access: "kcatoken",
+  refresh: "kcrtoken",
+} as const;
+
+// Helper to get auth header
+function getAuthHeader(): Record<string, string> {
+  const token = sessionStorage.getItem(TOKEN_KEYS.access);
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+// Token expiry handler
+async function handleTokenExpiry(): Promise<boolean> {
+  const refreshToken = sessionStorage.getItem(TOKEN_KEYS.refresh);
 
   if (!refreshToken) {
     console.error("No refresh token available");
@@ -12,11 +35,11 @@ async function handleTokenExpiry() {
 
   try {
     const response = await axios.post("/api/auth/token/refresh/", {
-      refresh: refreshToken
+      refresh: refreshToken,
     });
 
     if (response.data.access) {
-      sessionStorage.setItem("kcatoken", response.data.access);
+      sessionStorage.setItem(TOKEN_KEYS.access, response.data.access);
       console.log("Token refreshed successfully");
       return true;
     }
@@ -28,219 +51,134 @@ async function handleTokenExpiry() {
   }
 }
 
-function triggerLogout(res: any) {
-  // Clear tokens
-  sessionStorage.removeItem("kcatoken");
-  sessionStorage.removeItem("kcrtoken");
+function triggerLogout(): void {
+  sessionStorage.removeItem(TOKEN_KEYS.access);
+  sessionStorage.removeItem(TOKEN_KEYS.refresh);
 
-  // Trigger navigation to login page
   if (typeof window !== "undefined") {
     window.location.href = "/login";
   }
 }
 
-export async function get({
+// Generic error handler
+async function handleApiError<T>(
+  error: AxiosError<ApiErrorResponse>,
+  retryFn: () => Promise<ApiResponse<T>>
+): Promise<ApiResponse<T>> {
+  if (error.response?.data?.message === "Token Expired") {
+    const refreshed = await handleTokenExpiry();
+    if (refreshed) {
+      return retryFn();
+    }
+    triggerLogout();
+  } else if (error.code === "ERR_NETWORK") {
+    console.error("Server Offline");
+    return { err: true, data: null, error: "Server is offline" };
+  }
+
+  return {
+    err: true,
+    data: null,
+    error: error.message || "An error occurred",
+  };
+}
+
+// Generic request wrapper
+async function makeRequest<T>(
+  method: "get" | "post" | "patch" | "delete",
+  endpoint: string,
+  data: any,
+  config: any,
+  retryFn?: () => Promise<ApiResponse<T>>
+): Promise<ApiResponse<T>> {
+  try {
+    let response;
+    if (method === "get" || method === "delete") {
+      response = await axios[method](endpoint, config);
+    } else {
+      response = await axios[method](endpoint, data, config);
+    }
+    return { err: false, data: response.data };
+  } catch (error: any) {
+    if (!retryFn) {
+      retryFn = () => makeRequest(method, endpoint, data, config);
+    }
+    return handleApiError(error, retryFn);
+  }
+}
+
+export async function get<T = any>({
   endpoint = "",
   params = {},
 }: {
   endpoint: string;
-  params?: any;
-}) {
-  try {
-    const response = await axios.get(endpoint, {
-      params,
-
-      headers: {
-        Authorization: "Bearer " + sessionStorage.getItem("kcatoken"),
-      },
-    });
-
-    return {
-      err: false,
-      data: response.data,
-    };
-  } catch (error: any) {
-    let err: any = new Error("Error");
-
-    if (error?.response?.data?.message == "Token Expired") {
-      const res = await handleTokenExpiry();
-
-      if (res) {
-        return await get({ endpoint, params });
-      } else {
-        triggerLogout(res);
-        return {
-          err: true,
-          data: null,
-        };
-      }
-    } else {
-      if (error?.code == "ERR_NETWORK") {
-        console.log("Server Offline");
-        return {
-          err: true,
-          data: null,
-        };
-      } else {
-        err.object = error;
-        return {
-          err: true,
-          data: null,
-        };
-      }
-    }
-  }
+  params?: Record<string, any>;
+}): Promise<ApiResponse<T>> {
+  return makeRequest<T>("get", endpoint, null, {
+    params,
+    headers: getAuthHeader(),
+  });
 }
 
-export async function post({
+export async function post<T = any>({
   endpoint = "",
   body,
-  headers,
+  headers = {},
+  noAuthorization = false,
 }: {
   endpoint: string;
   body: any;
-  headers?: any;
-}) {
-  try {
-    const response = await axios.post(endpoint, body, {
-      headers: {
-        ...headers,
-        Authorization: "Bearer " + sessionStorage.getItem("kcatoken"),
-      },
-    });
-    console.log(response);
-
-    return {
-      err: false,
-      data: response.data,
-    };
-  } catch (error: any) {
-    let err: any = new Error("Error");
-
-    if (error?.response?.data?.message == "Token Expired") {
-      const res = await handleTokenExpiry();
-
-      if (res) {
-        return await post({ endpoint, body, headers });
-      } else {
-        triggerLogout(res);
-        return {
-          err: true,
-          data: null,
-        };
-      }
-    } else {
-      err.object = error;
-      return {
-        err: true,
-        data: null,
-      };
-    }
-  }
-}
-
-export async function patch({
-  endpoint = "",
-  body,
-  headers,
-}: {
-  endpoint: string;
-  body: any;
-  headers?: any;
-}) {
-  try {
-    const response = await axios.patch(endpoint, body, {
-      headers: {
-        ...headers,
-        Authorization: "Bearer " + sessionStorage.getItem("kcatoken"),
-      },
-    });
-    return {
-      err: false,
-      data: response.data,
-    };
-  } catch (error: any) {
-    let err: any = new Error("Error");
-
-    if (error?.response?.data?.message == "Token Expired") {
-      const res = await handleTokenExpiry();
-
-      if (res) {
-        return await patch({ endpoint, body, headers });
-      } else {
-        triggerLogout(res);
-        return {
-          err: true,
-          data: null,
-        };
-      }
-    } else {
-      err.object = error;
-      return {
-        err: true,
-        data: null,
-      };
-    }
-  }
-}
-
-export async function del({
-  endpoint = "",
-  id,
-  headers,
-}: {
-  endpoint: string;
-  headers?: any;
-  id: string;
-}) {
-  try {
-    const response = await axios.delete(endpoint + id + "/", {
-      headers: {
-        ...headers,
-        Authorization: "Bearer " + sessionStorage.getItem("kcatoken"),
-      },
-    });
-    return {
-      err: false,
-      data: response.data,
-    };
-  } catch (error: any) {
-    let err: any = new Error("Error");
-
-    if (error?.response?.data?.message == "Token Expired") {
-      const res = await handleTokenExpiry();
-
-      if (res) {
-        return await del({ endpoint, id, headers });
-      } else {
-        triggerLogout(res);
-        return {
-          err: true,
-          data: null,
-        };
-      }
-    } else {
-      err.object = error;
-      return {
-        err: true,
-        data: null,
-      };
-    }
-  }
-}
-
-export async function login({
-  endpoint = "",
-  body,
-}: {
-  endpoint: string;
-  body: any;
-}) {
-  return post({
-    endpoint,
-    body,
+  headers?: Record<string, any>;
+  noAuthorization?: boolean;
+}): Promise<ApiResponse<T>> {
+  return makeRequest<T>("post", endpoint, body, {
     headers: {
-      withCredentials: true,
+      ...headers,
+      ...(noAuthorization ? {} : getAuthHeader()),
     },
   });
+}
+
+export async function patch<T = any>({
+  endpoint = "",
+  body,
+  headers = {},
+}: {
+  endpoint: string;
+  body: any;
+  headers?: Record<string, any>;
+}): Promise<ApiResponse<T>> {
+  return makeRequest<T>("patch", endpoint, body, {
+    headers: {
+      ...headers,
+      ...getAuthHeader(),
+    },
+  });
+}
+
+export async function del<T = any>({
+  endpoint = "",
+  id,
+  headers = {},
+}: {
+  endpoint: string;
+  id: string;
+  headers?: Record<string, any>;
+}): Promise<ApiResponse<T>> {
+  return makeRequest<T>("delete", `${endpoint}${id}/`, null, {
+    headers: {
+      ...headers,
+      ...getAuthHeader(),
+    },
+  });
+}
+
+export async function login<T = any>({
+  endpoint = "",
+  body,
+}: {
+  endpoint: string;
+  body: any;
+}): Promise<ApiResponse<T>> {
+  return post({ endpoint, body, noAuthorization: true });
 }
