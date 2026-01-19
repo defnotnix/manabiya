@@ -2,9 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { Box, Stack } from "@mantine/core";
-import { Tabs } from "@settle/admin";
+import { Box, Container, Paper } from "@mantine/core";
 
+import { DataTableWrapper } from "@settle/core";
 import { PropDataTableShell } from "./DataTableShell.type";
 import { DataTableShellDataTable } from "./components/DataTable";
 import { DataTableShellHeader } from "./components/Header";
@@ -48,17 +48,28 @@ export function DataTableShell({
       columns.map((cinfo: any) => ({
         ...cinfo,
         visible: true,
-      }))
+      })),
     );
   }, [columns]);
 
   // * FUNCTIONS
 
+  const { resetPage } = DataTableWrapper.useDataTableWrapperStore();
+
+  const handleTabChange = useCallback(
+    (index: number) => {
+      setActiveTab(index);
+      // Reset to page 1 when switching tabs
+      resetPage();
+    },
+    [resetPage],
+  );
+
   const handleToggleColumn = useCallback((index: number) => {
     setCustomColumns((prev: any) =>
       prev.map((cinfo: any, cindex: number) =>
-        cindex === index ? { ...cinfo, visible: !cinfo.visible } : cinfo
-      )
+        cindex === index ? { ...cinfo, visible: !cinfo.visible } : cinfo,
+      ),
     );
   }, []);
 
@@ -67,50 +78,51 @@ export function DataTableShell({
       prev.map((e: any) => ({
         ...e,
         visible: true,
-      }))
+      })),
     );
   }, []);
 
   const [selectedRecords, setSelectedRecords] = useState<any[]>([]);
 
+  const activeTabConfig = tabs[activeTab];
+
   const contextValue = {
     selectedRecords,
     setSelectedRecords,
+    activeTab,
+    activeTabConfig,
+    setActiveTab: handleTabChange,
   };
 
   return (
     <DataTableShellContext.Provider value={contextValue}>
-      <Stack gap={0} h="100%">
+      <Container size="xl" w="100%">
         <DataTableShellHeader
           moduleInfo={moduleInfo}
           newButtonHref={newButtonHref}
           sustained={sustained}
           onNewClick={onNewClick}
         />
+      </Container>
 
-        {/* Tabs */}
-        {tabs.length > 0 && (
-          <Tabs
-            px={0}
-            active={activeTab}
-            onTabChange={setActiveTab}
-            tabs={tabs}
-          />
-        )}
-
+      <Container size="xl">
         {/* Toolbar */}
         <DataTableShellToolbar
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={handleTabChange}
           hideFilters={hideFilters}
           filterList={filterList}
           customColumns={customColumns}
           onToggleColumn={handleToggleColumn}
           onResetColumns={handleResetColumns}
         />
+      </Container>
 
-        {/* Table */}
-        <Box
-          pos="relative"
-          style={{ flex: 1, overflow: "hidden" }}
+      <Container size="xl" h="100%" mt="md">
+        <Paper
+          withBorder
+          style={{ borderTop: "none", flex: 1, overflow: "hidden" }}
         >
           <DataTableShellDataTable
             idAccessor={idAccessor}
@@ -122,16 +134,16 @@ export function DataTableShell({
             rowStyle={rowStyle}
             pageSizes={pageSizes}
           />
+        </Paper>
 
-          <DataTableShellTableActions
-            idAccessor={idAccessor}
-            sustained={sustained}
-            onEditClick={onEditClick}
-            onDeleteClick={onDeleteClick}
-            onReviewClick={onReviewClick}
-          />
-        </Box>
-      </Stack>
+        <DataTableShellTableActions
+          idAccessor={idAccessor}
+          sustained={sustained}
+          onEditClick={onEditClick}
+          onDeleteClick={onDeleteClick}
+          onReviewClick={onReviewClick}
+        />
+      </Container>
     </DataTableShellContext.Provider>
   );
 }

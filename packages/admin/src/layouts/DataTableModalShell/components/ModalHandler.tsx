@@ -7,172 +7,257 @@ import {
   LoadingOverlay,
   Button,
   Group,
+  Divider,
+  SimpleGrid,
+  Paper,
 } from "@mantine/core";
+import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
-import { PropDataTableModalShell } from "../DataTableModalShell.type";
+import {
+  PropModalHandler,
+  PropModalStepper,
+  PropSharedModalBody,
+  PropSharedModalContent,
+} from "../DataTableModalShell.type";
 import { useDataTableModalShellContext } from "../DataTableModalShell.context";
-import { DataTableWrapper } from "@settle/core";
-import { FormWrapper } from "@settle/core";
+import { DataTableWrapper, FormWrapper } from "@settle/core";
+import {
+  CheckIcon,
+  EraserIcon,
+  XIcon,
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  WarningIcon,
+} from "@phosphor-icons/react";
+import { Step } from "../../FormShell/FormShell.type";
 
 export const useEditFormContext = FormWrapper.useForm;
 export const useFormProps = FormWrapper.useFormProps;
 
 // ─────────────────────────────────────────────
-// Create Modal Content Component
+// Modal Stepper Component
 // ─────────────────────────────────────────────
 
-interface CreateModalContentProps {
-  moduleTerm: string;
-  idAccessor: string;
-  transformOnCreate: any;
-  onCreateApi: any;
-  handleCreateSuccess: (res: any) => void;
-  handleCreateError: (err: any) => void;
-  closeCreateModal: () => void;
-  createFormComponent: any;
-}
-
-function CreateModalContent({
-  moduleTerm,
-  idAccessor,
-  transformOnCreate,
-  onCreateApi,
-  handleCreateSuccess,
-  handleCreateError,
-  closeCreateModal,
-  createFormComponent,
-}: CreateModalContentProps) {
+function ModalStepper({ steps, currentStep }: PropModalStepper) {
   return (
-    <FormWrapper
-      queryKey={`create.${moduleTerm.toLowerCase()}`}
-      formName={`create-${moduleTerm.toLowerCase()}`}
-      mode="uncontrolled"
-      initial={{}}
-      steps={1}
-      validation={[]}
-      disabledSteps={[]}
-      primaryKey={idAccessor}
-      apiSubmitFn={async (data: any) => {
-        const dataToSubmit = transformOnCreate ? transformOnCreate(data) : data;
-        return onCreateApi?.(dataToSubmit);
-      }}
-      transformFnSubmit={(formdata) => formdata}
-      formClearOnSuccess={true}
-      submitSuccessFn={(res) => handleCreateSuccess(res)}
-      submitErrorFn={(err) => handleCreateError(err)}
-      notifications={{
-        isLoading: () => {},
-        isSuccess: () => {},
-        isWarning: () => {},
-        isError: () => {},
-        isValidationError: () => {},
-        isValidationStepError: () => {},
-        isInfo: () => {},
-      }}
-    >
-      <CreateModalBody
-        createFormComponent={createFormComponent}
-        closeCreateModal={closeCreateModal}
-      />
-    </FormWrapper>
+    <SimpleGrid spacing={0} cols={steps.length}>
+      {steps.map((step, index) => {
+        // const isCompleted = index < currentStep;
+        // const isActive = index === currentStep;
+
+        const label = typeof step === "string" ? step : step.label;
+
+        return (
+          <Paper
+            key={index}
+            radius={0}
+            px="md"
+            py="xs"
+            bg={
+              currentStep > index
+                ? "var(--mantine-color-blue-light)"
+                : currentStep === index
+                  ? "var(--mantine-color-brand-light)"
+                  : "transparent"
+            }
+          >
+            <Group wrap="nowrap" gap="xs">
+              {currentStep > index && <CheckIcon weight="bold" size={12} />}
+              <div>
+                <Text size={"10px"} opacity={0.5}>
+                  {index + 1} of {steps.length}
+                </Text>
+                <Text fw={800} size="xs">
+                  {label}
+                </Text>
+              </div>
+            </Group>
+          </Paper>
+        );
+      })}
+    </SimpleGrid>
   );
 }
 
-interface CreateModalBodyProps {
-  createFormComponent: any;
-  closeCreateModal: () => void;
-}
+// ─────────────────────────────────────────────
+// Shared Modal Body Component
+// ─────────────────────────────────────────────
 
-function CreateModalBody({
-  createFormComponent,
-  closeCreateModal,
-}: CreateModalBodyProps) {
-  const { isLoading, handleSubmit } = FormWrapper.useFormProps();
+function SharedModalBody({
+  formComponent,
+  closeModal,
+  stepLabels,
+  totalSteps,
+  isCreate,
+}: PropSharedModalBody) {
+  const { isLoading, handleSubmit, handleStepNext, handleStepBack, current } =
+    FormWrapper.useFormProps();
+
+  const isMultiStep = totalSteps > 1;
+  const isFirstStep = current === 0;
+  const isLastStep = current === totalSteps - 1;
 
   return (
-    <Stack gap="lg">
+    <Stack gap={0}>
+      {/* Step indicator for multi-step forms */}
+      {isMultiStep && stepLabels && stepLabels.length > 0 && (
+        <ModalStepper steps={stepLabels} currentStep={current} />
+      )}
+
+      {isMultiStep && <Divider />}
+
       <div>
-        {createFormComponent ? (
-          typeof createFormComponent === "function" ? (
+        {formComponent ? (
+          typeof formComponent === "function" ? (
             (
-              createFormComponent as (props: {
+              formComponent as (props: {
                 isCreate: boolean;
+                currentStep: number;
               }) => React.ReactNode
             )({
-              isCreate: true,
+              isCreate,
+              currentStep: current,
             })
           ) : (
-            <div>{createFormComponent as React.ReactNode}</div>
+            <div>{formComponent as React.ReactNode}</div>
           )
         ) : (
-          <Text size="sm" color="dimmed">
+          <Text size="sm" c="dimmed" p="md">
             No form component provided
           </Text>
         )}
       </div>
 
-      <Group justify="flex-end" gap="sm" p="md">
-        <Button variant="light" onClick={closeCreateModal} disabled={isLoading}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} loading={isLoading}>
-          Create
-        </Button>
+      <Divider />
+
+      <Group justify="space-between" p="md">
+        {/* Left side - Cancel or Back button */}
+        {isMultiStep && !isFirstStep ? (
+          <Button
+            size="xs"
+            variant="light"
+            onClick={handleStepBack}
+            disabled={isLoading}
+            leftSection={<ArrowLeftIcon />}
+          >
+            Previous
+          </Button>
+        ) : (
+          <Button
+            size="xs"
+            variant="light"
+            onClick={closeModal}
+            disabled={isLoading}
+            leftSection={<XIcon />}
+          >
+            Cancel
+          </Button>
+        )}
+
+        {/* Right side - Next/Submit buttons */}
+        <Group justify="flex-end" gap="xs">
+          {isCreate && !isMultiStep && (
+            <Button
+              size="xs"
+              variant="light"
+              onClick={closeModal}
+              disabled={isLoading}
+              leftSection={<EraserIcon />}
+            >
+              Clear Fields
+            </Button>
+          )}
+
+          {isMultiStep && !isLastStep ? (
+            <Button
+              size="xs"
+              onClick={handleStepNext}
+              loading={isLoading}
+              rightSection={<ArrowRightIcon />}
+            >
+              Next
+            </Button>
+          ) : (
+            <Button
+              size="xs"
+              onClick={handleSubmit}
+              loading={isLoading}
+              rightSection={<CheckIcon />}
+            >
+              {isCreate ? "Create" : "Update"}
+            </Button>
+          )}
+        </Group>
       </Group>
     </Stack>
   );
 }
 
 // ─────────────────────────────────────────────
-// Edit Modal Content Component
+// Shared Modal Content Component
 // ─────────────────────────────────────────────
 
-interface EditModalContentProps {
-  moduleTerm: string;
-  idAccessor: string;
-  transformOnEdit: any;
-  onEditApi: any;
-  handleEditSuccess: (res: any) => void;
-  handleEditError: (err: any) => void;
-  closeEditModal: () => void;
-  editFormComponent: any;
-  activeEditRecord: any;
-  editLoading: boolean;
-}
-
-function EditModalContent({
+function SharedModalContent({
   moduleTerm,
   idAccessor,
-  transformOnEdit,
-  onEditApi,
-  handleEditSuccess,
-  handleEditError,
-  closeEditModal,
-  editFormComponent,
-  activeEditRecord,
-  editLoading,
-}: EditModalContentProps) {
+  apiFunction,
+  onSuccessCallback,
+  onErrorCallback,
+  closeModal,
+  formComponent,
+  formConfig,
+  mode,
+  activeRecord,
+  transformData,
+  loading = false,
+}: PropSharedModalContent) {
+  const isCreate = mode === "create";
+  const formName = `${mode}-${moduleTerm.toLowerCase()}`;
+  const queryKey = `${mode}.${moduleTerm.toLowerCase()}`;
+
+  // Merge initial values with active record if editing
+  const initialValues = isCreate
+    ? (formConfig?.initial ?? {})
+    : { ...(formConfig?.initial ?? {}), ...activeRecord };
+
+  // Determine form clearing
+  const shouldClear = formConfig?.formClearOnSuccess ?? isCreate;
+
   return (
     <Stack gap="lg" pos="relative">
-      <LoadingOverlay visible={editLoading} />
-      {editFormComponent && activeEditRecord ? (
+      <LoadingOverlay visible={loading} />
+
+      {/* Check if we have what we need to render */}
+      {!isCreate && !activeRecord ? (
+        <Text size="sm" c="dimmed">
+          Loading...
+        </Text>
+      ) : (
         <FormWrapper
-          queryKey={`edit.${moduleTerm.toLowerCase()}`}
-          formName={`edit-${moduleTerm.toLowerCase()}`}
+          queryKey={queryKey}
+          formName={formName}
           mode="uncontrolled"
-          initial={activeEditRecord}
-          steps={1}
-          validation={[]}
-          disabledSteps={[]}
+          initial={initialValues}
+          steps={formConfig?.steps ?? 1}
+          validation={formConfig?.validation ?? []}
+          disabledSteps={formConfig?.disabledSteps ?? []}
+          stepValidationFn={formConfig?.stepValidationFn}
           primaryKey={idAccessor}
           apiSubmitFn={async (data: any) => {
-            const dataToSubmit = transformOnEdit ? transformOnEdit(data) : data;
-            return onEditApi?.(data[idAccessor], dataToSubmit);
+            const dataToSubmit = transformData ? transformData(data) : data;
+            if (isCreate) {
+              return apiFunction?.(dataToSubmit);
+            } else {
+              return apiFunction?.(data[idAccessor], dataToSubmit);
+            }
           }}
           transformFnSubmit={(formdata) => formdata}
-          formClearOnSuccess={false}
-          submitSuccessFn={(res) => handleEditSuccess(res)}
-          submitErrorFn={(err) => handleEditError(err)}
+          submitFormat={formConfig?.submitFormat}
+          hasDirtCheck={formConfig?.hasDirtCheck}
+          formatJsonSubmitConfig={formConfig?.formatJsonSubmitConfig}
+          formClearOnSuccess={shouldClear}
+          submitSuccessFn={onSuccessCallback}
+          submitErrorFn={onErrorCallback}
           notifications={{
             isLoading: () => {},
             isSuccess: () => {},
@@ -183,75 +268,22 @@ function EditModalContent({
             isInfo: () => {},
           }}
         >
-          <EditModalBody
-            editFormComponent={editFormComponent}
-            closeEditModal={closeEditModal}
+          <SharedModalBody
+            formComponent={formComponent}
+            closeModal={closeModal}
+            stepLabels={formConfig?.stepLabels}
+            totalSteps={formConfig?.steps ?? 1}
+            isCreate={isCreate}
           />
         </FormWrapper>
-      ) : (
-        <Text size="sm" color="dimmed">
-          {activeEditRecord ? "Loading..." : "No form component provided"}
-        </Text>
       )}
     </Stack>
   );
 }
 
-interface EditModalBodyProps {
-  editFormComponent: any;
-  closeEditModal: () => void;
-}
-
-function EditModalBody({
-  editFormComponent,
-  closeEditModal,
-}: EditModalBodyProps) {
-  const { isLoading, handleSubmit } = FormWrapper.useFormProps();
-
-  return (
-    <Stack gap="lg">
-      <div>
-        {typeof editFormComponent === "function"
-          ? (
-              editFormComponent as (props: {
-                isCreate: boolean;
-              }) => React.ReactNode
-            )({
-              isCreate: false,
-            })
-          : (editFormComponent as React.ReactNode)}
-      </div>
-
-      <Group justify="flex-end" gap="sm">
-        <Button variant="light" onClick={closeEditModal} disabled={isLoading}>
-          Cancel
-        </Button>
-        <Button onClick={handleSubmit} loading={isLoading}>
-          Update
-        </Button>
-      </Group>
-    </Stack>
-  );
-}
-
-type ModalHandlerProps = Pick<
-  PropDataTableModalShell,
-  | "modalWidth"
-  | "onCreateApi"
-  | "onEditApi"
-  | "onCreateSuccess"
-  | "onEditSuccess"
-  | "onEditTrigger"
-  | "transformOnCreate"
-  | "transformOnEdit"
-  | "validator"
-  | "idAccessor"
-  | "createFormComponent"
-  | "editFormComponent"
-> & {
-  moduleName?: string;
-  moduleTerm?: string;
-};
+// ─────────────────────────────────────────────
+// Main Modal Handler
+// ─────────────────────────────────────────────
 
 export function ModalHandler({
   modalWidth = "md",
@@ -259,16 +291,20 @@ export function ModalHandler({
   onEditApi,
   onCreateSuccess,
   onEditSuccess,
-  onEditTrigger,
+  // onEditTrigger, // Not used in this component directly
   transformOnCreate,
   transformOnEdit,
-  validator,
+  // validator, // Not used
   idAccessor = "id",
   createFormComponent,
   editFormComponent,
+  createModalTitle,
+  editModalTitle,
+  createFormConfig,
+  editFormConfig,
   moduleName = "Item",
   moduleTerm = "Item",
-}: ModalHandlerProps) {
+}: PropModalHandler) {
   const {
     isCreateModalOpen,
     isEditModalOpen,
@@ -276,23 +312,28 @@ export function ModalHandler({
     editLoading,
     closeCreateModal,
     closeEditModal,
-    setEditLoading,
   } = useDataTableModalShellContext();
 
   const { refetch } = DataTableWrapper.useDataTableContext();
 
-  const handleCreateSuccess = (res: any) => {
-    notifications.show({
-      title: "Success",
-      message: `${moduleTerm} created successfully`,
-      color: "green",
-    });
-    onCreateSuccess?.(res);
-    closeCreateModal();
-    refetch();
-  };
+  // ─────────────────────────────────────────────
+  // Callbacks
+  // ─────────────────────────────────────────────
 
-  const handleCreateError = (err: any) => {
+  const handleSuccess =
+    (msg: string, callback?: (res: any) => void, closeFn?: () => void) =>
+    (res: any) => {
+      notifications.show({
+        title: "Success",
+        message: msg,
+        color: "green",
+      });
+      callback?.(res);
+      closeFn?.();
+      refetch();
+    };
+
+  const handleError = (msg: string) => (err: any) => {
     if (err.name === "ZodError") {
       const firstError = err.errors[0];
       notifications.show({
@@ -303,35 +344,7 @@ export function ModalHandler({
     } else {
       notifications.show({
         title: "Error",
-        message: `Failed to create ${moduleTerm}`,
-        color: "red",
-      });
-    }
-  };
-
-  const handleEditSuccess = (res: any) => {
-    notifications.show({
-      title: "Success",
-      message: `${moduleTerm} updated successfully`,
-      color: "green",
-    });
-    onEditSuccess?.(res);
-    closeEditModal();
-    refetch();
-  };
-
-  const handleEditError = (err: any) => {
-    if (err.name === "ZodError") {
-      const firstError = err.errors[0];
-      notifications.show({
-        title: "Validation Error",
-        message: `${firstError.path.join(".")}: ${firstError.message}`,
-        color: "red",
-      });
-    } else {
-      notifications.show({
-        title: "Error",
-        message: `Failed to update ${moduleTerm}`,
+        message: msg,
         color: "red",
       });
     }
@@ -343,22 +356,24 @@ export function ModalHandler({
       <Modal
         opened={isCreateModalOpen}
         onClose={closeCreateModal}
-        title={
-          <Text tt="uppercase" size="xs" fw={700}>
-            New {moduleTerm}
-          </Text>
-        }
+        title={createModalTitle ?? `New ${moduleTerm}`}
         size={modalWidth}
       >
-        <CreateModalContent
+        <SharedModalContent
+          mode="create"
           moduleTerm={moduleTerm}
           idAccessor={idAccessor}
-          transformOnCreate={transformOnCreate}
-          onCreateApi={onCreateApi}
-          handleCreateSuccess={handleCreateSuccess}
-          handleCreateError={handleCreateError}
-          closeCreateModal={closeCreateModal}
-          createFormComponent={createFormComponent}
+          apiFunction={onCreateApi}
+          transformData={transformOnCreate}
+          onSuccessCallback={handleSuccess(
+            `${moduleTerm} created successfully`,
+            onCreateSuccess,
+            closeCreateModal,
+          )}
+          onErrorCallback={handleError(`Failed to create ${moduleTerm}`)}
+          closeModal={closeCreateModal}
+          formComponent={createFormComponent}
+          formConfig={createFormConfig}
         />
       </Modal>
 
@@ -366,24 +381,26 @@ export function ModalHandler({
       <Modal
         opened={isEditModalOpen}
         onClose={closeEditModal}
-        title={
-          <Text tt="uppercase" size="xs" fw={700}>
-            Edit {moduleTerm}
-          </Text>
-        }
+        title={editModalTitle ?? `Edit ${moduleTerm}`}
         size={modalWidth}
       >
-        <EditModalContent
+        <SharedModalContent
+          mode="edit"
           moduleTerm={moduleTerm}
           idAccessor={idAccessor}
-          transformOnEdit={transformOnEdit}
-          onEditApi={onEditApi}
-          handleEditSuccess={handleEditSuccess}
-          handleEditError={handleEditError}
-          closeEditModal={closeEditModal}
-          editFormComponent={editFormComponent}
-          activeEditRecord={activeEditRecord}
-          editLoading={editLoading}
+          apiFunction={onEditApi}
+          transformData={transformOnEdit}
+          onSuccessCallback={handleSuccess(
+            `${moduleTerm} updated successfully`,
+            onEditSuccess,
+            closeEditModal,
+          )}
+          onErrorCallback={handleError(`Failed to update ${moduleTerm}`)}
+          closeModal={closeEditModal}
+          formComponent={editFormComponent}
+          formConfig={editFormConfig}
+          activeRecord={activeEditRecord}
+          loading={editLoading}
         />
       </Modal>
     </>

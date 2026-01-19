@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { usePathname } from "next/navigation";
 import {
   Badge,
@@ -27,7 +28,8 @@ export function DataTableShellHeader({
   onNewClick,
 }: PropDataTableHeader) {
   // * CONTEXT
-
+  const moreActionsMenuId = useId();
+  const newButtonMenuId = useId();
   const pathname = usePathname();
   const { refetch } = DataTableWrapper.useDataTableContext();
   const finalHref = newButtonHref || `${pathname}/new`;
@@ -55,8 +57,7 @@ export function DataTableShellHeader({
     : undefined;
 
   return (
-    <div suppressHydrationWarning>
-      <Stack gap="sm">
+    <Stack gap="sm">
         <Group justify="space-between" px="md" h={80}>
           <div>
             <Group gap={8}>
@@ -82,21 +83,19 @@ export function DataTableShellHeader({
           </div>
 
           <Group gap={4}>
-            <div suppressHydrationWarning>
-              <Menu>
-                <Menu.Target>
-                  <Button
-                    rightSection={<CaretDownIcon />}
-                    size="xs"
-                    variant="subtle"
-                    color="dark"
-                  >
-                    More Actions
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
-              </Menu>
-            </div>
+            <Menu id={moreActionsMenuId}>
+              <Menu.Target>
+                <Button
+                  rightSection={<CaretDownIcon />}
+                  size="xs"
+                  variant="subtle"
+                  color="dark"
+                >
+                  More Actions
+                </Button>
+              </Menu.Target>
+              <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
+            </Menu>
 
             <Button
               leftSection={<ArrowClockwiseIcon />}
@@ -130,20 +129,17 @@ export function DataTableShellHeader({
                 </Button>
               )}
 
-              <div suppressHydrationWarning>
-                <Menu>
-                  <Menu.Target>
-                    <Button size="xs" px={8} ml={1}>
-                      <CaretDownIcon />
-                    </Button>
-                  </Menu.Target>
-                  <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
-                </Menu>
-              </div>
+              <Menu id={newButtonMenuId}>
+                <Menu.Target>
+                  <Button size="xs" px={8} ml={1}>
+                    <CaretDownIcon />
+                  </Button>
+                </Menu.Target>
+                <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
+              </Menu>
             </ButtonGroup>
           </Group>
         </Group>
-      </Stack>
-    </div>
+    </Stack>
   );
 }

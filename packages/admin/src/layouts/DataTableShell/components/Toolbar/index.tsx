@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import {
-  Badge,
   Button,
   Checkbox,
   Divider,
@@ -12,8 +11,6 @@ import {
   Stack,
   Text,
   TextInput,
-  useMantineColorScheme,
-  useMantineTheme,
 } from "@mantine/core";
 import {
   CaretDownIcon,
@@ -23,12 +20,16 @@ import {
 } from "@phosphor-icons/react";
 
 import { useDebouncedValue } from "@mantine/hooks";
+import { Tabs } from "@settle/admin";
 import { DataTableWrapper } from "@settle/core";
 import { PropDataTableToolbar } from "../../DataTableShell.type";
 import { DataTableShellFilter } from "../TableFilters";
 import { DataTableShellSearchFilters } from "../SearchFilters";
 
 export function DataTableShellToolbar({
+  tabs,
+  activeTab,
+  onTabChange,
   filterList,
   hideFilters,
   customColumns,
@@ -40,8 +41,6 @@ export function DataTableShellToolbar({
   const { setSearch } = DataTableWrapper.useDataTableWrapperStore();
 
   // * STATE
-
-  const { colorScheme } = useMantineColorScheme();
 
   const [svalue, setSValue] = useState<string>("");
   const [debouncedSearch] = useDebouncedValue(svalue, 200);
@@ -56,19 +55,18 @@ export function DataTableShellToolbar({
 
   return (
     <>
-      <Group
-        gap="xs"
-        justify="space-between"
-        px="sm"
-        h={40}
-        bg={colorScheme == "dark" ? "dark.7" : "gray.1"}
-      >
+      <Group gap="xs" justify="space-between" px="sm" h={40}>
+        {tabs.length > 0 && (
+          <Tabs tabs={tabs} active={activeTab} onTabChange={onTabChange} />
+        )}
+
         <Group gap={4}>
+          <DataTableShellFilter filterList={filterList} />
+
           {/* Search */}
           <div suppressHydrationWarning>
             <TextInput
-             
-              miw={500}
+              miw={300}
               leftSection={<MagnifyingGlassIcon />}
               //  rightSection={<Loader size={12}/>}
               size="xs"
@@ -77,12 +75,7 @@ export function DataTableShellToolbar({
               onChange={(e) => setSValue(e.target.value)}
             />
           </div>
-         
 
-          <DataTableShellFilter filterList={filterList} />
-        </Group>
-
-        <Group gap={4}>
           <div suppressHydrationWarning>
             <Popover withArrow shadow="md">
               <Popover.Target>
@@ -96,7 +89,7 @@ export function DataTableShellToolbar({
                   leftSection={<GearSixIcon />}
                   rightSection={<CaretDownIcon />}
                 >
-                  Manage Columns
+                  Columns
                 </Button>
               </Popover.Target>
               <Popover.Dropdown p={0} w={200}>

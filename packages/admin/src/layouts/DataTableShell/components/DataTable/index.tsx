@@ -77,13 +77,13 @@ export function DataTableShellDataTable({
   // Apply optional forceFilter
   const visibleRecords = useMemo(
     () => (forceFilter ? forceFilter(sortedRecords) : sortedRecords),
-    [sortedRecords, forceFilter]
+    [sortedRecords, forceFilter],
   );
 
   // Visible columns (based on column visibility)
   const visibleColumns = useMemo(
     () => customColumns.filter((c: any) => c.visible),
-    [customColumns]
+    [customColumns],
   );
 
   // Transform columns to mantine-datatable format
@@ -96,7 +96,7 @@ export function DataTableShellDataTable({
         render: col.render, // Custom render function if provided
         cellsStyle: col.cellsStyle, // Pass through cellsStyle property
       })),
-    [visibleColumns]
+    [visibleColumns],
   );
 
   // Final columns passed to DataTable
@@ -111,12 +111,12 @@ export function DataTableShellDataTable({
       },
       ...transformedColumns,
     ],
-    [transformedColumns]
+    [transformedColumns],
   );
 
   const totalRecords = useMemo(
     () => (hasServerSearch ? totalItems : visibleRecords.length),
-    [hasServerSearch, totalItems, visibleRecords.length]
+    [hasServerSearch, totalItems, visibleRecords.length],
   );
 
   // * FUNCTIONS
@@ -126,7 +126,7 @@ export function DataTableShellDataTable({
     (nextPage: number) => {
       setPage(nextPage);
     },
-    [setPage]
+    [setPage],
   );
 
   const handlePageSizeChange = useCallback(
@@ -134,14 +134,14 @@ export function DataTableShellDataTable({
       setPageSize(nextSize);
       setPage(1);
     },
-    [setPageSize, setPage]
+    [setPageSize, setPage],
   );
 
   const handleSelectionChange = useCallback(
     (selection: any[]) => {
       setSelectedRecords(selection);
     },
-    [setSelectedRecords]
+    [setSelectedRecords],
   );
 
   const handleClearSelection = useCallback(() => {
@@ -152,6 +152,7 @@ export function DataTableShellDataTable({
     <>
       <Divider />
       <DataTable
+        mih={500}
         striped
         withColumnBorders
         idAccessor={idAccessor}

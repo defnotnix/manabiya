@@ -38,14 +38,15 @@ type DataTableShellFilterProps = {
 export function DataTableShellFilter({
   filterList,
 }: DataTableShellFilterProps) {
-  const { addFilter, resetFilter } = DataTableWrapper.useDataTableWrapperStore();
+  const { addFilter, resetFilter } =
+    DataTableWrapper.useDataTableWrapperStore();
 
   return (
     <>
       <Menu withArrow>
         <Menu.Target>
           <Button variant="subtle" size="xs" rightSection={<CaretDownIcon />}>
-            Manage Filters
+            Filters
           </Button>
         </Menu.Target>
 

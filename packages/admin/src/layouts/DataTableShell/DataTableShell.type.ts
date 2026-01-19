@@ -1,3 +1,5 @@
+import type { PropTabsTab } from "@settle/admin";
+
 // ─────────────────────────────────────────────
 // Shared bits
 // ─────────────────────────────────────────────
@@ -38,6 +40,9 @@ export type PropDataTableHeader = {
 // ─────────────────────────────────────────────
 
 export type PropDataTableToolbar = PropSustained & {
+  tabs: PropTabsTab[];
+  activeTab: number;
+  onTabChange: (index: number) => void;
   customColumns: any[];
   hideFilters?: boolean;
   filterList: any[];
@@ -66,7 +71,7 @@ export type PropDataTableShellDataTable = PropRowStyle &
 export type PropDataTableShell = PropSustained &
   PropDataTableHeader &
   PropDataTableShellDataTable & {
-    tabs?: any[];
+    tabs?: PropTabsTab[];
     hideFilters?: boolean;
     filterList: any[];
     tableActions?: any[];

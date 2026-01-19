@@ -35,6 +35,10 @@ export function DataTableModalShell({
   // Modal-specific props
   modalWidth = "md",
   modalFormConfig,
+  createFormConfig,
+  editFormConfig,
+  createModalTitle,
+  editModalTitle,
 
   // API handlers
   onCreateApi,
@@ -251,6 +255,10 @@ export function DataTableModalShell({
           idAccessor={idAccessor}
           createFormComponent={createFormComponent}
           editFormComponent={editFormComponent}
+          createModalTitle={createModalTitle}
+          editModalTitle={editModalTitle}
+          createFormConfig={createFormConfig ?? modalFormConfig}
+          editFormConfig={editFormConfig ?? modalFormConfig}
           moduleName={moduleInfo?.name || "Item"}
           moduleTerm={moduleInfo?.term || "Item"}
         />

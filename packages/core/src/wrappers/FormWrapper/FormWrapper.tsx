@@ -77,7 +77,7 @@ export function FormWrapper({
     mode: mode,
     name: formName,
     initialValues: initial,
-    //validate: validation.length > 0 ? validation[current] : undefined,
+    validate: validation.length > 0 ? validation[current] : undefined,
   });
 
   // * PRELOADING
@@ -165,7 +165,7 @@ export function FormWrapper({
       // ? ID for Edit Requests
       form.getValues()?.[primaryKey],
       // ? Full Initial Values
-      form.getValues()
+      form.getValues(),
     );
   }
 
