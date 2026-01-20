@@ -1,21 +1,9 @@
 "use client";
 
-import { usePathname, useRouter } from "next/navigation";
-import {
-  Breadcrumbs,
-  Text,
-  Anchor,
-  Group,
-  Button,
-  Box,
-  ThemeIcon,
-  ActionIcon,
-  Paper,
-  Divider,
-} from "@mantine/core";
-import { ArrowLeftIcon, CaretLeft, CaretLeftIcon } from "@phosphor-icons/react";
+import { Anchor, Breadcrumbs, Container, Group, Text } from "@mantine/core";
+import { CaretRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
-import React from "react";
+import { usePathname, useRouter } from "next/navigation";
 
 export function AutoBreadcrumb() {
   const pathname = usePathname();
@@ -52,7 +40,7 @@ export function AutoBreadcrumb() {
         {title}
       </Text>
     ) : (
-      <Anchor component={Link} href={href} key={href} size="xs">
+      <Anchor component={Link} href={href} key={href} size="xs" fw={800}>
         {title}
       </Anchor>
     );
@@ -67,9 +55,9 @@ export function AutoBreadcrumb() {
 
   return (
     <>
-      {/* <Paper px="md">
-        <Group h={30} gap="xs" align="center">
-          {showBackButton && (
+      <Container size="xl">
+        <Group h={30} gap="xs" align="flex-end">
+          {/* {showBackButton && (
             <ActionIcon
               variant="light"
               color="gray"
@@ -79,11 +67,15 @@ export function AutoBreadcrumb() {
             >
               <ArrowLeftIcon weight="bold" />
             </ActionIcon>
-          )}
-          <Breadcrumbs>{items}</Breadcrumbs>
+          )} */}
+          <Breadcrumbs
+            separatorMargin={8}
+            separator={<CaretRightIcon size={10} weight="bold" />}
+          >
+            {items}
+          </Breadcrumbs>
         </Group>
-      </Paper>
-      <Divider /> */}
+      </Container>
     </>
   );
 }

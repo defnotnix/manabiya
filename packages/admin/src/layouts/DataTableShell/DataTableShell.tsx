@@ -11,6 +11,7 @@ import { DataTableShellHeader } from "./components/Header";
 import { DataTableShellTableActions } from "./components/TableActions";
 import { DataTableShellToolbar } from "./components/Toolbar";
 import { Context as DataTableShellContext } from "./DataTableShell.context";
+import { DataTableShellSearchFilters } from "./components/SearchFilters";
 
 export function DataTableShell({
   sustained = false,
@@ -35,6 +36,7 @@ export function DataTableShell({
   onReviewClick,
 }: PropDataTableShell) {
   // * CONTEXT
+  const { filters } = DataTableWrapper.useDataTableWrapperStore();
 
   // * STATE
 
@@ -83,6 +85,7 @@ export function DataTableShell({
   }, []);
 
   const [selectedRecords, setSelectedRecords] = useState<any[]>([]);
+  const [deleting, setDeleting] = useState(false);
 
   const activeTabConfig = tabs[activeTab];
 
@@ -92,6 +95,8 @@ export function DataTableShell({
     activeTab,
     activeTabConfig,
     setActiveTab: handleTabChange,
+    deleting,
+    setDeleting,
   };
 
   return (
@@ -108,6 +113,7 @@ export function DataTableShell({
       <Container size="xl">
         {/* Toolbar */}
         <DataTableShellToolbar
+          moduleInfo={moduleInfo}
           tabs={tabs}
           activeTab={activeTab}
           onTabChange={handleTabChange}
@@ -119,11 +125,14 @@ export function DataTableShell({
         />
       </Container>
 
-      <Container size="xl" h="100%" mt="md">
+      <Container size="xl" mt="md">
         <Paper
+          h={`calc(100vh - ${filters.length ? 180 : 180}px)`}
           withBorder
-          style={{ borderTop: "none", flex: 1, overflow: "hidden" }}
+          style={{ borderTop: "none", overflow: "hidden" }}
         >
+          <DataTableShellSearchFilters />
+
           <DataTableShellDataTable
             idAccessor={idAccessor}
             columns={columns}

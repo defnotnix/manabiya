@@ -118,20 +118,37 @@ export function DataTableModalShell({
       const idToSubmit = transformOnDelete ? transformOnDelete(id) : id;
       return onDeleteApi?.(idToSubmit);
     },
-    onSuccess: (res, id) => {
-      notifications.show({
+    onMutate: () => {
+      return notifications.show({
+        loading: true,
+        title: "Deleting",
+        message: "Please wait...",
+        autoClose: false,
+        withCloseButton: false,
+      });
+    },
+    onSuccess: (res, id, notificationId) => {
+      notifications.update({
+        id: notificationId,
+        loading: false,
         title: "Success",
         message: "Item deleted successfully",
         color: "green",
+        autoClose: 3000,
+        withCloseButton: true,
       });
       onDeleteSuccess?.(id);
       refetch();
     },
-    onError: () => {
-      notifications.show({
+    onError: (_error, _id, notificationId) => {
+      notifications.update({
+        id: notificationId,
+        loading: false,
         title: "Error",
         message: "Failed to delete item",
         color: "red",
+        autoClose: 5000,
+        withCloseButton: true,
       });
     },
   });

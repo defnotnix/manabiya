@@ -27,7 +27,7 @@ export function AdminShell({
     <>
       <AppShell
         navbar={{
-          width: 330,
+          width: 300,
           breakpoint: "sm",
           // collapsed: { mobile: !opened },
         }}

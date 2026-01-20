@@ -58,88 +58,81 @@ export function DataTableShellHeader({
 
   return (
     <Stack gap="sm">
-        <Group justify="space-between" px="md" h={80}>
-          <div>
-            <Group gap={8}>
-              <div>
-                <Text size="xl" fw={900}>
-                  <span
-                    style={{
-                      fontWeight: 300,
-                    }}
-                  >
-                    Manage
-                  </span>{" "}
-                  {moduleInfo.label}
-                </Text>
-              </div>
-              <Badge variant="outline" color="gray" size="xs">
-                XXXX entries
-              </Badge>
-            </Group>
-            <Text size="xs" opacity={0.5}>
-              {moduleInfo.description}
-            </Text>
-          </div>
+      <Group justify="space-between" h={80}>
+        <div>
+          <Group gap={8}>
+            <div>
+              <Text size="xl" fw={900}>
+                {moduleInfo.label}
+              </Text>
+            </div>
+            <Badge variant="outline" color="gray" size="xs">
+              XXXX entries
+            </Badge>
+          </Group>
+          <Text size="xs" opacity={0.5}>
+            {moduleInfo.description}
+          </Text>
+        </div>
 
-          <Group gap={4}>
-            <Menu id={moreActionsMenuId}>
+        <Group gap={4}>
+          <Menu id={moreActionsMenuId}>
+            <Menu.Target>
+              <Button
+                rightSection={<CaretDownIcon />}
+                size="xs"
+                variant="subtle"
+                color="dark"
+              >
+                More Actions
+              </Button>
+            </Menu.Target>
+            <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
+          </Menu>
+
+          <Button
+            leftSection={<ArrowClockwiseIcon />}
+            size="xs"
+            variant="light"
+            color="dark"
+            onClick={() => {
+              refetch();
+            }}
+          >
+            Reload Data
+          </Button>
+
+          <ButtonGroup>
+            {sustained && handleNewClick ? (
+              <Button
+                onClick={handleNewClick}
+                size="xs"
+                leftSection={<PlusIcon />}
+              >
+                New {moduleInfo.label}
+              </Button>
+            ) : (
+              <Button
+                component="a"
+                href={finalHref}
+                size="xs"
+                leftSection={<PlusIcon />}
+              >
+                New {moduleInfo.label}
+              </Button>
+            )}
+
+            <Menu id={newButtonMenuId}>
               <Menu.Target>
-                <Button
-                  rightSection={<CaretDownIcon />}
-                  size="xs"
-                  variant="subtle"
-                  color="dark"
-                >
-                  More Actions
+                <Button size="xs" px={8} ml={1}>
+                  <CaretDownIcon />
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
             </Menu>
-
-            <Button
-              leftSection={<ArrowClockwiseIcon />}
-              size="xs"
-              variant="light"
-              color="dark"
-              onClick={() => {
-                refetch();
-              }}
-            >
-              Reload Data
-            </Button>
-
-            <ButtonGroup>
-              {sustained && handleNewClick ? (
-                <Button
-                  onClick={handleNewClick}
-                  size="xs"
-                  leftSection={<PlusIcon />}
-                >
-                  New {moduleInfo.label}
-                </Button>
-              ) : (
-                <Button
-                  component="a"
-                  href={finalHref}
-                  size="xs"
-                  leftSection={<PlusIcon />}
-                >
-                  New {moduleInfo.label}
-                </Button>
-              )}
-
-              <Menu id={newButtonMenuId}>
-                <Menu.Target>
-                  <Button size="xs" px={8} ml={1}>
-                    <CaretDownIcon />
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
-              </Menu>
-            </ButtonGroup>
-          </Group>
+          </ButtonGroup>
         </Group>
+      </Group>
     </Stack>
   );
 }

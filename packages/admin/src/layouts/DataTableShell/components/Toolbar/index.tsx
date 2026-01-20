@@ -27,6 +27,7 @@ import { DataTableShellFilter } from "../TableFilters";
 import { DataTableShellSearchFilters } from "../SearchFilters";
 
 export function DataTableShellToolbar({
+  moduleInfo,
   tabs,
   activeTab,
   onTabChange,
@@ -55,9 +56,13 @@ export function DataTableShellToolbar({
 
   return (
     <>
-      <Group gap="xs" justify="space-between" px="sm" h={40}>
-        {tabs.length > 0 && (
+      <Group gap="xs" justify="space-between" h={40}>
+        {tabs.length > 0 ? (
           <Tabs tabs={tabs} active={activeTab} onTabChange={onTabChange} />
+        ) : (
+          <Button variant="light" size="xs">
+            All {moduleInfo.name}
+          </Button>
         )}
 
         <Group gap={4}>
@@ -141,8 +146,6 @@ export function DataTableShellToolbar({
           </div>
         </Group>
       </Group>
-
-      <DataTableShellSearchFilters />
     </>
   );
 }

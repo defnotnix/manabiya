@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Group, ThemeIcon } from "@mantine/core";
+import { Button, Group, Text, ThemeIcon } from "@mantine/core";
 import { XIcon } from "@phosphor-icons/react";
 import { DataTableWrapper } from "@settle/core";
 
@@ -12,12 +12,16 @@ export function DataTableShellSearchFilters() {
   }
 
   return (
-    <Group gap={4} px="lg" pb="sm">
+    <Group gap={4} p="sm">
+      <Text mr="xs" size="xs">
+        Filters:
+      </Text>
       {filters.map((filter: any, index: number) => {
         return (
           <Button
             key={index}
             variant="light"
+            h={24}
             size="xs"
             rightSection={
               <ThemeIcon
@@ -31,7 +35,7 @@ export function DataTableShellSearchFilters() {
               </ThemeIcon>
             }
           >
-            {filter.label} : asfdasfasd
+            {filter.label} : {filter.value}
           </Button>
         );
       })}

@@ -18,17 +18,23 @@ export function DataTableShellTableActions({
 }: PropDataTableShellActions) {
   // * CONTEXT
 
-  const { selectedRecords, setSelectedRecords } = useContext();
+  const { selectedRecords, setSelectedRecords, deleting, setDeleting } =
+    useContext();
 
   const Router = useRouter();
   const Pathname = usePathname();
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     const idsToDelete = selectedRecords.map((record: any) =>
       record[idAccessor]
     );
-    onDeleteClick?.(idsToDelete);
-    setSelectedRecords([]);
+    setDeleting(true);
+    try {
+      await onDeleteClick?.(idsToDelete);
+      setSelectedRecords([]);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const handleReview = () => {
@@ -113,6 +119,7 @@ export function DataTableShellTableActions({
                 size="xs"
                 variant="subtle"
                 color="red.6"
+                loading={deleting}
               >
                 Delete
               </Button>

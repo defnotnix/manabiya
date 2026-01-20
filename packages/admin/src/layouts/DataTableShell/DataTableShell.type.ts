@@ -40,6 +40,7 @@ export type PropDataTableHeader = {
 // ─────────────────────────────────────────────
 
 export type PropDataTableToolbar = PropSustained & {
+  moduleInfo: any;
   tabs: PropTabsTab[];
   activeTab: number;
   onTabChange: (index: number) => void;
@@ -79,7 +80,7 @@ export type PropDataTableShell = PropSustained &
     newButtonHref?: string;
     onNewClick?: () => void;
     onEditClick?: (record: any) => void;
-    onDeleteClick?: (ids: (string | number)[]) => void;
+    onDeleteClick?: (ids: (string | number)[]) => void | Promise<void>;
     onReviewClick?: (record: any) => void;
   };
 
