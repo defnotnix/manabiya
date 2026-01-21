@@ -15,7 +15,8 @@
       "Bash(grep:*)",
       "Bash(pnpm build:*)",
       "Bash(pnpm --filter @settle/admin build:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
