@@ -95,6 +95,7 @@ export type NavGroup = {
   defaultCollapsed?: boolean;
   order?: number;
   modules: NavModule[];
+  href?: string; // Direct navigation link (used when singleNavLayout is true)
 };
 
 export type NavRailDivider = {

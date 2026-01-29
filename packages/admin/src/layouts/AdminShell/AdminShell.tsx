@@ -18,6 +18,7 @@ export function AdminShell({
   essentials,
   softwareInfo,
   onLogout,
+  singleNavLayout = false,
 }: PropAdminNavLayout) {
   // * STATES
 
@@ -27,7 +28,7 @@ export function AdminShell({
     <>
       <AppShell
         navbar={{
-          width: 300,
+          width: singleNavLayout ? 45 : 300,
           breakpoint: "sm",
           // collapsed: { mobile: !opened },
         }}
@@ -37,6 +38,7 @@ export function AdminShell({
             navItems={navItems}
             navModules={navModules}
             navConfig={navConfig}
+            singleNavLayout={singleNavLayout}
           />
         </AppShell.Navbar>
 

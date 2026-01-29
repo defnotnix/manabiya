@@ -10,12 +10,15 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { BowlSteamIcon, GearSixIcon, InfoIcon } from "@phosphor-icons/react";
+import { useRouter, usePathname } from "next/navigation";
 import { NavRailItem } from "../../../AdminShell.nav.types";
 import { useNav } from "../../../context/NavContext";
 import { UserInfoPopover } from "./UserInfoPopover";
 
 export function NavRail() {
-  const { config, activeGroupId, setActiveGroupId } = useNav();
+  const { config, activeGroupId, setActiveGroupId, singleNavLayout } = useNav();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const renderRailItem = (item: NavRailItem, index: number) => {
     // Handle divider
@@ -31,8 +34,20 @@ export function NavRail() {
 
     // Handle group (type is optional, defaults to group)
     const group = item;
-    const isActive = activeGroupId === group.id;
     const Icon = group.icon;
+
+    // In singleNavLayout mode, check if current path matches href
+    const isActive = singleNavLayout
+      ? group.href ? pathname.startsWith(group.href) : false
+      : activeGroupId === group.id;
+
+    const handleClick = () => {
+      if (singleNavLayout && group.href) {
+        router.push(group.href);
+      } else {
+        setActiveGroupId(group.id);
+      }
+    };
 
     return (
       <Tooltip key={group.id} label={group.label} position="right" withArrow>
@@ -41,7 +56,7 @@ export function NavRail() {
           color={isActive ? "brand" : "dark"}
           size="md"
           radius="sm"
-          onClick={() => setActiveGroupId(group.id)}
+          onClick={handleClick}
           aria-label={group.label}
         >
           <Icon weight={isActive ? "fill" : "bold"} size={16} />

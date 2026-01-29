@@ -19,6 +19,7 @@ function isNavGroup(item: NavRailItem): item is NavGroup {
 interface NavContextType {
   // Config
   config: NavConfig;
+  singleNavLayout: boolean;
 
   // State
   activeGroupId: string | null;
@@ -47,9 +48,10 @@ export function useNav() {
 interface NavProviderProps {
   config: NavConfig;
   children: ReactNode;
+  singleNavLayout?: boolean;
 }
 
-export function NavProvider({ config, children }: NavProviderProps) {
+export function NavProvider({ config, children, singleNavLayout = false }: NavProviderProps) {
   const pathname = usePathname();
   const [activeGroupId, setActiveGroupId] = useState<string | null>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -83,6 +85,7 @@ export function NavProvider({ config, children }: NavProviderProps) {
 
   const value = {
     config,
+    singleNavLayout,
     activeGroupId,
     expandedItems,
     searchQuery,

@@ -59,6 +59,7 @@ export function AdminShellNavbar({
   navItems = [],
   navConfig,
   navModules,
+  singleNavLayout = false,
 }: AdminShellNavbarProps) {
   // Normalize configuration: Use provided navConfig or migrate legacy items
   const config = useMemo(() => {
@@ -67,7 +68,7 @@ export function AdminShellNavbar({
   }, [navConfig, navItems]);
 
   return (
-    <NavProvider config={config}>
+    <NavProvider config={config} singleNavLayout={singleNavLayout}>
       <Group
         gap={0}
         align="stretch"
@@ -78,8 +79,8 @@ export function AdminShellNavbar({
         {/* Left Rail */}
         <NavRail />
 
-        {/* Right Panel */}
-        <NavPanelContainer />
+        {/* Right Panel - Hidden in singleNavLayout mode */}
+        {!singleNavLayout && <NavPanelContainer />}
       </Group>
     </NavProvider>
   );

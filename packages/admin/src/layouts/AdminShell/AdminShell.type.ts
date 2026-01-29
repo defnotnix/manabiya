@@ -48,6 +48,7 @@ type PropAdminNavSideNav = {
   navModules?: PropAdminNavModule[];
   navConfig?: NavConfig; // Added new prop
   onLogout?: () => void;
+  singleNavLayout?: boolean; // When true, only shows rail with direct href navigation
 };
 
 type PropAdminNavStyles = {
