@@ -170,6 +170,9 @@ function SignInForm({
  * PageSignIn Component
  */
 export function PageSignIn({
+  heading = ["Welcome Back!", "to your organize-it-better portal."],
+  subheading = "Enter your credentials to access your account.",
+  icon,
   loginApi,
   successRedirectUrl,
   forgotRedirectUrl,
@@ -302,22 +305,18 @@ export function PageSignIn({
       <Paper w="100%" withBorder p={{ base: "xl", lg: "4rem" }} radius="md">
         <Stack gap="md" w="100%">
           <Center>
-            <BowlSteamIcon weight="fill" size={32} />
+            {icon || <BowlSteamIcon weight="fill" size={32} />}
           </Center>
 
           {/* Header */}
           <Stack gap="xs" align="center">
-            {/* Placeholder for Logo if needed, otherwise just text */}
             <Title order={2} ta="center" fw={900} lh="100%">
-              Welcome Back!
+              {heading[0]}
               <br />
-              <span style={{ opacity: 0.5 }}>
-                {" "}
-                to your organize-it-better portal.
-              </span>
+              <span style={{ opacity: 0.5 }}> {heading[1]}</span>
             </Title>
             <Text c="dimmed" size="xs" ta="center" maw={400}>
-              Enter your credentials to access your account.
+              {subheading}
             </Text>
           </Stack>
 

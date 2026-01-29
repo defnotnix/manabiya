@@ -9,6 +9,24 @@
 
 export interface PageSignInProps {
   /**
+   * Heading displayed as two lines
+   * @example ["Welcome Back!", "to your organize-it-better portal."]
+   */
+  heading?: [string, string];
+
+  /**
+   * Subheading text displayed below the heading
+   * @example "Enter your credentials to access your account."
+   */
+  subheading?: string;
+
+  /**
+   * Icon component to display at the top
+   * @example <BowlSteamIcon weight="fill" size={32} />
+   */
+  icon?: React.ReactNode;
+
+  /**
    * API endpoint for email/password login
    * @example "/api/auth/login/"
    */

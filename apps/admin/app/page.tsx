@@ -40,23 +40,8 @@ export default function () {
             fontFamily: "Stack Sans Notch",
           }}
         >
-          settle
-          <br />
-          <AnimatePresence mode="wait">
-            <motion.span
-              key={phraseIndex}
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -30 }}
-              transition={{ duration: 0.5 }}
-              style={{
-                display: "inline-block",
-                color: phraseIndex == 2 ? "var(--mantine-color-brand-6)" : "",
-              }}
-            >
-              {phrases[phraseIndex]}.
-            </motion.span>
-          </AnimatePresence>
+          you found{" "}
+          <span style={{ color: "var(--mantine-color-brand-6)" }}>zetsel.</span>
         </Text>
       </Container>
     </>
