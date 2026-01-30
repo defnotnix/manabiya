@@ -35,25 +35,19 @@ export function LayoutApp({ children }: PropsWithChildren) {
       <MantineProvider theme={configThemeMantine} defaultColorScheme="light">
         <ModalsProvider>
           <Notifications />
-          <PreferenceWrapper
-            defaults={{}}
-            appKey="vsphere"
-            userId="1"
-            version="2.0"
-          >
-            <RolePermsWrapper defaultPermissions={{}}>
-              <div
-                className={cx(classes.root, {
-                  [classes.body]: classes.body,
-                })}
-                style={{
-                  minHeight: "100vh",
-                }}
-              >
-                {children}
-              </div>
-            </RolePermsWrapper>
-          </PreferenceWrapper>
+
+          <RolePermsWrapper defaultPermissions={{}}>
+            <div
+              className={cx(classes.root, {
+                [classes.body]: classes.body,
+              })}
+              style={{
+                minHeight: "100vh",
+              }}
+            >
+              {children}
+            </div>
+          </RolePermsWrapper>
         </ModalsProvider>
       </MantineProvider>
     </QueryWrapper>

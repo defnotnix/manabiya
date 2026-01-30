@@ -10,10 +10,10 @@ export function ModuleSignIn() {
       loginApi="/api/auth/login/"
       successRedirectUrl="/admin/home"
       forgotRedirectUrl="/forgot-password"
-      hasGoogleLogin={true}
-      hasAppleLogin={true}
-      hasDiscordLogin={true}
-      hasMagicLinkLogin={false}
+      // hasGoogleLogin={true}
+      // hasAppleLogin={true}
+      // hasDiscordLogin={true}
+      // hasMagicLinkLogin={false}
       onSuccess={(response) => {
         console.log("Login successful:", response);
       }}

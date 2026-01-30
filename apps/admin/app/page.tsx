@@ -40,7 +40,7 @@ export default function () {
             fontFamily: "Stack Sans Notch",
           }}
         >
-          you found{" "}
+          <span style={{ opacity: 0.5 }}>uhh...</span> you just found{" "}
           <span style={{ color: "var(--mantine-color-brand-6)" }}>zetsel.</span>
         </Text>
       </Container>

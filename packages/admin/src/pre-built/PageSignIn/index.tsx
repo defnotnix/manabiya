@@ -304,16 +304,17 @@ export function PageSignIn({
     >
       <Paper w="100%" withBorder p={{ base: "xl", lg: "4rem" }} radius="md">
         <Stack gap="md" w="100%">
-          <Center>
-            {icon || <BowlSteamIcon weight="fill" size={32} />}
-          </Center>
+          <Center>{icon || <BowlSteamIcon weight="fill" size={32} />}</Center>
 
           {/* Header */}
           <Stack gap="xs" align="center">
             <Title order={2} ta="center" fw={900} lh="100%">
               {heading[0]}
               <br />
-              <span style={{ opacity: 0.5 }}> {heading[1]}</span>
+              <span style={{ color: "var(--mantine-color-brand-6)" }}>
+                {" "}
+                {heading[1]}
+              </span>
             </Title>
             <Text c="dimmed" size="xs" ta="center" maw={400}>
               {subheading}
@@ -321,7 +322,7 @@ export function PageSignIn({
           </Stack>
 
           <Paper p={0} bg="transparent">
-            <Stack gap="lg">
+            <Stack gap="lg" py="xl">
               {!showMagicLink ? (
                 <>
                   {/* Social OAuth Login Options at Top */}
@@ -396,7 +397,9 @@ export function PageSignIn({
                     </SimpleGrid>
                   )}
 
-                  <Divider label="or" labelPosition="center" my="xs" />
+                  {(hasAppleLogin || hasDiscordLogin || hasGoogleLogin) && (
+                    <Divider label="or" labelPosition="center" my="xs" />
+                  )}
 
                   <SignInForm
                     onSubmit={handleSignIn}
