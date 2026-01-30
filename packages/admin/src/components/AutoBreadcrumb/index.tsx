@@ -5,11 +5,18 @@ import { CaretRightIcon } from "@phosphor-icons/react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-export function AutoBreadcrumb() {
+interface AutoBreadcrumbProps {
+  hidden?: string[];
+}
+
+export function AutoBreadcrumb({ hidden = [] }: AutoBreadcrumbProps) {
   const pathname = usePathname();
   const router = useRouter();
 
   if (!pathname) return null;
+
+  // Hide breadcrumb if current pathname is in the hidden list
+  if (hidden.includes(pathname)) return null;
 
   // Split pathname and remove empty strings
   const pathSegments = pathname.split("/").filter((segment) => segment !== "");

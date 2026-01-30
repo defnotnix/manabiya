@@ -1,11 +1,11 @@
 "use client";
 
-import { PropsWithChildren, useEffect } from "react";
-//vfw
-import { QueryWrapper, AppWrapper } from "@settle/admin";
-//themes
+import { PropsWithChildren } from "react";
+import { MantineProvider } from "@mantine/core";
+import { ModalsProvider } from "@mantine/modals";
+import { Notifications } from "@mantine/notifications";
+import { QueryWrapper } from "@settle/admin";
 import { configThemeMantine } from "@/config/theme";
-//styles
 import classes from "./app.module.css";
 
 import "@mantine/core/styles.css";
@@ -15,8 +15,7 @@ import "@mantine/notifications/styles.css";
 
 import "@/public/styles/global.css";
 import { PreferenceWrapper, RolePermsWrapper } from "@settle/core";
-
-//oauth
+import cx from "clsx";
 
 export function LayoutApp({ children }: PropsWithChildren) {
   return (
@@ -33,41 +32,30 @@ export function LayoutApp({ children }: PropsWithChildren) {
         },
       }}
     >
-      <AppWrapper
-        theme={configThemeMantine}
-        defaultColorScheme={"light"}
-        classNames={classes}
-        extraHeadTags={
-          <>
-            <link rel="preconnect" href="https://fonts.googleapis.com" />
-            <link rel="preconnect" href="https://fonts.gstatic.com" />
-            <link
-              href="https://fonts.googleapis.com/css2?family=Stack+Sans+Headline:wght@200..700&family=Stack+Sans+Notch:wght@200..700&family=Stack+Sans+Text:wght@200..700&family=Unbounded:wght@200..900&display=swap"
-              rel="stylesheet"
-            />
-          </>
-        }
-      >
-        {/* // todo - Haven't tested server side cookie fetch */}
-
-        <PreferenceWrapper
-          defaults={{}}
-          appKey="vsphere"
-          userId="1"
-          //VersionControl
-          version="2.0"
-        />
-
-        <RolePermsWrapper defaultPermissions={{}}>
-          <div
-            style={{
-              minHeight: "100vh",
-            }}
+      <MantineProvider theme={configThemeMantine} defaultColorScheme="light">
+        <ModalsProvider>
+          <Notifications />
+          <PreferenceWrapper
+            defaults={{}}
+            appKey="vsphere"
+            userId="1"
+            version="2.0"
           >
-            {children}
-          </div>
-        </RolePermsWrapper>
-      </AppWrapper>
+            <RolePermsWrapper defaultPermissions={{}}>
+              <div
+                className={cx(classes.root, {
+                  [classes.body]: classes.body,
+                })}
+                style={{
+                  minHeight: "100vh",
+                }}
+              >
+                {children}
+              </div>
+            </RolePermsWrapper>
+          </PreferenceWrapper>
+        </ModalsProvider>
+      </MantineProvider>
     </QueryWrapper>
   );
 }
