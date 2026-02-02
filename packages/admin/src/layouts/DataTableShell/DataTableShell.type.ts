@@ -33,6 +33,7 @@ export type PropDataTableHeader = {
   newButtonHref?: string;
   sustained?: boolean;
   onNewClick?: () => void;
+  disableCreateButton?: boolean;
 };
 
 // ─────────────────────────────────────────────
@@ -82,6 +83,9 @@ export type PropDataTableShell = PropSustained &
     onEditClick?: (record: any) => void;
     onDeleteClick?: (ids: (string | number)[]) => void | Promise<void>;
     onReviewClick?: (record: any) => void;
+    disableCreateButton?: boolean;
+    disableEditButton?: boolean;
+    disableDeleteButton?: boolean;
   };
 
 export type PropDataTableShellActions = PropIdAccessor & PropSustained & {
@@ -89,4 +93,6 @@ export type PropDataTableShellActions = PropIdAccessor & PropSustained & {
   onEditClick?: (record: any) => void;
   onDeleteClick?: (ids: (string | number)[]) => void;
   onReviewClick?: (record: any) => void;
+  disableEditButton?: boolean;
+  disableDeleteButton?: boolean;
 };

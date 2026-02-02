@@ -7,7 +7,8 @@ export function ModuleSignIn() {
     <PageSignIn
       heading={["Welcome Back!", "to your zetsel portal."]}
       subheading="Enter your credentials to access your account."
-      loginApi="/api/auth/login/"
+      loginApi="/api/auth/token/"
+      skipEmailValidation
       successRedirectUrl="/admin/home"
       forgotRedirectUrl="/forgot-password"
       // hasGoogleLogin={true}

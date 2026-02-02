@@ -75,22 +75,26 @@ function SignInForm({
   onSubmit,
   isLoading,
   onForgotPassword,
+  skipEmailValidation = false,
 }: {
-  onSubmit: (email: string, password: string) => void;
+  onSubmit: (username: string, password: string) => void;
   isLoading: boolean;
   onForgotPassword?: () => void;
+  skipEmailValidation?: boolean;
 }) {
   const form = useForm({
     initialValues: {
-      email: "",
+      username: "",
       password: "",
     },
     validate: {
-      email: (value: string) => {
-        if (!value.trim()) return "Email is required";
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(value))
-          return "Please enter a valid email address";
+      username: (value: string) => {
+        if (!value.trim()) return skipEmailValidation ? "Username is required" : "Email is required";
+        if (!skipEmailValidation) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(value))
+            return "Please enter a valid email address";
+        }
         return null;
       },
       password: (value: string) => {
@@ -101,7 +105,7 @@ function SignInForm({
   });
 
   const handleSubmit = form.onSubmit((values) => {
-    onSubmit(values.email, values.password);
+    onSubmit(values.username, values.password);
   });
 
   return (
@@ -110,10 +114,10 @@ function SignInForm({
         <TextInput
           size="md"
           radius="md"
-          placeholder="email@example.com"
-          type="email"
+          placeholder={skipEmailValidation ? "Username" : "email@example.com"}
+          type={skipEmailValidation ? "text" : "email"}
           required
-          {...form.getInputProps("email")}
+          {...form.getInputProps("username")}
           disabled={isLoading}
           rightSection={
             <EnvelopeIcon size={16} weight="duotone" style={{ opacity: 0.5 }} />
@@ -174,6 +178,7 @@ export function PageSignIn({
   subheading = "Enter your credentials to access your account.",
   icon,
   loginApi,
+  skipEmailValidation = false,
   successRedirectUrl,
   forgotRedirectUrl,
   onSuccess,
@@ -192,7 +197,7 @@ export function PageSignIn({
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignIn = async (email: string, password: string) => {
+  const handleSignIn = async (username: string, password: string) => {
     setIsLoading(true);
     triggerNotification.auth.isLoading({
       title: "Processing Authentication",
@@ -202,7 +207,7 @@ export function PageSignIn({
     try {
       const response = await apiDispatch.post({
         endpoint: loginApi,
-        body: { email, password },
+        body: skipEmailValidation ? { username, password } : { email: username, password },
         noAuthorization: true,
       });
 
@@ -221,7 +226,8 @@ export function PageSignIn({
             response.data.access,
           );
         }
-        if (response.data?.refresh) {
+        // Only store refresh token in development (production uses HttpOnly cookie)
+        if (response.data?.refresh && process.env.NODE_ENV === "development") {
           sessionStorage.setItem(
             AUTH_TOKEN_KEYS.REFRESH_TOKEN,
             response.data.refresh,
@@ -405,6 +411,7 @@ export function PageSignIn({
                     onSubmit={handleSignIn}
                     isLoading={isLoading}
                     onForgotPassword={onForgotPassword}
+                    skipEmailValidation={skipEmailValidation}
                   />
                 </>
               ) : (

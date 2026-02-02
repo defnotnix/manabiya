@@ -19,41 +19,41 @@
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `moduleInfo` | `object` | Required | Module config with name, label, description |
-| `columns` | `array` | Required | Column definitions for the table |
-| `idAccessor` | `string` | `"id"` | Property name used as unique identifier |
-| `filterList` | `array` | `[]` | Filter configuration options |
-| `hideFilters` | `boolean` | `false` | Hide filter toolbar |
-| `forceFilter` | `object` | - | Force apply specific filters |
-| `pageSizes` | `array` | `[10, 20, 50, 100]` | Page size options |
-| `tableActions` | `array` | `[]` | Custom row action buttons |
-| `tabs` | `array` | `[]` | Tab configuration |
-| `rowColor` | `string` | - | Row text color |
-| `rowBackgroundColor` | `string` | - | Row background color |
-| `rowStyle` | `CSSProperties` | - | Custom row styles |
-| `hasServerSearch` | `boolean` | `false` | Enable server-side search |
-| **Modal Props** | | | |
-| `modalWidth` | `string\|number` | `"md"` | Modal width (sm, md, lg, xl) |
-| **API Handlers** | | | |
-| `onCreateApi` | `function` | - | Create API call: `(data) => Promise<result>` |
-| `onEditApi` | `function` | - | Update API call: `(id, data) => Promise<result>` |
-| `onDeleteApi` | `function` | - | Delete API call: `(id) => Promise<void>` |
-| **Form Components** | | | |
-| `createFormComponent` | `ReactNode` | - | Form component for create modal |
-| `editFormComponent` | `ReactNode` | - | Form component for edit modal |
-| **Callbacks** | | | |
-| `onCreateSuccess` | `function` | - | Called after successful create |
-| `onEditSuccess` | `function` | - | Called after successful edit |
-| `onDeleteSuccess` | `function` | - | Called after successful delete |
-| `onEditTrigger` | `function` | - | Called when edit modal opens to fetch data |
-| **Transforms** | | | |
-| `transformOnCreate` | `function` | - | Transform data before create API call |
-| `transformOnEdit` | `function` | - | Transform data before edit API call |
-| `transformOnDelete` | `function` | - | Transform ID before delete API call |
-| **Validation** | | | |
-| `validator` | `object` | - | Zod validator for form validation |
+| Prop                  | Type             | Default             | Description                                      |
+| --------------------- | ---------------- | ------------------- | ------------------------------------------------ |
+| `moduleInfo`          | `object`         | Required            | Module config with name, label, description      |
+| `columns`             | `array`          | Required            | Column definitions for the table                 |
+| `idAccessor`          | `string`         | `"id"`              | Property name used as unique identifier          |
+| `filterList`          | `array`          | `[]`                | Filter configuration options                     |
+| `hideFilters`         | `boolean`        | `false`             | Hide filter toolbar                              |
+| `forceFilter`         | `object`         | -                   | Force apply specific filters                     |
+| `pageSizes`           | `array`          | `[10, 20, 50, 100]` | Page size options                                |
+| `tableActions`        | `array`          | `[]`                | Custom row action buttons                        |
+| `tabs`                | `array`          | `[]`                | Tab configuration                                |
+| `rowColor`            | `string`         | -                   | Row text color                                   |
+| `rowBackgroundColor`  | `string`         | -                   | Row background color                             |
+| `rowStyle`            | `CSSProperties`  | -                   | Custom row styles                                |
+| `hasServerSearch`     | `boolean`        | `false`             | Enable server-side search                        |
+| **Modal Props**       |                  |                     |                                                  |
+| `modalWidth`          | `string\|number` | `"md"`              | Modal width (sm, md, lg, xl)                     |
+| **API Handlers**      |                  |                     |                                                  |
+| `onCreateApi`         | `function`       | -                   | Create API call: `(data) => Promise<result>`     |
+| `onEditApi`           | `function`       | -                   | Update API call: `(id, data) => Promise<result>` |
+| `onDeleteApi`         | `function`       | -                   | Delete API call: `(id) => Promise<void>`         |
+| **Form Components**   |                  |                     |                                                  |
+| `createFormComponent` | `ReactNode`      | -                   | Form component for create modal                  |
+| `editFormComponent`   | `ReactNode`      | -                   | Form component for edit modal                    |
+| **Callbacks**         |                  |                     |                                                  |
+| `onCreateSuccess`     | `function`       | -                   | Called after successful create                   |
+| `onEditSuccess`       | `function`       | -                   | Called after successful edit                     |
+| `onDeleteSuccess`     | `function`       | -                   | Called after successful delete                   |
+| `onEditTrigger`       | `function`       | -                   | Called when edit modal opens to fetch data       |
+| **Transforms**        |                  |                     |                                                  |
+| `transformOnCreate`   | `function`       | -                   | Transform data before create API call            |
+| `transformOnEdit`     | `function`       | -                   | Transform data before edit API call              |
+| `transformOnDelete`   | `function`       | -                   | Transform ID before delete API call              |
+| **Validation**        |                  |                     |                                                  |
+| `validator`           | `object`         | -                   | Zod validator for form validation                |
 
 ## Basic Usage
 
@@ -77,14 +77,13 @@ export function ListPage() {
         const response = await AGENDA_API.getAgendas();
         return { data: response?.data || [] };
       }}
-      dataKey="data"
+      dataKey="results"
     >
       <DataTableModalShell
         moduleInfo={AGENDA_MODULE_CONFIG}
         columns={columns}
         idAccessor="id"
         filterList={[]}
-
         // API handlers
         onCreateApi={async (data) => {
           const response = await AGENDA_API.createAgenda(data);
@@ -97,11 +96,9 @@ export function ListPage() {
         onDeleteApi={async (id) => {
           await AGENDA_API.deleteAgenda(String(id));
         }}
-
         // Form components
         createFormComponent={<AgendaForm />}
         editFormComponent={<AgendaForm />}
-
         // Modal customization
         modalWidth="lg"
       />
@@ -170,6 +167,7 @@ const columns = [
 ```
 
 **Column Properties:**
+
 - `accessor`: Field name from data object
 - `header`: Column header label
 - `size`: Column width in pixels
@@ -191,6 +189,7 @@ onCreateApi={async (data) => {
 ```
 
 **Expected:**
+
 - Input: Form data object
 - Output: Created item object
 - Called by: Form submission in create modal
@@ -210,6 +209,7 @@ onEditApi={async (id, data) => {
 ```
 
 **Expected:**
+
 - Input: ID (string | number) + form data
 - Output: Updated item object
 - Called by: Form submission in edit modal
@@ -227,6 +227,7 @@ onDeleteApi={async (id) => {
 ```
 
 **Expected:**
+
 - Input: ID (string | number) or array of IDs
 - Output: void (no return needed)
 - Called by: Confirmation modal
@@ -320,6 +321,7 @@ Then pass to DataTableModalShell:
 **Initial State:** Empty form
 
 **On Submit:**
+
 1. Calls `onCreateApi` with form data
 2. Validates using validator if provided
 3. Shows success notification
@@ -328,6 +330,7 @@ Then pass to DataTableModalShell:
 6. Calls `onCreateSuccess` callback
 
 **On Error:**
+
 - Shows error notification
 - Modal stays open
 - Form data preserved
@@ -341,6 +344,7 @@ Then pass to DataTableModalShell:
 **Initial State:** Pre-filled with row data
 
 **On Submit:**
+
 1. Calls `onEditApi` with ID and form data
 2. Validates using validator if provided
 3. Shows success notification
@@ -349,11 +353,13 @@ Then pass to DataTableModalShell:
 6. Calls `onEditSuccess` callback
 
 **On Error:**
+
 - Shows error notification
 - Modal stays open
 - Form data preserved
 
 **Optional onEditTrigger:**
+
 - Called before modal opens
 - Useful for fetching full record from API
 - Overwrites row data with returned data
@@ -372,6 +378,7 @@ onEditTrigger={async (row) => {
 **Trigger:** User clicks delete action
 
 **Behavior:**
+
 1. Shows confirmation modal
 2. Displays "Are you sure?" message
 3. On confirm: Calls `onDeleteApi`
@@ -489,7 +496,7 @@ Transform data before sending to API:
 <DataTableWrapper
   queryKey="item.list"
   queryGetFn={() => API.getItems()}
-  dataKey="data"
+  dataKey="results"
 >
   <DataTableModalShell
     moduleInfo={MODULE_CONFIG}
@@ -572,7 +579,7 @@ Transform data before sending to API:
 
 ```tsx
 <DataTableModalShell
-  modalWidth="lg"  // or "sm", "md", "xl"
+  modalWidth="lg" // or "sm", "md", "xl"
   moduleInfo={MODULE_CONFIG}
   columns={columns}
   // ... other props
@@ -597,11 +604,7 @@ export function CustomButton() {
     closeEditModal,
   } = useDataTableModalShellContext();
 
-  return (
-    <button onClick={openCreateModal}>
-      Custom Create Button
-    </button>
-  );
+  return <button onClick={openCreateModal}>Custom Create Button</button>;
 }
 ```
 
@@ -617,11 +620,7 @@ export function AgendaForm() {
   // Access form values, errors, etc.
   const title = form.values.title;
 
-  return (
-    <form>
-      {/* Form fields */}
-    </form>
-  );
+  return <form>{/* Form fields */}</form>;
 }
 ```
 
@@ -641,7 +640,7 @@ const agendaValidator = z.object({
 <DataTableModalShell
   validator={agendaValidator}
   // ... other props
-/>
+/>;
 ```
 
 ## Notifications
@@ -678,6 +677,7 @@ onCreateSuccess={(err) => {
 ## Summary
 
 DataTableModalShell provides:
+
 - Complete table with built-in modals
 - Seamless create/edit/delete workflow
 - Auto-refetch after operations

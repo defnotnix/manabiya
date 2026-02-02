@@ -3,6 +3,7 @@
 ## Overview
 
 `DataTableWrapper` is a powerful data table management wrapper built on top of React Query. It provides:
+
 - **Automatic data fetching** with React Query integration
 - **Client-side and server-side pagination** support
 - **Search and filtering** capabilities
@@ -40,7 +41,7 @@ export function UsersList() {
       queryGetFn={async () => {
         const response = await fetch("/api/users");
         const data = await response.json();
-        return data;  // Returns array of users
+        return data; // Returns array of users
       }}
     >
       <UsersTable />
@@ -50,7 +51,8 @@ export function UsersList() {
 
 function UsersTable() {
   const { data, isLoading, refetch } = DataTableWrapper.useDataTableContext();
-  const { page, pageSize, setPage } = DataTableWrapper.useDataTableWrapperStore();
+  const { page, pageSize, setPage } =
+    DataTableWrapper.useDataTableWrapperStore();
 
   return (
     <div>
@@ -77,14 +79,14 @@ function UsersTable() {
 ```tsx
 <DataTableWrapper
   queryKey="users.list"
-  enableServerQuery={true}  // Enable server-side pagination
+  enableServerQuery={true} // Enable server-side pagination
   queryGetFn={async ({ page, pageSize, search, filters }) => {
     const response = await fetch(
-      `/api/users?page=${page}&pageSize=${pageSize}&search=${search}`
+      `/api/users?page=${page}&pageSize=${pageSize}&search=${search}`,
     );
     return response.json();
   }}
-  dataKey="results"              // Extract data from response.results
+  dataKey="results" // Extract data from response.results
   paginationDataKey="pagination" // Extract pagination from response.pagination
 >
   <UsersTable />
@@ -124,32 +126,34 @@ function UsersTableWithSearch() {
 
 ### DataTableWrapper Props
 
-| Prop | Type | Required | Default | Description |
-|------|------|----------|---------|-------------|
-| `children` | `ReactNode` | ✅ Yes | - | Child components that will consume the data |
-| `testMode` | `boolean` | No | `false` | Enable debug logging to console |
-| `queryKey` | `string` | ✅ Yes | `"module.list"` | React Query key (use dot notation: "users.list") |
-| `queryGetFn` | `function` | No | `undefined` | Async function to fetch data |
-| `enableServerQuery` | `boolean` | No | `false` | Enable server-side pagination and filtering |
-| `dataKey` | `string` | No | `undefined` | Key to extract data from response (e.g., "results") |
-| `paginationDataKey` | `string` | No | `undefined` | Key to extract pagination data from response |
-| `paginationResponseFn` | `function` | No | `() => {}` | Custom function to extract pagination data |
+| Prop                   | Type        | Required | Default         | Description                                         |
+| ---------------------- | ----------- | -------- | --------------- | --------------------------------------------------- |
+| `children`             | `ReactNode` | ✅ Yes   | -               | Child components that will consume the data         |
+| `testMode`             | `boolean`   | No       | `false`         | Enable debug logging to console                     |
+| `queryKey`             | `string`    | ✅ Yes   | `"module.list"` | React Query key (use dot notation: "users.list")    |
+| `queryGetFn`           | `function`  | No       | `undefined`     | Async function to fetch data                        |
+| `enableServerQuery`    | `boolean`   | No       | `false`         | Enable server-side pagination and filtering         |
+| `dataKey`              | `string`    | No       | `undefined`     | Key to extract data from response (e.g., "results") |
+| `paginationDataKey`    | `string`    | No       | `undefined`     | Key to extract pagination data from response        |
+| `paginationResponseFn` | `function`  | No       | `() => {}`      | Custom function to extract pagination data          |
 
 ### queryGetFn Function Signature
 
 **Client-Side Mode:**
+
 ```typescript
-queryGetFn: () => Promise<T[]>
+queryGetFn: () => Promise<T[]>;
 ```
 
 **Server-Side Mode:**
+
 ```typescript
 queryGetFn: (params: {
   page: number;
   pageSize: number;
   search: string;
   filters: any;
-}) => Promise<any>
+}) => Promise<any>;
 ```
 
 ## Context and Store API
@@ -160,10 +164,10 @@ Access data, loading states, and refetch function:
 
 ```typescript
 const {
-  data,       // T[] - Current page data
-  isLoading,  // boolean - Loading or fetching state
-  isError,    // boolean - Error state
-  refetch,    // function - Manually refetch data
+  data, // T[] - Current page data
+  isLoading, // boolean - Loading or fetching state
+  isError, // boolean - Error state
+  refetch, // function - Manually refetch data
 } = DataTableWrapper.useDataTableContext();
 ```
 
@@ -173,16 +177,16 @@ Access and update pagination and search state:
 
 ```typescript
 const {
-  page,              // number - Current page
-  pageSize,          // number - Items per page
-  search,            // string - Search query
-  filters,           // any - Additional filters
-  paginationData,    // any - Pagination metadata from server
+  page, // number - Current page
+  pageSize, // number - Items per page
+  search, // string - Search query
+  filters, // any - Additional filters
+  paginationData, // any - Pagination metadata from server
 
-  setPage,           // (page: number) => void
-  setPageSize,       // (size: number) => void
-  setSearch,         // (search: string) => void
-  setFilters,        // (filters: any) => void
+  setPage, // (page: number) => void
+  setPageSize, // (size: number) => void
+  setSearch, // (search: string) => void
+  setFilters, // (filters: any) => void
   setPaginationData, // (data: any) => void
 } = DataTableWrapper.useDataTableWrapperStore();
 ```
@@ -213,14 +217,8 @@ export function ProductsList() {
 
 function ProductsTable() {
   const { data, isLoading } = DataTableWrapper.useDataTableContext();
-  const {
-    page,
-    pageSize,
-    search,
-    setPage,
-    setPageSize,
-    setSearch
-  } = DataTableWrapper.useDataTableWrapperStore();
+  const { page, pageSize, search, setPage, setPageSize, setSearch } =
+    DataTableWrapper.useDataTableWrapperStore();
 
   return (
     <div>
@@ -243,8 +241,11 @@ function ProductsTable() {
         columns={[
           { accessor: "id", title: "ID" },
           { accessor: "name", title: "Product Name" },
-          { accessor: "price", title: "Price",
-            render: (item) => `$${item.price}` },
+          {
+            accessor: "price",
+            title: "Price",
+            render: (item) => `$${item.price}`,
+          },
           { accessor: "stock", title: "In Stock" },
         ]}
       />
@@ -292,11 +293,8 @@ export function ServerPaginatedList() {
 
 function UsersList() {
   const { data, isLoading } = DataTableWrapper.useDataTableContext();
-  const {
-    paginationData,
-    page,
-    setPage
-  } = DataTableWrapper.useDataTableWrapperStore();
+  const { paginationData, page, setPage } =
+    DataTableWrapper.useDataTableWrapperStore();
 
   return (
     <div>
@@ -332,16 +330,14 @@ function UsersList() {
 <DataTableWrapper
   queryKey="orders.list"
   enableServerQuery={true}
-  dataKey="data"
+  dataKey="results"
   paginationResponseFn={(response) => ({
     total: response.meta.total_items,
     currentPage: response.meta.current,
     totalPages: response.meta.pages,
   })}
   queryGetFn={async ({ page, pageSize }) => {
-    const response = await fetch(
-      `/api/orders?page=${page}&limit=${pageSize}`
-    );
+    const response = await fetch(`/api/orders?page=${page}&limit=${pageSize}`);
     return response.json();
   }}
 >
@@ -421,7 +417,7 @@ Enable test mode to see debug information in the console:
 
 ```tsx
 <DataTableWrapper
-  testMode={true}  // Enable debug logging
+  testMode={true} // Enable debug logging
   queryKey="users.list"
   queryGetFn={async () => {
     const response = await fetch("/api/users");
@@ -433,6 +429,7 @@ Enable test mode to see debug information in the console:
 ```
 
 Console output will include:
+
 - `DataTableWrapper_Data` - The fetched data after extraction
 
 ## Common Patterns
@@ -546,21 +543,22 @@ interface User {
 
 ## Comparison with ListHandler
 
-| Feature | DataTableWrapper | ListHandler (Legacy) |
-|---------|------------------|----------------------|
-| React Query | ✅ Yes | ❌ No |
-| Auto Caching | ✅ Yes | ❌ No |
-| Type Safety | ✅ Generics | ⚠️ Basic |
-| Server Pagination | ✅ Yes | ❌ No |
-| Search | ✅ Built-in | ⚠️ Manual |
-| Context API | ✅ Yes | ❌ No |
-| **Recommendation** | ✅ Use this | ⚠️ Legacy - migrate to DataTableWrapper |
+| Feature            | DataTableWrapper | ListHandler (Legacy)                    |
+| ------------------ | ---------------- | --------------------------------------- |
+| React Query        | ✅ Yes           | ❌ No                                   |
+| Auto Caching       | ✅ Yes           | ❌ No                                   |
+| Type Safety        | ✅ Generics      | ⚠️ Basic                                |
+| Server Pagination  | ✅ Yes           | ❌ No                                   |
+| Search             | ✅ Built-in      | ⚠️ Manual                               |
+| Context API        | ✅ Yes           | ❌ No                                   |
+| **Recommendation** | ✅ Use this      | ⚠️ Legacy - migrate to DataTableWrapper |
 
 ## Migration from ListHandler
 
 If you're using the legacy `ListHandler`, migrate to `DataTableWrapper`:
 
 **Before (ListHandler):**
+
 ```tsx
 const { data, isLoading, refetch } = useListHandler({
   endpoint: "/api/users",
@@ -568,6 +566,7 @@ const { data, isLoading, refetch } = useListHandler({
 ```
 
 **After (DataTableWrapper):**
+
 ```tsx
 <DataTableWrapper
   queryKey="users.list"
@@ -577,7 +576,7 @@ const { data, isLoading, refetch } = useListHandler({
   }}
 >
   <UsersList />
-</DataTableWrapper>
+</DataTableWrapper>;
 
 // In child component:
 const { data, isLoading, refetch } = DataTableWrapper.useDataTableContext();
@@ -594,7 +593,7 @@ const { refetch } = DataTableWrapper.useDataTableContext();
 
 const handleCreate = async (data) => {
   await createUser(data);
-  refetch();  // Refetch to get updated data
+  refetch(); // Refetch to get updated data
 };
 ```
 

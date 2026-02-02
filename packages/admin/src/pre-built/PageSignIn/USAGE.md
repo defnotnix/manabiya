@@ -37,6 +37,23 @@ export function SignInPage() {
 }
 ```
 
+### Django JWT / Username API Example
+
+For backends that expect `username` field (e.g., Django Simple JWT):
+
+```tsx
+<PageSignIn
+  loginApi="/api/auth/token/"
+  skipEmailValidation               // Sends { username, password } instead of { email, password }
+  successRedirectUrl="/admin/home"
+  forgotRedirectUrl="/forgot-password"
+/>
+```
+
+When `skipEmailValidation` is enabled:
+- Input field accepts any non-empty string (no email format validation)
+- Request body uses `{ username, password }` instead of `{ email, password }`
+
 ### With All Auth Methods Enabled
 
 ```tsx
@@ -85,7 +102,8 @@ export function SignInPage() {
 
 | Prop | Type | Required | Default | Description |
 |------|------|----------|---------|-------------|
-| `loginApi` | string | ✅ | - | API endpoint for email/password login (e.g., `/api/auth/login`) |
+| `loginApi` | string | ✅ | - | API endpoint for login (e.g., `/api/auth/token/`) |
+| `skipEmailValidation` | boolean | ❌ | false | Treat as username: skip email validation & send `{ username }` instead of `{ email }` |
 | `successRedirectUrl` | string | ✅ | - | URL to redirect to after successful login (e.g., `/dashboard`) |
 | `forgotRedirectUrl` | string | ✅ | - | URL to redirect to when "Forgot Password" is clicked |
 | `onSuccess` | function | ❌ | - | Callback fired on successful login before redirect |
@@ -104,10 +122,18 @@ export function SignInPage() {
 
 ### Email/Password Login
 
-**Request:**
+**Request (default - `skipEmailValidation: false`):**
 ```json
 {
   "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Request (with `skipEmailValidation: true`):**
+```json
+{
+  "username": "admin",
   "password": "securePassword123"
 }
 ```
@@ -116,12 +142,7 @@ export function SignInPage() {
 ```json
 {
   "access": "eyJhbGciOiJIUzI1NiIs...",
-  "refresh": "eyJhbGciOiJIUzI1NiIs...",
-  "user": {
-    "id": "123",
-    "email": "user@example.com",
-    "name": "John Doe"
-  }
+  "refresh": "eyJhbGciOiJIUzI1NiIs..."
 }
 ```
 
@@ -137,11 +158,13 @@ export function SignInPage() {
 
 ### Token Storage
 
-Tokens are automatically stored in `sessionStorage`:
-- **Access Token**: `kcatoken`
-- **Refresh Token**: `kcrtoken`
+**Access Token** is always stored in `sessionStorage` with key `kcatoken`.
 
-**⚠️ Security Note**: For production applications, consider using HTTP-only cookies instead of sessionStorage to protect against XSS attacks.
+**Refresh Token** handling depends on environment:
+- **Development**: Stored in `sessionStorage` with key `kcrtoken` (returned in response body)
+- **Production**: Stored as HttpOnly cookie by backend (not accessible to JavaScript)
+
+This follows Django JWT best practices where production uses secure HttpOnly cookies for refresh tokens.
 
 ## Authentication Flow
 
@@ -185,9 +208,10 @@ Tokens are automatically stored in `sessionStorage`:
 
 The sign-in form includes built-in validation:
 
-### Email Field
+### Username/Email Field
 - ✅ Required
-- ✅ Must be valid email format
+- ✅ Must be valid email format (when `skipEmailValidation: false`, default)
+- ✅ Any non-empty string accepted (when `skipEmailValidation: true`)
 - ✅ Validates on change and blur
 
 ### Password Field
@@ -315,7 +339,7 @@ Validation errors appear below each field automatically.
 
 ## Form Validation Details
 
-### Email Validation
+### Email Validation (default behavior)
 ```typescript
 // Regex: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 // Checks:
@@ -329,6 +353,14 @@ Validation errors appear below each field automatically.
 // Invalid: user.com ❌
 ```
 
+### Username Validation (with `skipEmailValidation: true`)
+```typescript
+// Only checks if value is non-empty
+// Valid: admin ✅
+// Valid: user@example.com ✅
+// Invalid: "" ❌ (empty string)
+```
+
 ⚠️ **Note**: Client-side validation is for UX only. Always implement server-side validation for security.
 
 ## Error Messages
@@ -337,8 +369,8 @@ The component displays user-friendly error messages:
 
 | Scenario | Message |
 |----------|---------|
-| Empty email | "Email is required" |
-| Invalid email format | "Please enter a valid email address" |
+| Empty email/username | "Email is required" (or "Username is required" with `skipEmailValidation`) |
+| Invalid email format | "Please enter a valid email address" (only when `skipEmailValidation: false`) |
 | Empty password | "Password is required" |
 | API returns error | Message from API (fallback: "Invalid email or password") |
 | Network error | "An unexpected error occurred. Please try again." |

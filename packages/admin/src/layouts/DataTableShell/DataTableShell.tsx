@@ -34,6 +34,9 @@ export function DataTableShell({
   onEditClick,
   onDeleteClick,
   onReviewClick,
+  disableCreateButton = false,
+  disableEditButton = false,
+  disableDeleteButton = false,
 }: PropDataTableShell) {
   // * CONTEXT
   const { filters } = DataTableWrapper.useDataTableWrapperStore();
@@ -107,6 +110,7 @@ export function DataTableShell({
           newButtonHref={newButtonHref}
           sustained={sustained}
           onNewClick={onNewClick}
+          disableCreateButton={disableCreateButton}
         />
       </Container>
 
@@ -151,6 +155,8 @@ export function DataTableShell({
           onEditClick={onEditClick}
           onDeleteClick={onDeleteClick}
           onReviewClick={onReviewClick}
+          disableEditButton={disableEditButton}
+          disableDeleteButton={disableDeleteButton}
         />
       </Container>
     </DataTableShellContext.Provider>

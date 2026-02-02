@@ -110,7 +110,6 @@ export function DataTableShellToolbar({
 
                     return (
                       <Button
-                        c="dark.9"
                         justify="left"
                         radius={0}
                         variant="subtle"
@@ -119,7 +118,7 @@ export function DataTableShellToolbar({
                         leftSection={<Checkbox checked={checked} size="xs" />}
                         onClick={() => onToggleColumn(index)}
                       >
-                        {column.title}
+                        {column.header}
                       </Button>
                     );
                   })}

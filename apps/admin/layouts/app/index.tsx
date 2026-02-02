@@ -21,7 +21,7 @@ export function LayoutApp({ children }: PropsWithChildren) {
   return (
     <QueryWrapper
       apiProvider={process.env.NEXT_PUBLIC_ENDPOINT_URL || ""}
-      withCredentials={false}
+      withCredentials={true}
       timeout={5000}
       queryProps={{
         defaultOptions: {

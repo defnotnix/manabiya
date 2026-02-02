@@ -26,6 +26,7 @@ export function DataTableShellHeader({
   newButtonHref,
   sustained = false,
   onNewClick,
+  disableCreateButton = false,
 }: PropDataTableHeader) {
   // * CONTEXT
   const moreActionsMenuId = useId();
@@ -108,15 +109,17 @@ export function DataTableShellHeader({
                 onClick={handleNewClick}
                 size="xs"
                 leftSection={<PlusIcon />}
+                disabled={disableCreateButton}
               >
                 New {moduleInfo.label}
               </Button>
             ) : (
               <Button
                 component="a"
-                href={finalHref}
+                href={disableCreateButton ? undefined : finalHref}
                 size="xs"
                 leftSection={<PlusIcon />}
+                disabled={disableCreateButton}
               >
                 New {moduleInfo.label}
               </Button>
@@ -124,7 +127,7 @@ export function DataTableShellHeader({
 
             <Menu id={newButtonMenuId}>
               <Menu.Target>
-                <Button size="xs" px={8} ml={1}>
+                <Button size="xs" px={8} ml={1} disabled={disableCreateButton}>
                   <CaretDownIcon />
                 </Button>
               </Menu.Target>

@@ -1,84 +1,19 @@
-
-import { 
-  FilesIcon,
+import {
+  ChartBarIcon,
   GearIcon,
-  TagIcon,
-  TicketIcon,
+  MapPinIcon,
   UsersIcon,
-  ChartBarIcon, 
-  ReceiptIcon,
-  BankIcon,
-  TruckIcon,
-  GlobeIcon,
-  MegaphoneIcon,
-  HouseIcon
+  ShieldIcon,
+  MapTrifoldIcon,
+  TranslateIcon,
+  PolygonIcon,
+  ChartLineUpIcon,
+  HouseIcon,
 } from "@phosphor-icons/react";
-import { NavConfig, NavElement, NavGroup, NavModule } from "@settle/admin";
-
-// Import existing configs
+import { NavConfig, NavGroup } from "@settle/admin";
 import { navItems as mainNavItems } from "./navs/main-nav";
-import { navModules } from "./navs/modules";
 
-// Helper to convert legacy items to new structure
-function convertLegacyItems(items: any[]): NavElement[] {
-  return items.map(item => ({
-    type: "link",
-    label: item.label,
-    href: item.value || "#",
-    icon: item.icon,
-    // Add dummy children for testing depth if needed
-    // children: ...
-  }));
-}
-
-// Helper to generate dummy items for testing (Goal: 10-20 items per module)
-function generateDummyItems(moduleId: string, count: number): NavElement[] {
-  return Array.from({ length: count }).map((_, i) => ({
-    type: "link",
-    label: `${moduleId} Item ${i + 1}`,
-    href: `/admin/${moduleId}/item-${i + 1}`,
-    icon: FilesIcon
-  }));
-}
-
-// 1. Create groups from navModules
-const moduleGroups: NavGroup[] = navModules.map((mod, index) => {
-  const modId = mod.label.toLowerCase().replace(/[^a-z0-9]/g, "-");
-  
-  return {
-    id: modId,
-    label: mod.label,
-    icon: mod.icon,
-    color: mod.color as any,
-    modules: [
-      {
-        id: `${modId}-main`,
-        label: "Main",
-        showHeader: false, // Cleaner look for main module
-        items: [
-           // Add a dashboard/overview link for this module
-           { type: "link", label: "Dashboard", href: `/admin/${modId}`, icon: ChartBarIcon },
-           { type: "divider" },
-           // Add generated dummy items
-           ...generateDummyItems(modId, 15) 
-        ]
-      },
-      {
-          id: `${modId}-settings`,
-          label: "Settings",
-          showHeader: true,
-          items: [
-              { type: "link", label: "Configuration", href: `/admin/${modId}/config`, icon: GearIcon },
-              { type: "link", label: "Permissions", href: `/admin/${modId}/perms`, icon: UsersIcon },
-              { type: "link", label: "Tags", href: `/admin/${modId}/tags`, icon: TagIcon },
-          ]
-      }
-    ]
-  };
-});
-
-// 2. Handle the "Main" nav items (Home, Agendas)
-// We'll put these in a "General" or "Home" group at the top
+// Dashboard / General Group
 const mainGroup: NavGroup = {
   id: "general",
   label: "General",
@@ -88,23 +23,118 @@ const mainGroup: NavGroup = {
       id: "general-main",
       label: "General",
       items: [
-        ...convertLegacyItems(mainNavItems),
-        { type: "divider" },
-        // Add some dummy items here too for testing
-        ...generateDummyItems("general", 10)
+         // Keep existing main nav items (Home, etc.) if needed, or just Dashboard
+         // User asked for "just dashboard for my the main module"
+         // But maybe keep the standard navItems or just a Dashboard link. 
+         // I'll add Dashboard explicitly and then the standard ones if they are generic.
+         { 
+            type: "link", 
+            label: "Dashboard", 
+            href: "/admin", 
+            icon: ChartBarIcon 
+         },
       ]
     }
   ]
 };
 
-// 3. Assemble final config
+// Configuration Module Group
+const configGroup: NavGroup = {
+  id: "config",
+  label: "Configuration",
+  icon: GearIcon,
+  color: "blue", // Arbitrary color
+  modules: [
+    {
+      id: "auth",
+      label: "Auth",
+      items: [
+        {
+          type: "link",
+          label: "Users",
+          href: "/admin/config/auth/users",
+          icon: UsersIcon,
+        },
+        {
+          type: "link",
+          label: "Roles",
+          href: "/admin/config/auth/roles",
+          icon: ShieldIcon, // Using Shield for Roles
+        },
+      ],
+    },
+    {
+      id: "location",
+      label: "Location",
+      items: [
+        {
+          type: "link",
+          label: "Geo Unit Types",
+          href: "/admin/config/location/geo-unit-types",
+          icon: MapTrifoldIcon,
+        },
+        {
+          type: "link",
+          label: "Geo Units",
+          href: "/admin/config/location/geo-units",
+          icon: MapPinIcon,
+        },
+        {
+          type: "link",
+          label: "Geo Unit Names",
+          href: "/admin/config/location/geo-unit-names",
+          icon: TranslateIcon,
+        },
+        {
+          type: "link",
+          label: "Geo Unit Geometries",
+          href: "/admin/config/location/geo-unit-geometries",
+          icon: PolygonIcon,
+        },
+        {
+           type: "divider",
+           label: "Places"
+        },
+        {
+          type: "link",
+          label: "Place Types",
+          href: "/admin/config/location/place-types",
+          icon: MapPinIcon,
+        },
+        {
+          type: "link",
+          label: "Places",
+          href: "/admin/config/location/places",
+          icon: MapPinIcon,
+        },
+        {
+           type: "divider",
+           label: "Metrics"
+        },
+        {
+          type: "link",
+          label: "Metrics",
+          href: "/admin/config/location/metrics",
+          icon: ChartBarIcon,
+        },
+        {
+          type: "link",
+          label: "Metric Values",
+          href: "/admin/config/location/geo-unit-metric-values",
+          icon: ChartLineUpIcon,
+        },
+      ],
+    },
+  ],
+};
+
 export const navConfig: NavConfig = {
   groups: [
     mainGroup,
-    ...moduleGroups
+    configGroup,
   ],
   settings: {
-      searchEnabled: true,
-      accordion: true
-  }
+    searchEnabled: true,
+    accordion: true,
+  },
 };

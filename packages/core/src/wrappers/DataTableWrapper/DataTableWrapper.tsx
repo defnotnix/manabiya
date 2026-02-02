@@ -67,6 +67,7 @@ export function DataTableWrapper<T>({
                 ? {
                     page,
                     pageSize,
+                    page_size: pageSize, // snake_case for API compatibility
                     search,
                     filters,
                   }

@@ -5,6 +5,7 @@
 A "sustained module" is a specialized module pattern where all CRUD operations are handled within a single page using modals and inline forms. Unlike the structured module which has separate pages for new/edit/view, the sustained module keeps everything contained on one list page.
 
 **Key Characteristics:**
+
 - Single page (List page)
 - Modal-based forms for create/edit
 - Inline delete confirmations
@@ -14,6 +15,7 @@ A "sustained module" is a specialized module pattern where all CRUD operations a
 ## When to Use Sustained Module vs Structured Module
 
 **Use Sustained Module when:**
+
 - CRUD operations are simple and quick
 - You want a cleaner, more compact UI
 - Users frequently create/edit items without needing detail pages
@@ -21,6 +23,7 @@ A "sustained module" is a specialized module pattern where all CRUD operations a
 - All data fits well in a table view
 
 **Use Structured Module when:**
+
 - Complex workflows with multiple pages
 - Detailed view pages are important
 - Form complexity is high (multi-step forms)
@@ -40,7 +43,7 @@ apps/admin-test/
 │           ├── pages/
 │           │   └── list/
 │           │       ├── page.tsx         # Single list page with modals
-│           │       └── list.columns.tsx # Column definitions
+│           │       └── list.column.tsx  # Column definitions (REQUIRED)
 │           └── form/
 │               └── [ModuleName]Form.tsx # Reusable form component
 └── app/
@@ -49,15 +52,26 @@ apps/admin-test/
             └── page.tsx                 # Routing page (thin wrapper)
 ```
 
+> **IMPORTANT: File Organization Rules**
+>
+> 1. **Pages MUST be in their specific folders** - Each page type (list, new, edit, view) must have its own folder under `pages/`
+> 2. **Columns MUST be stored separately** - Column definitions must be in a separate file named `list.column.tsx`, NOT inline in the page component
+>
+> This separation ensures:
+> - Clean, maintainable code
+> - Reusable column definitions
+> - Smaller page components
+> - Easier testing and modifications
+
 ### Key Differences from Structured Module
 
-| Aspect | Sustained | Structured |
-|--------|-----------|-----------|
-| Pages | 1 (list only) | 4+ (list, new, edit, view) |
-| Forms | Modal-based | Page-based |
-| Routing | Simple | Complex with sub-routes |
+| Aspect         | Sustained           | Structured                 |
+| -------------- | ------------------- | -------------------------- |
+| Pages          | 1 (list only)       | 4+ (list, new, edit, view) |
+| Forms          | Modal-based         | Page-based                 |
+| Routing        | Simple              | Complex with sub-routes    |
 | Form Placement | DataTableModalShell | FormShell with FormWrapper |
-| Delete | Confirmation modal | API call with redirect |
+| Delete         | Confirmation modal  | API call with redirect     |
 
 ## File Descriptions
 
@@ -82,6 +96,7 @@ export { AGENDA_API };
 ```
 
 **Key Fields:**
+
 - `name`: Singular module name
 - `label`: Plural display label
 - `term`: Used in modal titles ("New {term}")
@@ -100,12 +115,12 @@ import { moduleApiCall } from "@settle/core";
 const ENDPOINT = "/agendas";
 
 export const AGENDA_API = {
+  // Return response directly - let dataKey handle extraction
   getAgendas: async (params?: any) => {
-    const data = await moduleApiCall.getRecords({
+    return await moduleApiCall.getRecords({
       endpoint: ENDPOINT,
       params,
     });
-    return { data: Array.isArray(data) ? data : [] };
   },
 
   createAgenda: async (data: any) => {
@@ -134,9 +149,43 @@ export const AGENDA_API = {
 };
 ```
 
+> **Note:** For `getAgendas`, return the response directly without wrapping. The `dataKey` prop in `DataTableWrapper` will handle extracting the correct data array from the response.
+
+### `pages/list/list.column.tsx` - Column Definitions (REQUIRED)
+
+> **IMPORTANT:** Column definitions MUST be in a separate file. Never define columns inline in page.tsx.
+
+```typescript
+import { Badge } from "@mantine/core";
+
+export const columns = [
+  {
+    accessor: "id",
+    header: "ID",
+    size: 80,
+  },
+  {
+    accessor: "title",
+    header: "Title",
+    size: 250,
+  },
+  {
+    accessor: "status",
+    header: "Status",
+    size: 120,
+    render: (row: any) => (
+      <Badge color={row.status === "active" ? "green" : "gray"}>
+        {row.status}
+      </Badge>
+    ),
+  },
+];
+```
+
 ### `pages/list/page.tsx` - Single List Page
 
 The only page in a sustained module. Uses `DataTableModalShell` which combines:
+
 - DataTable display
 - Modal forms for create/edit
 - Confirmation for delete
@@ -149,22 +198,14 @@ import { DataTableWrapper } from "@settle/core";
 import { DataTableModalShell } from "@settle/admin";
 import { AGENDA_MODULE_CONFIG, AGENDA_API } from "../../module.config";
 import { AgendaForm } from "../../form/AgendaForm";
+import { columns } from "./list.column"; // Import columns from separate file
 
 export function ListPage() {
-  const columns = [
-    { accessor: "title", header: "Title", size: 250 },
-    { accessor: "status", header: "Status", size: 120 },
-    // More columns...
-  ];
-
   return (
     <DataTableWrapper
       queryKey="agenda.list"
-      queryGetFn={async () => {
-        const response = await AGENDA_API.getAgendas();
-        return { data: response?.data || [] };
-      }}
-      dataKey="data"
+      queryGetFn={AGENDA_API.getAgendas}
+      dataKey="results"
     >
       <DataTableModalShell
         moduleInfo={AGENDA_MODULE_CONFIG}
@@ -198,6 +239,7 @@ export function ListPage() {
 ```
 
 **Key Points:**
+
 - Wrapped in `DataTableWrapper` for data management
 - Uses `DataTableModalShell` for modal-based CRUD
 - `onCreateApi`, `onEditApi`, `onDeleteApi` handle API calls
@@ -245,6 +287,7 @@ export function AgendaForm() {
 ```
 
 **Key Differences from Structured:**
+
 - No FormShell wrapper (modals handle layout)
 - Form used for both create and edit (passed to `DataTableModalShell`)
 - Form is inside Modal, not on a separate page
@@ -277,23 +320,23 @@ export default ListPage;
 
 ### Props
 
-| Prop | Type | Description |
-|------|------|-------------|
-| `moduleInfo` | `object` | Module configuration with name, label, description |
-| `columns` | `array` | Column definitions for the table |
-| `idAccessor` | `string` | Property name used as unique identifier |
-| `filterList` | `array` | Filter configuration options |
-| `onCreateApi` | `function` | API call function: `(data) => Promise<result>` |
-| `onEditApi` | `function` | API call function: `(id, data) => Promise<result>` |
-| `onDeleteApi` | `function` | API call function: `(id) => Promise<void>` |
-| `createFormComponent` | `ReactNode` | Form component for create modal |
-| `editFormComponent` | `ReactNode` | Form component for edit modal |
-| `onCreateSuccess` | `function` | Callback after successful create |
-| `onEditSuccess` | `function` | Callback after successful edit |
-| `onDeleteSuccess` | `function` | Callback after successful delete |
-| `modalWidth` | `string\|number` | Modal width (default: "md") |
-| `hasReviewPage` | `boolean` | Enable review button (default: false) |
-| `onReviewClick` | `function` | Handler for review button |
+| Prop                  | Type             | Description                                        |
+| --------------------- | ---------------- | -------------------------------------------------- |
+| `moduleInfo`          | `object`         | Module configuration with name, label, description |
+| `columns`             | `array`          | Column definitions for the table                   |
+| `idAccessor`          | `string`         | Property name used as unique identifier            |
+| `filterList`          | `array`          | Filter configuration options                       |
+| `onCreateApi`         | `function`       | API call function: `(data) => Promise<result>`     |
+| `onEditApi`           | `function`       | API call function: `(id, data) => Promise<result>` |
+| `onDeleteApi`         | `function`       | API call function: `(id) => Promise<void>`         |
+| `createFormComponent` | `ReactNode`      | Form component for create modal                    |
+| `editFormComponent`   | `ReactNode`      | Form component for edit modal                      |
+| `onCreateSuccess`     | `function`       | Callback after successful create                   |
+| `onEditSuccess`       | `function`       | Callback after successful edit                     |
+| `onDeleteSuccess`     | `function`       | Callback after successful delete                   |
+| `modalWidth`          | `string\|number` | Modal width (default: "md")                        |
+| `hasReviewPage`       | `boolean`        | Enable review button (default: false)              |
+| `onReviewClick`       | `function`       | Handler for review button                          |
 
 ### Basic Implementation
 
@@ -304,14 +347,13 @@ export default ListPage;
     const response = await AGENDA_API.getAgendas();
     return { data: response?.data || [] };
   }}
-  dataKey="data"
+  dataKey="results"
 >
   <DataTableModalShell
     // Required
     moduleInfo={AGENDA_MODULE_CONFIG}
     columns={columns}
     idAccessor="id"
-
     // API handlers
     onCreateApi={async (data) => {
       const response = await AGENDA_API.createAgenda(data);
@@ -324,11 +366,9 @@ export default ListPage;
     onDeleteApi={async (id) => {
       await AGENDA_API.deleteAgenda(String(id));
     }}
-
     // Forms
     createFormComponent={<AgendaForm />}
     editFormComponent={<AgendaForm />}
-
     // Customization
     modalWidth="lg"
     filterList={[]}
@@ -339,12 +379,14 @@ export default ListPage;
 ### Modal Form Behavior
 
 **Create Modal:**
+
 - Opens when user clicks "New" button
 - Shows title: "NEW {TERM}"
 - Calls `onCreateApi` on submit
 - Closes and refetches on success
 
 **Edit Modal:**
+
 - Opens when user clicks row or edit action
 - Shows title: "EDIT {TERM}"
 - Pre-populates with row data
@@ -352,6 +394,7 @@ export default ListPage;
 - Closes and refetches on success
 
 **Delete Confirmation:**
+
 - Shows confirmation modal
 - Calls `onDeleteApi` on confirm
 - Auto-refetches on success
@@ -385,6 +428,7 @@ const columns = [
 ```
 
 **Column Properties:**
+
 - `accessor`: Data field to display
 - `header`: Column header label
 - `size`: Column width in pixels
@@ -457,6 +501,7 @@ Before implementing a sustained module, ensure you have:
 - [ ] **module.config.ts** - Module metadata and API re-export
 - [ ] **module.api.ts** - All CRUD endpoints
 - [ ] **pages/list/page.tsx** - List page with DataTableModalShell
+- [ ] **pages/list/list.column.tsx** - Column definitions (REQUIRED - never inline)
 - [ ] **form/[ModuleName]Form.tsx** - Reusable form component
 - [ ] **index.ts** - Module exports
 - [ ] **app/admin/[module]/page.tsx** - Routing page (thin wrapper)
@@ -495,6 +540,7 @@ export const navItems: PropAdminNavItems[] = [
 ```
 
 **Key Points:**
+
 - Import an appropriate icon from `@phosphor-icons/react`
 - `label`: Display name in navigation
 - `value`: Route path (e.g., `/agenda`)
@@ -503,6 +549,7 @@ export const navItems: PropAdminNavItems[] = [
 ### Icon Selection
 
 Choose from available Phosphor Icons:
+
 - `ClipboardIcon` - For agendas, tasks, lists
 - `FileTextIcon` - For documents, proposals
 - `CheckCircleIcon` - For approvals, workflows
@@ -577,15 +624,16 @@ DataTableModalShell automatically refetches data after successful create/edit/de
 Set appropriate modal width based on form complexity:
 
 ```typescript
-modalWidth="sm"    // Small forms
-modalWidth="md"    // Default (medium)
-modalWidth="lg"    // Complex forms
-modalWidth="xl"    // Very complex forms
+modalWidth = "sm"; // Small forms
+modalWidth = "md"; // Default (medium)
+modalWidth = "lg"; // Complex forms
+modalWidth = "xl"; // Very complex forms
 ```
 
 ## Comparison: Sustained vs Structured
 
 ### Sustained Module Structure
+
 ```
 agenda/
 ├── module.config.ts
@@ -594,11 +642,13 @@ agenda/
 │   └── AgendaForm.tsx
 ├── pages/
 │   └── list/
-│       └── page.tsx
+│       ├── page.tsx
+│       └── list.column.tsx  # REQUIRED: Column definitions
 └── index.ts
 ```
 
 ### Structured Module Structure
+
 ```
 applicant/
 ├── module.config.ts
@@ -618,6 +668,7 @@ applicant/
 ```
 
 **Key Differences:**
+
 - Sustained: 1 page → Modal-based forms
 - Structured: 4+ pages → Page-based forms
 - Sustained: Simpler, more compact
@@ -632,7 +683,7 @@ applicant/
 <DataTableWrapper
   queryKey="item.list"
   queryGetFn={() => API.getItems()}
-  dataKey="data"
+  dataKey="results"
 >
   <DataTableModalShell
     moduleInfo={MODULE_CONFIG}
@@ -695,9 +746,11 @@ applicant/
 - **module.api.ts**: Up to 10-15 endpoints
 - **module.config.ts**: Lightweight, <20 lines
 - **[ModuleName]Form.tsx**: <80 lines
-- **pages/list/page.tsx**: <100 lines
+- **pages/list/page.tsx**: <60 lines (columns are separate)
+- **pages/list/list.column.tsx**: <50 lines per column file
 
 If files exceed these, consider:
+
 - Extracting form fields to separate components
 - Creating utility functions for complex logic
 - Splitting large forms into multi-step forms (if needed)
@@ -728,30 +781,37 @@ The sustained module architecture allows easy extension:
 To create a new sustained module in 5 steps:
 
 ### Step 1: Create Module Directory Structure
+
 ```bash
 mkdir -p apps/admin-test/modules/admin/[module-name]/{form,pages/list}
 ```
 
 ### Step 2: Create Core Files
+
 - **module.config.ts** - Module configuration
 - **module.api.ts** - API endpoints
 - **form/[ModuleName]Form.tsx** - Form component
-- **pages/list/page.tsx** - List page
+- **pages/list/page.tsx** - List page (imports columns)
+- **pages/list/list.column.tsx** - Column definitions (REQUIRED)
 - **index.ts** - Module exports
 
 ### Step 3: Create Routing Page
+
 ```bash
 mkdir -p apps/admin-test/app/admin/[module-name]
 ```
 
 **File:** `app/admin/[module-name]/page.tsx`
+
 ```typescript
 import { ListPage } from "@/modules/admin/[module-name]";
 export default ListPage;
 ```
 
 ### Step 4: Add to Navigation
+
 **File:** `config/nav/navs/main-nav.tsx`
+
 ```typescript
 {
   label: "[Module Label]",
@@ -762,6 +822,7 @@ export default ListPage;
 ```
 
 ### Step 5: Test
+
 - Navigate to `/admin/[module-name]` in browser
 - Verify module appears in navigation sidebar
 - Test create, edit, delete operations
@@ -769,6 +830,7 @@ export default ListPage;
 ## Summary
 
 Sustained modules provide:
+
 - Simplified architecture with single page
 - Modal-based forms integrated with table
 - Automatic data refresh after operations

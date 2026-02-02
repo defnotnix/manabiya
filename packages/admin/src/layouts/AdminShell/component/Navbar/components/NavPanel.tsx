@@ -18,7 +18,7 @@ export function NavPanel() {
       style={{ flex: 1, minWidth: 0, overflow: "hidden" }}
     >
       {/* Module Content */}
-      <ScrollArea py="sm" className={classes.navScrollArea}>
+      <ScrollArea className={classes.navScrollArea}>
         <Stack gap="xl" px={0} pb="md">
           {/* Gap between modules */}
           {activeGroup.modules.map((module) => (

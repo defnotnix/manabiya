@@ -1,35 +1,37 @@
 # DataTableShell Usage
 
 ## Overview
+
 `DataTableShell` is a layout component from `@settle/admin` that provides the complete UI shell for a data table list page. It includes header, filters, toolbar, pagination, and row actions.
 
 ## Location
+
 `@settle/admin/src/layouts/DataTableShell/`
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `moduleInfo` | `object` | Required | Module configuration with name, description, etc. |
-| `columns` | `MRT_ColumnDef[]` | Required | Column definitions for mantine-react-table |
-| `idAccessor` | `string` | `"id"` | Property name used as unique identifier for rows |
-| `newButtonHref` | `string` | - | URL for creating new records |
-| `onNewClick` | `function` | - | Callback when new button is clicked |
-| `onEditClick` | `function` | - | Callback when edit action is triggered |
-| `onDeleteClick` | `function` | - | Callback when delete action is triggered |
-| `onReviewClick` | `function` | - | Callback when review/view action is triggered |
-| `tabs` | `array` | `[]` | Tab configuration array |
-| `tableActions` | `array` | `[]` | Custom row action buttons |
-| `pageSizes` | `array` | `[10, 20, 50, 100]` | Page size options |
-| `disableActions` | `boolean` | `false` | Disable row action buttons |
-| `hideFilters` | `boolean` | - | Hide filter toolbar |
-| `filterList` | `array` | `[]` | Filter configuration |
-| `forceFilter` | `object` | - | Force apply specific filters |
-| `hasServerSearch` | `boolean` | `false` | Enable server-side search |
-| `sustained` | `boolean` | `false` | Maintain selected records across pages |
-| `rowColor` | `string` | `"var(--mantine-color-gray-0)"` | Row text color |
-| `rowBackgroundColor` | `string` | `"var(--mantine-color-gray-0)"` | Row background color |
-| `rowStyle` | `CSSProperties` | - | Custom row styles |
+| Prop                 | Type              | Default                         | Description                                       |
+| -------------------- | ----------------- | ------------------------------- | ------------------------------------------------- |
+| `moduleInfo`         | `object`          | Required                        | Module configuration with name, description, etc. |
+| `columns`            | `MRT_ColumnDef[]` | Required                        | Column definitions for mantine-react-table        |
+| `idAccessor`         | `string`          | `"id"`                          | Property name used as unique identifier for rows  |
+| `newButtonHref`      | `string`          | -                               | URL for creating new records                      |
+| `onNewClick`         | `function`        | -                               | Callback when new button is clicked               |
+| `onEditClick`        | `function`        | -                               | Callback when edit action is triggered            |
+| `onDeleteClick`      | `function`        | -                               | Callback when delete action is triggered          |
+| `onReviewClick`      | `function`        | -                               | Callback when review/view action is triggered     |
+| `tabs`               | `array`           | `[]`                            | Tab configuration array                           |
+| `tableActions`       | `array`           | `[]`                            | Custom row action buttons                         |
+| `pageSizes`          | `array`           | `[10, 20, 50, 100]`             | Page size options                                 |
+| `disableActions`     | `boolean`         | `false`                         | Disable row action buttons                        |
+| `hideFilters`        | `boolean`         | -                               | Hide filter toolbar                               |
+| `filterList`         | `array`           | `[]`                            | Filter configuration                              |
+| `forceFilter`        | `object`          | -                               | Force apply specific filters                      |
+| `hasServerSearch`    | `boolean`         | `false`                         | Enable server-side search                         |
+| `sustained`          | `boolean`         | `false`                         | Maintain selected records across pages            |
+| `rowColor`           | `string`          | `"var(--mantine-color-gray-0)"` | Row text color                                    |
+| `rowBackgroundColor` | `string`          | `"var(--mantine-color-gray-0)"` | Row background color                              |
+| `rowStyle`           | `CSSProperties`   | -                               | Custom row styles                                 |
 
 ## Basic Usage
 
@@ -40,7 +42,7 @@ import { DataTableWrapper } from "@settle/core";
 <DataTableWrapper
   queryKey="applicant.list"
   queryGetFn={() => APPLICANT_API.getApplicants()}
-  dataKey="data"
+  dataKey="results"
 >
   <DataTableShell
     moduleInfo={{
@@ -55,7 +57,7 @@ import { DataTableWrapper } from "@settle/core";
     onReviewClick={(id) => router.push(`/admin/applicant/${id}`)}
     onDeleteClick={(id) => API.deleteApplicant(id)}
   />
-</DataTableWrapper>
+</DataTableWrapper>;
 ```
 
 ## Column Definition
@@ -64,12 +66,12 @@ Define columns using the following format:
 
 ### Column Properties
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `accessor` | `string` | Yes | The data field key to access from records |
-| `header` | `string` | Yes | The column header label to display |
-| `size` | `number` | No | Column width in pixels |
-| `render` | `function` | No | Custom render function: `(row, index) => ReactNode` |
+| Property   | Type       | Required | Description                                         |
+| ---------- | ---------- | -------- | --------------------------------------------------- |
+| `accessor` | `string`   | Yes      | The data field key to access from records           |
+| `header`   | `string`   | Yes      | The column header label to display                  |
+| `size`     | `number`   | No       | Column width in pixels                              |
+| `render`   | `function` | No       | Custom render function: `(row, index) => ReactNode` |
 
 ### Basic Column Definition
 
@@ -135,12 +137,13 @@ import { applicantListColumns } from "./list.columns";
   columns={applicantListColumns}
   idAccessor="id"
   // ... other props
-/>
+/>;
 ```
 
 ## Row Actions
 
 ### Default Actions
+
 The shell automatically provides Edit, Delete, and Review buttons based on callbacks:
 
 ```tsx
@@ -158,6 +161,7 @@ The shell automatically provides Edit, Delete, and Review buttons based on callb
 ```
 
 ### Custom Actions
+
 Add custom row actions:
 
 ```tsx
@@ -180,13 +184,13 @@ Add custom row actions:
 ## Filters & Search
 
 ### Hide Filters
+
 ```tsx
-<DataTableShell
-  hideFilters={true}
-/>
+<DataTableShell hideFilters={true} />
 ```
 
 ### Define Filter Options
+
 ```tsx
 <DataTableShell
   filterList={[
@@ -209,6 +213,7 @@ Add custom row actions:
 ```
 
 ### Force Apply Filters
+
 ```tsx
 <DataTableShell
   forceFilter={{
@@ -237,9 +242,7 @@ Add multiple tabs to the list:
 Customize page size options:
 
 ```tsx
-<DataTableShell
-  pageSizes={[5, 10, 25, 50]}
-/>
+<DataTableShell pageSizes={[5, 10, 25, 50]} />
 ```
 
 ## Row Styling
@@ -268,6 +271,7 @@ const { selectedRecords } = DataTableShell.useContext();
 ## Common Patterns
 
 ### Pattern 1: Simple Read-Only List
+
 ```tsx
 <DataTableShell
   moduleInfo={MODULE_CONFIG}
@@ -278,6 +282,7 @@ const { selectedRecords } = DataTableShell.useContext();
 ```
 
 ### Pattern 2: Full CRUD Operations
+
 ```tsx
 <DataTableShell
   moduleInfo={MODULE_CONFIG}
@@ -290,6 +295,7 @@ const { selectedRecords } = DataTableShell.useContext();
 ```
 
 ### Pattern 3: With Server-Side Search
+
 ```tsx
 <DataTableShell
   moduleInfo={MODULE_CONFIG}
@@ -307,7 +313,9 @@ Access shell context:
 import { useContext } from "react";
 import { Context as DataTableShellContext } from "@settle/admin";
 
-const { selectedRecords, setSelectedRecords } = useContext(DataTableShellContext);
+const { selectedRecords, setSelectedRecords } = useContext(
+  DataTableShellContext,
+);
 ```
 
 ## Notes

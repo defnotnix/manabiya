@@ -21,7 +21,7 @@ export default function TestLayoutPage() {
             })),
           };
         }}
-        dataKey="data"
+        dataKey="results"
       >
         <DataTableShell
           moduleInfo={{

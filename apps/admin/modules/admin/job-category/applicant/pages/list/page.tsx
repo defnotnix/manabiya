@@ -18,7 +18,7 @@ export function ListPage() {
           data: response?.data || [],
         };
       }}
-      dataKey="data"
+      dataKey="results"
     >
       <DataTableShell
         moduleInfo={APPLICANT_MODULE_CONFIG}

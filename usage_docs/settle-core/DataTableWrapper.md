@@ -1,23 +1,25 @@
 # DataTableWrapper Usage
 
 ## Overview
+
 `DataTableWrapper` is a core wrapper component from `@settle/core` that manages data fetching, pagination, searching, and filtering for data tables. It wraps your table content with context and store management.
 
 ## Location
+
 `@settle/core/src/wrappers/DataTableWrapper/`
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `testMode` | `boolean` | `false` | Enable console logging for debugging |
-| `children` | `ReactNode` | Required | Child components that consume the data table context |
-| `queryKey` | `string` | `"module.list"` | Unique key for React Query caching |
-| `queryGetFn` | `async function` | Required | Function that fetches data from your API |
-| `enableServerQuery` | `boolean` | `false` | When true, pagination/search is handled by server |
-| `dataKey` | `string` | - | Path to extract data array from response (e.g., `"data"` or `"results"`) |
-| `paginationDataKey` | `string` | - | Path to extract pagination info from response |
-| `paginationResponseFn` | `function` | `() => {}` | Custom function to extract pagination data from response |
+| Prop                   | Type             | Default         | Description                                                              |
+| ---------------------- | ---------------- | --------------- | ------------------------------------------------------------------------ |
+| `testMode`             | `boolean`        | `false`         | Enable console logging for debugging                                     |
+| `children`             | `ReactNode`      | Required        | Child components that consume the data table context                     |
+| `queryKey`             | `string`         | `"module.list"` | Unique key for React Query caching                                       |
+| `queryGetFn`           | `async function` | Required        | Function that fetches data from your API                                 |
+| `enableServerQuery`    | `boolean`        | `false`         | When true, pagination/search is handled by server                        |
+| `dataKey`              | `string`         | -               | Path to extract data array from response (e.g., `"data"` or `"results"`) |
+| `paginationDataKey`    | `string`         | -               | Path to extract pagination info from response                            |
+| `paginationResponseFn` | `function`       | `() => {}`      | Custom function to extract pagination data from response                 |
 
 ## Basic Usage
 
@@ -32,15 +34,16 @@ import { DataTableWrapper } from "@settle/core";
       data: response?.data || [],
     };
   }}
-  dataKey="data"
+  dataKey="results"
 >
   {/* Your DataTableShell or custom table component */}
-</DataTableWrapper>
+</DataTableWrapper>;
 ```
 
 ## Key Features
 
 ### 1. **Client-Side Pagination & Search**
+
 By default, DataTableWrapper handles pagination and search client-side using the store:
 
 ```tsx
@@ -55,6 +58,7 @@ By default, DataTableWrapper handles pagination and search client-side using the
 ```
 
 ### 2. **Server-Side Pagination & Search**
+
 Enable server-side handling:
 
 ```tsx
@@ -65,7 +69,7 @@ Enable server-side handling:
     // params includes: page, pageSize, search, filters
     return await APPLICANT_API.getApplicants(params);
   }}
-  dataKey="data"
+  dataKey="results"
   paginationDataKey="pagination"
 >
   {/* Server handles pagination */}
@@ -73,6 +77,7 @@ Enable server-side handling:
 ```
 
 ### 3. **Custom Pagination Response**
+
 Use a function to extract pagination data:
 
 ```tsx
@@ -82,7 +87,7 @@ Use a function to extract pagination data:
   queryGetFn={async (params) => {
     return await API.getApplicants(params);
   }}
-  dataKey="data"
+  dataKey="results"
   paginationResponseFn={(response) => ({
     total: response.total,
     hasMore: response.hasMore,
@@ -113,7 +118,7 @@ Enable debug logging:
   testMode={true}
   queryKey="applicant.list"
   queryGetFn={...}
-  dataKey="data"
+  dataKey="results"
 >
   {/* Logs: DataTableWrapper_Data, pagination info */}
 </DataTableWrapper>
@@ -122,23 +127,25 @@ Enable debug logging:
 ## Common Patterns
 
 ### Pattern 1: Simple List with Client-Side Search
+
 ```tsx
 <DataTableWrapper
   queryKey="applicant.list"
   queryGetFn={() => APPLICANT_API.getApplicants()}
-  dataKey="data"
+  dataKey="results"
 >
   <DataTableShell columns={columns} />
 </DataTableWrapper>
 ```
 
 ### Pattern 2: Server-Side Paginated List
+
 ```tsx
 <DataTableWrapper
   queryKey="applicant.list"
   enableServerQuery={true}
   queryGetFn={(params) => APPLICANT_API.getApplicants(params)}
-  dataKey="data"
+  dataKey="results"
   paginationDataKey="pagination"
 >
   <DataTableShell columns={columns} />

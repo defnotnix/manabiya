@@ -62,12 +62,14 @@ Based on inputs, generate all files listed below.
 ### Shell-Specific Files
 
 **DataTableModalShell** (modal-based):
+
 ```
 └── pages/list/components/
     └── [ModuleName]ProfileModal.tsx
 ```
 
 **DataTableShell** (page-based):
+
 ```
 └── pages/
     ├── new/page.tsx
@@ -82,6 +84,7 @@ apps/admin-test/app/admin/[module-slug]/page.tsx
 ```
 
 For DataTableShell, also:
+
 ```
 apps/admin-test/app/admin/[module-slug]/new/page.tsx
 apps/admin-test/app/admin/[module-slug]/[id]/page.tsx
@@ -94,14 +97,14 @@ apps/admin-test/app/admin/[module-slug]/[id]/edit/page.tsx
 
 Before generating code, read these USAGE.md files for accurate patterns:
 
-| Component | Documentation |
-|-----------|---------------|
+| Component           | Documentation                                             |
+| ------------------- | --------------------------------------------------------- |
 | DataTableModalShell | `packages/admin/src/layouts/DataTableModalShell/USAGE.md` |
-| DataTableShell | `packages/admin/src/layouts/DataTableShell/USAGE.md` |
-| DataTableWrapper | `packages/core/src/wrappers/DataTableWrapper/USAGE.md` |
-| FormWrapper | `packages/core/src/wrappers/FormWrapper/USAGE.md` |
-| FormShell | `packages/admin/src/layouts/FormShell/USAGE.md` |
-| moduleApiCall | `packages/core/src/helpers/moduleApiCall/USAGE.md` |
+| DataTableShell      | `packages/admin/src/layouts/DataTableShell/USAGE.md`      |
+| DataTableWrapper    | `packages/core/src/wrappers/DataTableWrapper/USAGE.md`    |
+| FormWrapper         | `packages/core/src/wrappers/FormWrapper/USAGE.md`         |
+| FormShell           | `packages/admin/src/layouts/FormShell/USAGE.md`           |
+| moduleApiCall       | `packages/core/src/helpers/moduleApiCall/USAGE.md`        |
 
 ---
 
@@ -109,14 +112,14 @@ Before generating code, read these USAGE.md files for accurate patterns:
 
 From module name `AuthUsers`:
 
-| Format | Output |
-|--------|--------|
-| PascalCase | `AuthUsers` |
-| camelCase | `authUsers` |
-| SCREAMING_SNAKE | `AUTH_USERS` |
-| kebab-case | `auth-users` |
-| Singular | `AuthUser` / `User` |
-| Plural | `AuthUsers` / `Users` |
+| Format          | Output                |
+| --------------- | --------------------- |
+| PascalCase      | `AuthUsers`           |
+| camelCase       | `authUsers`           |
+| SCREAMING_SNAKE | `AUTH_USERS`          |
+| kebab-case      | `auth-users`          |
+| Singular        | `AuthUser` / `User`   |
+| Plural          | `AuthUsers` / `Users` |
 
 ---
 
@@ -124,32 +127,32 @@ From module name `AuthUsers`:
 
 From data format, generate columns:
 
-| Field Type | Pattern |
-|------------|---------|
-| `id` | `{ accessor: "id", header: "ID", size: 80 }` |
-| `string` | `{ accessor: "field", header: "Label", size: 150 }` |
-| `email` | `{ accessor: "email", header: "Email", size: 220 }` |
-| `date` | Render with `toLocaleDateString()` |
-| `boolean` | Render with `<Badge>` |
-| `status/role` | Render with colored `<Badge>` |
+| Field Type     | Pattern                                                     |
+| -------------- | ----------------------------------------------------------- |
+| `id`           | `{ accessor: "id", header: "ID", size: 80 }`                |
+| `string`       | `{ accessor: "field", header: "Label", size: 150 }`         |
+| `email`        | `{ accessor: "email", header: "Email", size: 220 }`         |
+| `date`         | Render with `toLocaleDateString()`                          |
+| `boolean`      | Render with `<Badge>`                                       |
+| `status/role`  | Render with colored `<Badge>`                               |
 | `nested.field` | `accessor: "parent.child"`, render with `row.parent?.child` |
-| `image` | Render with `<Avatar>` |
+| `image`        | Render with `<Avatar>`                                      |
 
 ---
 
 ## Form Field Generation
 
-| Field Type | Component |
-|------------|-----------|
-| `string` (short) | `<TextInput>` |
-| `string` (long) | `<Textarea>` |
-| `email` | `<TextInput type="email">` |
-| `password` | `<PasswordInput>` |
-| `number` | `<NumberInput>` |
-| `date` | `<DateInput>` |
-| `boolean` | `<Switch>` |
-| `enum` | `<Select>` |
-| `nested.field` | `form.getInputProps("parent.child")` |
+| Field Type       | Component                            |
+| ---------------- | ------------------------------------ |
+| `string` (short) | `<TextInput>`                        |
+| `string` (long)  | `<Textarea>`                         |
+| `email`          | `<TextInput type="email">`           |
+| `password`       | `<PasswordInput>`                    |
+| `number`         | `<NumberInput>`                      |
+| `date`           | `<DateInput>`                        |
+| `boolean`        | `<Switch>`                           |
+| `enum`           | `<Select>`                           |
+| `nested.field`   | `form.getInputProps("parent.child")` |
 
 ---
 
@@ -276,7 +279,7 @@ export const [moduleName]ListColumns = [
 "use client";
 
 import { DataTableWrapper } from "@settle/core";
-import { DataTableModalShell, AutoBreadcrumb } from "@settle/admin";
+import { DataTableModalShell } from "@settle/admin";
 import { [MODULE_NAME]_MODULE_CONFIG, [MODULE_NAME]_API } from "../../module.config";
 import { [ModuleName]Form } from "../../form/[ModuleName]Form";
 import { [moduleName]FormConfig } from "../../form/form.config";
@@ -289,7 +292,7 @@ export function ListPage() {
       queryGetFn={async () => [MODULE_NAME]_API.get[Plural]()}
       dataKey="results"
     >
-      <AutoBreadcrumb items={[{ label: "[Module Label]" }]} />
+
 
       <DataTableModalShell
         moduleInfo={[MODULE_NAME]_MODULE_CONFIG}
@@ -317,7 +320,7 @@ export function ListPage() {
 
 import { useRouter } from "next/navigation";
 import { DataTableWrapper } from "@settle/core";
-import { DataTableShell, AutoBreadcrumb } from "@settle/admin";
+import { DataTableShell } from "@settle/admin";
 import { [MODULE_NAME]_MODULE_CONFIG, [MODULE_NAME]_API } from "../../module.config";
 import { [moduleName]ListColumns } from "./list.columns";
 
@@ -330,7 +333,7 @@ export function ListPage() {
       queryGetFn={async () => [MODULE_NAME]_API.get[Plural]()}
       dataKey="results"
     >
-      <AutoBreadcrumb items={[{ label: "[Module Label]" }]} />
+
 
       <DataTableShell
         moduleInfo={[MODULE_NAME]_MODULE_CONFIG}

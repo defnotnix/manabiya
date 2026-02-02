@@ -15,6 +15,8 @@ export function DataTableShellTableActions({
   onEditClick,
   onDeleteClick,
   onReviewClick,
+  disableEditButton = false,
+  disableDeleteButton = false,
 }: PropDataTableShellActions) {
   // * CONTEXT
 
@@ -83,7 +85,7 @@ export function DataTableShellTableActions({
                 Review
               </Button>
 
-              {selectedRecords.length == 1 && (
+              {selectedRecords.length == 1 && !disableEditButton && (
                 <Button
                   leftSection={<PenIcon />}
                   size="xs"
@@ -113,16 +115,18 @@ export function DataTableShellTableActions({
                 </Button>
               )}
 
-              <Button
-                onClick={handleDelete}
-                leftSection={<TrashIcon />}
-                size="xs"
-                variant="subtle"
-                color="red.6"
-                loading={deleting}
-              >
-                Delete
-              </Button>
+              {!disableDeleteButton && (
+                <Button
+                  onClick={handleDelete}
+                  leftSection={<TrashIcon />}
+                  size="xs"
+                  variant="subtle"
+                  color="red.6"
+                  loading={deleting}
+                >
+                  Delete
+                </Button>
+              )}
               <Button
                 leftSection={<XIcon />}
                 size="xs"

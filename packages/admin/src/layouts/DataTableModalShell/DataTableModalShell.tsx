@@ -256,6 +256,10 @@ export function DataTableModalShell({
         onEditClick={(record: any) => contextValue.openEditModal(record)}
         onDeleteClick={handleBulkDelete}
         onReviewClick={onReviewClick}
+
+        disableCreateButton={!onCreateApi}
+        disableEditButton={!onEditApi}
+        disableDeleteButton={!onDeleteApi}
       />
 
       {onCreateApi || onEditApi ? (

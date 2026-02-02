@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Divider, useMantineColorScheme } from "@mantine/core";
 
 import { sortBy } from "lodash";
@@ -23,11 +23,7 @@ export function DataTableShellDataTable({
 }: PropDataTableShellDataTable) {
   //* CONTEXT
 
-  const {
-    data,
-    isLoading: isFetching,
-    refetch,
-  } = DataTableWrapper.useDataTableContext();
+  const { data, isLoading: isFetching } = DataTableWrapper.useDataTableContext();
   const {
     page,
     pageSize,
@@ -42,20 +38,6 @@ export function DataTableShellDataTable({
     columnAccessor: "name",
     direction: "asc",
   });
-
-  // * FUNCTION
-
-  // ---------------------------------------------------------------------------
-  // EFFECTS
-  // ---------------------------------------------------------------------------
-
-  // Initialize column visibility only when `columns` change
-
-  // Refetch data whenever page or pageSize changes (server-side pagination)
-  useEffect(() => {
-    if (!hasServerSearch) return;
-    refetch();
-  }, [page, pageSize, hasServerSearch, refetch]);
 
   // ---------------------------------------------------------------------------
   // DERIVED DATA
@@ -152,9 +134,9 @@ export function DataTableShellDataTable({
     <>
       <Divider />
       <DataTable
-        mih={500}
         striped
         withColumnBorders
+        withRowBorders
         idAccessor={idAccessor}
         columns={tableColumnConfig}
         records={visibleRecords}
@@ -163,6 +145,7 @@ export function DataTableShellDataTable({
         fz="xs"
         fw={500}
         horizontalSpacing="xs"
+        verticalSpacing="xs"
         highlightOnHover
         rowStyle={rowStyle}
         sortStatus={sortStatus}
@@ -175,6 +158,9 @@ export function DataTableShellDataTable({
         onRecordsPerPageChange={handlePageSizeChange}
         paginationSize="xs"
         selectionTrigger="cell"
+        selectionColumnStyle={{
+          maxWidth: 32,
+        }}
         selectionCheckboxProps={{ size: "xs" }}
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={handleSelectionChange}

@@ -216,7 +216,7 @@ export function ListPage() {
         const response = await APPLICANT_API.getApplicants();
         return { data: response?.data || [] };
       }}
-      dataKey="data"
+      dataKey="results"
     >
       <DataTableShell
         moduleInfo={APPLICANT_MODULE_CONFIG}

@@ -33,6 +33,16 @@ export interface PageSignInProps {
   loginApi: string;
 
   /**
+   * Treat input as username instead of email
+   * When true:
+   * - Skips email format validation (accepts any non-empty string)
+   * - Sends { username, password } instead of { email, password }
+   * Useful for Django JWT APIs or systems with non-email usernames
+   * @default false
+   */
+  skipEmailValidation?: boolean;
+
+  /**
    * URL to redirect to after successful login
    * @example "/dashboard"
    */
