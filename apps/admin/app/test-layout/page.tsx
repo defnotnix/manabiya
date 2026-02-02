@@ -35,6 +35,7 @@ export default function TestLayoutPage() {
             { accessor: "lastName", title: "Last Name" },
             { accessor: "email", title: "Email" },
           ]}
+          filterList={[]}
         />
       </DataTableWrapper>
     </div>

@@ -64,4 +64,20 @@ export const columns = [
       </Badge>
     ),
   },
+  {
+    accessor: "user_permissions",
+    header: "Permissions",
+    size: 150,
+    render: (row: any) => {
+      const permCount = Array.isArray(row.user_permissions) ? row.user_permissions.length : 0;
+      if (permCount > 0) {
+        return (
+          <Badge size="sm" color="cyan" variant="light">
+            Polling Station ({permCount})
+          </Badge>
+        );
+      }
+      return <span style={{ color: "var(--mantine-color-dimmed)" }}>-</span>;
+    },
+  },
 ];

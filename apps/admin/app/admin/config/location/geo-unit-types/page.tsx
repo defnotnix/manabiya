@@ -1,3 +1,2 @@
-import { ListPage } from "@/modules/admin/config/location/geo-unit-types";
-
+import { ListPage } from "@/modules/config/location/geo-unit-types";
 export default ListPage;

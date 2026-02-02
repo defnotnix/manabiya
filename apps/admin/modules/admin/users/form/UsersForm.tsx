@@ -11,13 +11,90 @@ import {
   Grid,
   Divider,
   PasswordInput,
+  Card,
+  ThemeIcon,
+  SimpleGrid,
 } from "@mantine/core";
 import { FormWrapper } from "@settle/core";
-import { DateInput } from "@mantine/dates";
+import { User, UserGear, Database } from "@phosphor-icons/react";
+import { USER_TYPES, UserType } from "./form.config";
+import { PollingStationMultiSelect } from "../../elections/data-entry-accounts/form/PollingStationMultiSelect";
 
 interface UsersFormProps {
   currentStep?: number;
   isCreate?: boolean;
+}
+
+// Account status options
+const ACCOUNT_STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "disabled", label: "Disabled" },
+];
+
+// Status Select Component
+function StatusSelect({ form }: { form: any }) {
+  const currentStatus = form.values.is_disabled ? "disabled" : "active";
+
+  const handleStatusChange = (value: string | null) => {
+    if (value === "disabled") {
+      form.setFieldValue("is_active", false);
+      form.setFieldValue("is_disabled", true);
+    } else {
+      form.setFieldValue("is_active", true);
+      form.setFieldValue("is_disabled", false);
+    }
+  };
+
+  return (
+    <Select
+      label="Account Status"
+      data={ACCOUNT_STATUS_OPTIONS}
+      value={currentStatus}
+      onChange={handleStatusChange}
+      size="sm"
+      mt="md"
+    />
+  );
+}
+
+// User Type Selection Card Component
+function UserTypeCard({
+  title,
+  description,
+  icon,
+  selected,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Card
+      withBorder
+      padding="lg"
+      style={{
+        cursor: "pointer",
+        borderColor: selected ? "var(--mantine-color-blue-6)" : undefined,
+        backgroundColor: selected ? "var(--mantine-color-blue-0)" : undefined,
+      }}
+      onClick={onClick}
+    >
+      <Stack align="center" gap="sm">
+        <ThemeIcon size="xl" variant={selected ? "filled" : "light"} color="blue">
+          {icon}
+        </ThemeIcon>
+        <Text fw={600} size="sm">
+          {title}
+        </Text>
+        <Text size="xs" c="dimmed" ta="center">
+          {description}
+        </Text>
+      </Stack>
+    </Card>
+  );
 }
 
 export function UsersForm({
@@ -25,9 +102,121 @@ export function UsersForm({
   isCreate = true,
 }: UsersFormProps) {
   const form = FormWrapper.useForm();
+  const userType = form.values.userType as UserType;
 
-  // Step 1: Identity & Account
+  // Step 0: User Type Selection
   if (currentStep === 0) {
+    return (
+      <Stack gap="md" p="md">
+        <Text fw={600} size="sm" c="dimmed">
+          Select User Type
+        </Text>
+        <Text size="xs" c="dimmed">
+          Choose the type of user account you want to create
+        </Text>
+        <SimpleGrid cols={3} spacing="md" mt="md">
+          <UserTypeCard
+            title="Staff"
+            description="Regular staff member with standard access"
+            icon={<User size={24} />}
+            selected={userType === USER_TYPES.STAFF}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.STAFF)}
+          />
+          <UserTypeCard
+            title="Superuser"
+            description="Administrator with full system access"
+            icon={<UserGear size={24} />}
+            selected={userType === USER_TYPES.SUPERUSER}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.SUPERUSER)}
+          />
+          <UserTypeCard
+            title="Data Entry"
+            description="Account for data entry with polling station access"
+            icon={<Database size={24} />}
+            selected={userType === USER_TYPES.DATA_ENTRY}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.DATA_ENTRY)}
+          />
+        </SimpleGrid>
+        {form.errors.userType && (
+          <Text size="xs" c="red">
+            {form.errors.userType}
+          </Text>
+        )}
+      </Stack>
+    );
+  }
+
+  // For Data Entry users, show review at step 2 onwards (since they only have 2 form steps)
+  if (userType === USER_TYPES.DATA_ENTRY && currentStep >= 2) {
+    return (
+      <Stack gap="md" p="md">
+        <Paper withBorder p="md">
+          <Text fw={600} mb="sm">
+            Review Information
+          </Text>
+          <Grid>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Account Type
+              </Text>
+              <Text size="sm">Data Entry Account</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Username
+              </Text>
+              <Text size="sm">{form.values.username}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Polling Stations
+              </Text>
+              <Text size="sm">{form.values.polling_stations?.length || 0} selected</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Status
+              </Text>
+              <Text size="sm">
+                {form.values.is_active ? "Active" : form.values.is_disabled ? "Disabled" : "Not Set"}
+              </Text>
+            </Grid.Col>
+          </Grid>
+        </Paper>
+      </Stack>
+    );
+  }
+
+  // For Data Entry users, show simplified form at step 1
+  if (userType === USER_TYPES.DATA_ENTRY && currentStep === 1) {
+    return (
+      <Stack gap="md" p="md">
+        <Text fw={600} size="sm" c="dimmed">
+          Data Entry Account Details
+        </Text>
+        <TextInput
+          label="Username"
+          {...form.getInputProps("username")}
+          withAsterisk
+        />
+        <PasswordInput
+          label="Password"
+          {...form.getInputProps("password")}
+          withAsterisk
+        />
+        <PollingStationMultiSelect
+          value={form.values.polling_stations || []}
+          onChange={(val) => form.setFieldValue("polling_stations", val)}
+          error={form.errors.polling_stations as string}
+        />
+        <Divider my="xs" label="Account Status" labelPosition="center" />
+        <StatusSelect form={form} />
+      </Stack>
+    );
+  }
+
+  // Step 1: Identity & Account (for Staff/Superuser)
+  if (currentStep === 1) {
     return (
       <Stack gap="md" p="md">
         <Text fw={600} size="sm" c="dimmed">
@@ -70,7 +259,6 @@ export function UsersForm({
             {...form.getInputProps("gender")}
             required
           />
-          {/* Using text input for date simplicity matching dummyjson format YYYY-MM-DD or similar */}
           <TextInput
             label="Birth Date"
             placeholder="YYYY-MM-DD"
@@ -117,12 +305,15 @@ export function UsersForm({
           data={["admin", "moderator", "user"]}
           {...form.getInputProps("role")}
         />
+
+        <Divider my="xs" label="Account Status" labelPosition="center" />
+        <StatusSelect form={form} />
       </Stack>
     );
   }
 
-  // Step 2: Physical & Address
-  if (currentStep === 1) {
+  // Step 2: Physical & Address (for Staff/Superuser)
+  if (currentStep === 2 && userType !== USER_TYPES.DATA_ENTRY) {
     return (
       <Stack gap="md" p="md">
         <Text fw={600} size="sm" c="dimmed">
@@ -202,8 +393,8 @@ export function UsersForm({
     );
   }
 
-  // Step 3: Employment & Bank
-  if (currentStep === 2) {
+  // Step 3: Employment & Bank (for Staff/Superuser)
+  if (currentStep === 3 && userType !== USER_TYPES.DATA_ENTRY) {
     return (
       <Stack gap="md" p="md">
         <Text fw={600} size="sm" c="dimmed">
@@ -278,47 +469,96 @@ export function UsersForm({
           Review Information
         </Text>
 
-        <Grid>
-          <Grid.Col span={6}>
-            <Text size="sm" fw={700}>
-              Identity
-            </Text>
-            <Text size="sm">
-              {form.values.firstName} {form.values.lastName}
-            </Text>
-            <Text size="sm">{form.values.email}</Text>
-            <Text size="sm">{form.values.phone}</Text>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Text size="sm" fw={700}>
-              Address
-            </Text>
-            <Text size="sm">{form.values.address.address}</Text>
-            <Text size="sm">
-              {form.values.address.city}, {form.values.address.state}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Text size="sm" fw={700}>
-              Employment
-            </Text>
-            <Text size="sm">
-              {form.values.company.title} at {form.values.company.name}
-            </Text>
-          </Grid.Col>
-          <Grid.Col span={6}>
-            <Text size="sm" fw={700}>
-              Bank
-            </Text>
-            <Text size="sm">
-              {form.values.bank.cardType} ending in{" "}
-              {form.values.bank.cardNumber?.slice(-4)}
-            </Text>
-          </Grid.Col>
-        </Grid>
+        {userType === USER_TYPES.DATA_ENTRY ? (
+          // Data Entry Review
+          <Grid>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Account Type
+              </Text>
+              <Text size="sm">Data Entry Account</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Username
+              </Text>
+              <Text size="sm">{form.values.username}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Polling Stations
+              </Text>
+              <Text size="sm">{form.values.polling_stations?.length || 0} selected</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Status
+              </Text>
+              <Text size="sm">
+                {form.values.is_active ? "Active" : form.values.is_disabled ? "Disabled" : "Not Set"}
+              </Text>
+            </Grid.Col>
+          </Grid>
+        ) : (
+          // Staff/Superuser Review
+          <Grid>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Account Type
+              </Text>
+              <Text size="sm" style={{ textTransform: "capitalize" }}>
+                {userType}
+              </Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Status
+              </Text>
+              <Text size="sm">
+                {form.values.is_active ? "Active" : form.values.is_disabled ? "Disabled" : "Not Set"}
+              </Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Identity
+              </Text>
+              <Text size="sm">
+                {form.values.firstName} {form.values.lastName}
+              </Text>
+              <Text size="sm">{form.values.email}</Text>
+              <Text size="sm">{form.values.phone}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Address
+              </Text>
+              <Text size="sm">{form.values.address?.address}</Text>
+              <Text size="sm">
+                {form.values.address?.city}, {form.values.address?.state}
+              </Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Employment
+              </Text>
+              <Text size="sm">
+                {form.values.company?.title} at {form.values.company?.name}
+              </Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Bank
+              </Text>
+              <Text size="sm">
+                {form.values.bank?.cardType} ending in{" "}
+                {form.values.bank?.cardNumber?.slice(-4)}
+              </Text>
+            </Grid.Col>
+          </Grid>
+        )}
       </Paper>
     </Stack>
   );
 }
 
-export const STEPS = ["Identity", "Details", "Employment", "Review"];
+export const STEPS = ["User Type", "Identity", "Details", "Employment", "Review"];

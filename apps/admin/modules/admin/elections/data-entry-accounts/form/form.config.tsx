@@ -1,0 +1,20 @@
+import { z } from "zod";
+import { zodResolver } from "mantine-form-zod-resolver";
+
+export const dataEntryAccountFormSchema = z.object({
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  polling_stations: z
+    .array(z.string())
+    .min(1, "At least one Polling Station is required"),
+});
+
+export const dataEntryAccountFormConfig = {
+  initial: {
+    username: "",
+    password: "",
+    polling_stations: [],
+  },
+  steps: 1,
+  validation: [zodResolver(dataEntryAccountFormSchema)],
+};

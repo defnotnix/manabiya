@@ -11,14 +11,25 @@ import {
   Loader,
   MultiSelect,
   SimpleGrid,
-  Switch,
-  Paper,
+  Select,
+  Card,
+  ThemeIcon,
 } from "@mantine/core";
-import { MagnifyingGlassIcon } from "@phosphor-icons/react";
+import { MagnifyingGlassIcon, User, UserGear, Database } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { FormWrapper } from "@settle/core";
 import { USERS_API } from "../module.api";
 import { useMemo, useState } from "react";
+import { PollingStationMultiSelect } from "@/modules/admin/elections/data-entry-accounts/form/PollingStationMultiSelect";
+
+// User Type Constants
+export const USER_TYPES = {
+  STAFF: "staff",
+  SUPERUSER: "superuser",
+  DATA_ENTRY: "data_entry",
+} as const;
+
+export type UserType = (typeof USER_TYPES)[keyof typeof USER_TYPES];
 
 interface UserFormProps {
   currentStep?: number;
@@ -37,9 +48,70 @@ interface Role {
   name: string;
 }
 
+// User Type Card Component
+function UserTypeCard({
+  title,
+  description,
+  icon,
+  selected,
+  onClick,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <Card
+      withBorder
+      padding="md"
+      style={{
+        cursor: "pointer",
+        borderColor: selected ? "var(--mantine-color-blue-6)" : undefined,
+        backgroundColor: selected ? "var(--mantine-color-blue-0)" : undefined,
+      }}
+      onClick={onClick}
+    >
+      <Stack align="center" gap="xs">
+        <ThemeIcon size="lg" variant={selected ? "filled" : "light"} color="blue">
+          {icon}
+        </ThemeIcon>
+        <Text fw={600} size="xs">
+          {title}
+        </Text>
+        <Text size="xs" c="dimmed" ta="center">
+          {description}
+        </Text>
+      </Stack>
+    </Card>
+  );
+}
+
+// Account status options
+const ACCOUNT_STATUS_OPTIONS = [
+  { value: "active", label: "Active" },
+  { value: "disabled", label: "Disabled" },
+];
+
 export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
   const form = FormWrapper.useForm();
   const [search, setSearch] = useState("");
+  const userType = form.values.userType as UserType;
+
+  // Get current status value for Select
+  const currentStatus = form.values.is_disabled ? "disabled" : "active";
+
+  // Handle status change from Select
+  const handleStatusChange = (value: string | null) => {
+    if (value === "disabled") {
+      form.setFieldValue("is_active", false);
+      form.setFieldValue("is_disabled", true);
+    } else {
+      form.setFieldValue("is_active", true);
+      form.setFieldValue("is_disabled", false);
+    }
+  };
 
   // Fetch Permissions
   const { data: permissions = [], isLoading: loadingPermissions } = useQuery({
@@ -55,8 +127,6 @@ export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
     queryKey: ["users", "roles"],
     queryFn: async () => {
       const response = await USERS_API.getRoles();
-      // The Roles API returns { data: [...] } or just array depending on implementation
-      // Based on implementation of roles/module.api.ts, getRoles returns { data: [...] }
       return (response.data as Role[]) || [];
     },
   });
@@ -107,6 +177,86 @@ export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
     form.setFieldValue("user_permissions", newPermissions);
   };
 
+  // If user type not selected (only for create mode), show user type selection
+  if (isCreate && !userType) {
+    return (
+      <Stack gap="sm" p="sm">
+        <Text fw={600} size="sm" c="dimmed">
+          Select User Type
+        </Text>
+        <Text size="xs" c="dimmed">
+          Choose the type of user account you want to create
+        </Text>
+        <SimpleGrid cols={3} spacing="sm" mt="sm">
+          <UserTypeCard
+            title="Staff"
+            description="Regular staff member"
+            icon={<User size={20} />}
+            selected={userType === USER_TYPES.STAFF}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.STAFF)}
+          />
+          <UserTypeCard
+            title="Superuser"
+            description="Full system access"
+            icon={<UserGear size={20} />}
+            selected={userType === USER_TYPES.SUPERUSER}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.SUPERUSER)}
+          />
+          <UserTypeCard
+            title="Data Entry"
+            description="Data entry with polling station access"
+            icon={<Database size={20} />}
+            selected={userType === USER_TYPES.DATA_ENTRY}
+            onClick={() => form.setFieldValue("userType", USER_TYPES.DATA_ENTRY)}
+          />
+        </SimpleGrid>
+        {form.errors.userType && (
+          <Text size="xs" c="red">
+            {form.errors.userType}
+          </Text>
+        )}
+      </Stack>
+    );
+  }
+
+  // Data Entry User Form
+  if (userType === USER_TYPES.DATA_ENTRY) {
+    return (
+      <Stack gap="sm" p="sm">
+        <Text fw={600} size="sm" c="dimmed">
+          Data Entry Account
+        </Text>
+        <TextInput
+          label="Username"
+          placeholder="username"
+          {...form.getInputProps("username")}
+          required
+          size="xs"
+        />
+        <PasswordInput
+          label="Password"
+          placeholder="Password"
+          {...form.getInputProps("password")}
+          required
+          size="xs"
+        />
+        <PollingStationMultiSelect
+          value={form.values.polling_stations || []}
+          onChange={(val) => form.setFieldValue("polling_stations", val)}
+          error={form.errors.polling_stations as string}
+        />
+        <Select
+          label="Account Status"
+          data={ACCOUNT_STATUS_OPTIONS}
+          value={currentStatus}
+          onChange={handleStatusChange}
+          size="xs"
+        />
+      </Stack>
+    );
+  }
+
+  // Staff/Superuser Form
   return (
     <Stack gap="sm" p="sm">
       <SimpleGrid cols={2}>
@@ -151,27 +301,13 @@ export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
         />
       )}
 
-      <Divider label="Access Control" labelPosition="left" />
-
-      <Group grow>
-        <Switch
-          label="Active"
-          {...form.getInputProps("is_active", { type: "checkbox" })}
-        />
-        <Switch
-          label="Staff"
-          {...form.getInputProps("is_staff", { type: "checkbox" })}
-        />
-        <Switch
-          label="Superuser"
-          {...form.getInputProps("is_superuser", { type: "checkbox" })}
-        />
-        <Switch
-          label="Disabled"
-          {...form.getInputProps("is_disabled", { type: "checkbox" })}
-          color="red"
-        />
-      </Group>
+      <Select
+        label="Account Status"
+        data={ACCOUNT_STATUS_OPTIONS}
+        value={currentStatus}
+        onChange={handleStatusChange}
+        size="xs"
+      />
 
       <MultiSelect
         label="Groups (Roles)"

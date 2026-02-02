@@ -1,3 +1,2 @@
-import { ListPage } from "@/modules/admin/config/location/place-types";
-
+import { ListPage } from "@/modules/config/location/place-types";
 export default ListPage;

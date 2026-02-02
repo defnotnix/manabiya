@@ -2,12 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { DataTableWrapper } from "@settle/core";
-import { DataTableModalShell, AutoBreadcrumb } from "@settle/admin";
+import { DataTableModalShell } from "@settle/admin";
 import { USERS_MODULE_CONFIG, USERS_API } from "../../module.config";
 import { UsersForm } from "../../form/UsersForm";
-import { UsersFormConfig } from "../../form/form.config";
+import { UsersFormConfig, USER_TYPES } from "../../form/form.config";
 import { usersListColumns } from "./list.columns";
 import { UsersProfileModal } from "./components/UsersProfileModal";
+import { DATA_ENTRY_ACCOUNTS_API } from "../../../elections/data-entry-accounts/module.api";
 
 export function ListPage() {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -55,9 +56,27 @@ export function ListPage() {
               ],
             },
           ]}
-          // Modal API handlers
+          // Modal API handlers - route based on user type
           onCreateApi={async (data) => {
-            return USERS_API.createUser(data);
+            const { userType, ...userData } = data;
+
+            // Data entry users use the data entry accounts API
+            if (userType === USER_TYPES.DATA_ENTRY) {
+              return DATA_ENTRY_ACCOUNTS_API.createAccount({
+                username: userData.username,
+                password: userData.password,
+                polling_stations: userData.polling_stations,
+                is_active: userData.is_active,
+                is_disabled: userData.is_disabled,
+              });
+            }
+
+            // Staff and Superuser use the default users API
+            return USERS_API.createUser({
+              ...userData,
+              is_superuser: userType === USER_TYPES.SUPERUSER,
+              is_staff: userType === USER_TYPES.STAFF || userType === USER_TYPES.SUPERUSER,
+            });
           }}
           onEditApi={async (id, data) => {
             return USERS_API.updateUser(String(id), data);

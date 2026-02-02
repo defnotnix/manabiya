@@ -1,3 +1,2 @@
-import { ListPage } from "@/modules/admin/config/location/places";
-
+import { ListPage } from "@/modules/config/location/places";
 export default ListPage;

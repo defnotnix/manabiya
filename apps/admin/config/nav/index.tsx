@@ -1,15 +1,11 @@
 import {
-  ChartBarIcon,
   GearIcon,
   MapPinIcon,
-  UsersIcon,
-  ShieldIcon,
-  MapTrifoldIcon,
-  TranslateIcon,
-  PolygonIcon,
-  ChartLineUpIcon,
   HouseIcon,
+  MapTrifoldIcon,
   GraphIcon,
+  UsersThree,
+  User,
 } from "@phosphor-icons/react";
 import { PropAdminNavItems } from "@settle/admin";
 
@@ -30,6 +26,20 @@ export const navItems: PropAdminNavItems[] = [
         icon: GraphIcon,
         value: "/admin/stat",
       },
+      {
+        divider: true,
+        dividerLabel: "Voting Analysis",
+      },
+      {
+        label: "Entries",
+        icon: UsersThree,
+        value: "/admin/elections/voter-roll-entries",
+      },
+      {
+        label: "Accounts",
+        icon: User,
+        value: "/admin/elections/data-entry-accounts",
+      },
     ],
   },
 
@@ -44,22 +54,6 @@ export const navItems: PropAdminNavItems[] = [
     description: "System Configuration",
     color: "blue",
     children: [
-      // Auth Section
-      {
-        divider: true,
-        dividerLabel: "Auth",
-      },
-      {
-        label: "Users",
-        icon: UsersIcon,
-        value: "/admin/config/auth/users",
-      },
-      {
-        label: "Roles",
-        icon: ShieldIcon,
-        value: "/admin/config/auth/roles",
-      },
-
       // Location - Geo Section
       {
         divider: true,
@@ -74,16 +68,6 @@ export const navItems: PropAdminNavItems[] = [
         label: "Geo Units",
         icon: MapPinIcon,
         value: "/admin/config/location/geo-units",
-      },
-      {
-        label: "Geo Unit Names",
-        icon: TranslateIcon,
-        value: "/admin/config/location/geo-unit-names",
-      },
-      {
-        label: "Geo Unit Geometries",
-        icon: PolygonIcon,
-        value: "/admin/config/location/geo-unit-geometries",
       },
 
       // Location - Places Section
@@ -102,20 +86,20 @@ export const navItems: PropAdminNavItems[] = [
         value: "/admin/config/location/places",
       },
 
-      // Location - Metrics Section
+      // Auth Section
       {
         divider: true,
-        dividerLabel: "Location / Metrics",
+        dividerLabel: "Auth / Access Control",
       },
       {
-        label: "Metrics",
-        icon: ChartBarIcon,
-        value: "/admin/config/location/metrics",
+        label: "Users",
+        icon: User,
+        value: "/admin/config/auth/users",
       },
       {
-        label: "Metric Values",
-        icon: ChartLineUpIcon,
-        value: "/admin/config/location/geo-unit-metric-values",
+        label: "Roles",
+        icon: UsersThree,
+        value: "/admin/config/auth/roles",
       },
     ],
   },
