@@ -123,13 +123,22 @@ export async function verifySession(): Promise<boolean> {
 // Check if error is a token expiry error
 function isTokenExpiredError(error: AxiosError<any>): boolean {
   if (error.response?.status === 401) {
+    const url = error.config?.url || "";
+    // Don't treat login/auth endpoints as token expiry
+    if (url.includes("/auth/login") || url.includes("/auth/token/") && !url.includes("/refresh")) {
+      return false;
+    }
+
     const data = error.response?.data;
     // Check various token expiry response formats
-    // Note: "authentication_failed" is NOT a token expiry - it's invalid credentials on login
     return (
       data?.message === "Token Expired" ||
       data?.error?.detail?.code === "token_not_valid" ||
-      data?.code === "token_not_valid"
+      data?.code === "token_not_valid" ||
+      data?.detail?.includes?.("token") ||
+      data?.detail?.includes?.("expired") ||
+      // Fallback: treat any 401 on non-auth endpoints as token expiry
+      true
     );
   }
   return false;
@@ -153,6 +162,10 @@ async function handleApiError<T>(
   } else if (error.code === "ERR_NETWORK") {
     console.error("Server Offline");
     return { err: true, data: null, error: "Server is offline" };
+  } else if (error.code === "ERR_NETWORK_CHANGED" && !isRetry) {
+    // Network changed during request - retry once
+    console.log("Network changed, retrying request...");
+    return retryFn();
   }
 
   return {

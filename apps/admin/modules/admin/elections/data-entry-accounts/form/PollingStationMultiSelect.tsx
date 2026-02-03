@@ -22,8 +22,9 @@ import { POLLING_STATIONS_API } from "../module.api";
 
 interface PollingStation {
   id: number;
-  name: string;
-  display_name?: string;
+  place_name: string;
+  place_name_en?: string;
+  station_code?: string | null;
 }
 
 interface GeoUnit {
@@ -191,7 +192,7 @@ export function PollingStationMultiSelect({
         .filter((station) => station.id != null)
         .map((station) => ({
           value: String(station.id),
-          label: station.display_name || station.name || `Station ${station.id}`,
+          label: station.place_name || station.place_name_en || `Station ${station.id}`,
         })),
     [pollingStationsData]
   );
@@ -230,7 +231,7 @@ export function PollingStationMultiSelect({
       pollingStationsData.forEach((station) => {
         const id = String(station.id);
         if (value.includes(id)) {
-          newMap[id] = station.display_name || station.name || `Station ${station.id}`;
+          newMap[id] = station.place_name || station.place_name_en || `Station ${station.id}`;
         }
       });
       setSelectedStationsMap(newMap);

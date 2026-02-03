@@ -55,13 +55,15 @@ export function ListPage() {
       {selectedPollingStation ? (
         <DataTableWrapper
           queryKey={`voter-roll-entries.list.${selectedPollingStation}`}
-          queryGetFn={async ({ params }) =>
+          queryGetFn={async (params) =>
             VOTER_ROLL_ENTRIES_API.getEntries({
               ...params,
               polling_station: selectedPollingStation,
             })
           }
           dataKey="results"
+          enableServerQuery={true}
+          paginationDataKey="pagination"
         >
           <DataTableModalShell
             moduleInfo={{
