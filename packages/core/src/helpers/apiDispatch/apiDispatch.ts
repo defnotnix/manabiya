@@ -185,7 +185,7 @@ async function makeRequest<T>(
   } catch (error: any) {
     // Create retry function with fresh auth header
     const retryFn = () =>
-      makeRequest(method, endpoint, data, { ...config, headers: { ...config.headers, ...getAuthHeader() } }, true);
+      makeRequest<T>(method, endpoint, data, { ...config, headers: { ...config.headers, ...getAuthHeader() } }, true);
     return handleApiError(error, retryFn, isRetry);
   }
 }
