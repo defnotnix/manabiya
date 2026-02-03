@@ -226,8 +226,7 @@ export function PageSignIn({
             response.data.access,
           );
         }
-        // Only store refresh token in development (production uses HttpOnly cookie)
-        if (response.data?.refresh && process.env.NODE_ENV === "development") {
+        if (response.data?.refresh) {
           sessionStorage.setItem(
             AUTH_TOKEN_KEYS.REFRESH_TOKEN,
             response.data.refresh,

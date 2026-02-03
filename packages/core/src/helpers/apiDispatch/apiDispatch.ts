@@ -53,12 +53,9 @@ async function handleTokenExpiry(): Promise<boolean> {
 
 // Actual token refresh logic
 async function performTokenRefresh(): Promise<boolean> {
-  const isDevelopment = process.env.NODE_ENV === "development";
   const refreshToken = sessionStorage.getItem(TOKEN_KEYS.refresh);
 
-  // In production, refresh token comes from HttpOnly cookie (no body needed)
-  // In development, refresh token is sent in the request body
-  if (isDevelopment && !refreshToken) {
+  if (!refreshToken) {
     console.error("No refresh token available");
     return false;
   }
@@ -66,14 +63,13 @@ async function performTokenRefresh(): Promise<boolean> {
   try {
     const response = await axios.post(
       "/api/auth/token/refresh/",
-      isDevelopment ? { refresh: refreshToken } : {},
+      { refresh: refreshToken },
       { withCredentials: true }
     );
 
     if (response.data.access) {
       sessionStorage.setItem(TOKEN_KEYS.access, response.data.access);
-      // In development, also store the new refresh token if returned
-      if (isDevelopment && response.data.refresh) {
+      if (response.data.refresh) {
         sessionStorage.setItem(TOKEN_KEYS.refresh, response.data.refresh);
       }
       console.log("Token refreshed successfully");
