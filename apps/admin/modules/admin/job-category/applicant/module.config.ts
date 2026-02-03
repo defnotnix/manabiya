@@ -1,4 +1,4 @@
-import { APPLICANT_API } from "./module.api";
+import { APPLICANT_API } from "./form/api";
 
 export const APPLICANT_MODULE_CONFIG = {
   name: "Applicant",

@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { triggerNotification } from "@settle/admin";
-import { APPLICANT_API } from "../../module.api";
+import { APPLICANT_API } from "./api";
 
 /**
  * Step validation schemas
