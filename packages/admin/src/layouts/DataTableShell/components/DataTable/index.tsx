@@ -20,6 +20,7 @@ export function DataTableShellDataTable({
   disableActions,
   rowStyle,
   pageSizes = [10, 20, 50, 100],
+  rowExpansion,
 }: PropDataTableShellDataTable) {
   //* CONTEXT
 
@@ -164,6 +165,7 @@ export function DataTableShellDataTable({
         selectionCheckboxProps={{ size: "xs" }}
         selectedRecords={selectedRecords}
         onSelectedRecordsChange={handleSelectionChange}
+        rowExpansion={rowExpansion}
       />
     </>
   );

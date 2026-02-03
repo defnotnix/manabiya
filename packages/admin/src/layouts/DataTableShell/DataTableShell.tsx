@@ -37,6 +37,7 @@ export function DataTableShell({
   disableCreateButton = false,
   disableEditButton = false,
   disableDeleteButton = false,
+  rowExpansion,
 }: PropDataTableShell) {
   // * CONTEXT
   const { filters } = DataTableWrapper.useDataTableWrapperStore();
@@ -146,6 +147,7 @@ export function DataTableShell({
             disableActions={disableActions}
             rowStyle={rowStyle}
             pageSizes={pageSizes}
+            rowExpansion={rowExpansion}
           />
         </Paper>
 

@@ -24,6 +24,10 @@ type PropServerSearch = {
   hasServerSearch?: boolean;
 };
 
+type PropRowExpansion = {
+  rowExpansion?: any;
+};
+
 // ─────────────────────────────────────────────
 // Header
 // ─────────────────────────────────────────────
@@ -58,7 +62,8 @@ export type PropDataTableToolbar = PropSustained & {
 // ─────────────────────────────────────────────
 
 export type PropDataTableShellDataTable = PropRowStyle &
-  PropServerSearch & {
+  PropServerSearch &
+  PropRowExpansion & {
     customColumns?: any[];
     pageSizes?: number[];
     forceFilter?: (data: any) => any;

@@ -31,6 +31,7 @@ export function DataTableModalShell({
   disableActions = false,
   hideFilters,
   filterList = [],
+  rowExpansion,
 
   // Modal-specific props
   modalWidth = "md",
@@ -251,6 +252,7 @@ export function DataTableModalShell({
         disableActions={true}
         hideFilters={hideFilters}
         filterList={filterList}
+        rowExpansion={rowExpansion}
 
         onNewClick={contextValue.openCreateModal}
         onEditClick={(record: any) => contextValue.openEditModal(record)}

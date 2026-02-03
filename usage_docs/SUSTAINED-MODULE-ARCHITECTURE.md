@@ -674,6 +674,133 @@ applicant/
 - Sustained: Simpler, more compact
 - Structured: More flexibility, better for complex workflows
 
+## Row Expansion for Nested Data
+
+When your sustained module needs to display hierarchical data (e.g., Parent > Children relationships), use the `rowExpansion` prop.
+
+### When to Use Row Expansion
+
+- Displaying parent-child relationships (Company > Departments > Employees)
+- Showing related records without navigating to a new page
+- Hierarchical data that needs drill-down capability
+
+### Implementation Pattern
+
+```tsx
+// pages/list/page.tsx
+"use client";
+
+import { useState } from "react";
+import { DataTable } from "mantine-datatable";
+import { DataTableWrapper } from "@settle/core";
+import { DataTableModalShell } from "@settle/admin";
+import { MODULE_CONFIG, MODULE_API } from "../../module.config";
+import { columns } from "./list.column";
+
+// Nested table component (uses raw DataTable, not DataTableModalShell)
+function ChildItemsTable({ parentId }: { parentId: string }) {
+  const { records, loading } = useChildItemsAsync({ parentId });
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={[
+        { accessor: "name", title: "Name" },
+        { accessor: "status", title: "Status" },
+      ]}
+      records={records}
+      fetching={loading}
+    />
+  );
+}
+
+export function ListPage() {
+  const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+
+  return (
+    <DataTableWrapper
+      queryKey="module.list"
+      queryGetFn={MODULE_API.getItems}
+      dataKey="results"
+    >
+      <DataTableModalShell
+        moduleInfo={MODULE_CONFIG}
+        columns={columns}
+        idAccessor="id"
+        filterList={[]}
+        // Row expansion for nested data
+        rowExpansion={{
+          allowMultiple: true,
+          expanded: {
+            recordIds: expandedRecordIds,
+            onRecordIdsChange: setExpandedRecordIds,
+          },
+          content: ({ record }) => <ChildItemsTable parentId={record.id} />,
+        }}
+        // Modal API handlers
+        onCreateApi={async (data) => MODULE_API.createItem(data)}
+        onEditApi={async (id, data) => MODULE_API.updateItem(String(id), data)}
+        onDeleteApi={async (id) => MODULE_API.deleteItem(String(id))}
+        createFormComponent={<ItemForm />}
+        editFormComponent={<ItemForm />}
+      />
+    </DataTableWrapper>
+  );
+}
+```
+
+### Key Points for Nested Tables in Sustained Modules
+
+1. **Top Level**: Use `DataTableModalShell` (or `DataTableShell`) with `rowExpansion` prop
+2. **Nested Levels**: Use raw `DataTable` from mantine-datatable with `noHeader`
+3. **Each Level Manages Its Own State**: Each nested table has its own `expandedRecordIds` state
+4. **Async Data Fetching**: Nested tables can fetch their data independently based on parent ID
+5. **Multi-Level Nesting**: For deeper hierarchies, nested tables can also have their own `rowExpansion`
+
+### Multi-Level Nesting Example
+
+```tsx
+// Level 2: Departments (nested inside Companies)
+function DepartmentsTable({ companyId }: { companyId: string }) {
+  const { records, loading } = useDepartmentsAsync({ companyId });
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={departmentColumns}
+      records={records}
+      fetching={loading}
+      rowExpansion={{
+        allowMultiple: true,
+        expanded: { recordIds: expandedIds, onRecordIdsChange: setExpandedIds },
+        content: ({ record }) => <EmployeesTable departmentId={record.id} />,
+      }}
+    />
+  );
+}
+
+// Level 3: Employees (leaf level - no expansion)
+function EmployeesTable({ departmentId }: { departmentId: string }) {
+  const { records, loading } = useEmployeesAsync({ departmentId });
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={employeeColumns}
+      records={records}
+      fetching={loading}
+    />
+  );
+}
+```
+
 ## Common Patterns
 
 ### Pattern 1: Basic Sustained Module

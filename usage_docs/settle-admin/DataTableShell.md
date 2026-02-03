@@ -29,6 +29,7 @@
 | `forceFilter`        | `object`          | -                               | Force apply specific filters                      |
 | `hasServerSearch`    | `boolean`         | `false`                         | Enable server-side search                         |
 | `sustained`          | `boolean`         | `false`                         | Maintain selected records across pages            |
+| `rowExpansion`       | `object`          | -                               | Row expansion config for nested/expandable tables |
 | `rowColor`           | `string`          | `"var(--mantine-color-gray-0)"` | Row text color                                    |
 | `rowBackgroundColor` | `string`          | `"var(--mantine-color-gray-0)"` | Row background color                              |
 | `rowStyle`           | `CSSProperties`   | -                               | Custom row styles                                 |
@@ -317,6 +318,71 @@ const { selectedRecords, setSelectedRecords } = useContext(
   DataTableShellContext,
 );
 ```
+
+## Row Expansion (Nested Tables)
+
+DataTableShell supports expandable rows for hierarchical data using the `rowExpansion` prop.
+
+### Basic Usage
+
+```tsx
+const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+
+<DataTableShell
+  moduleInfo={MODULE_CONFIG}
+  columns={columns}
+  rowExpansion={{
+    allowMultiple: true,
+    expanded: {
+      recordIds: expandedRecordIds,
+      onRecordIdsChange: setExpandedRecordIds,
+    },
+    content: ({ record }) => <NestedTable parentId={record.id} />,
+  }}
+/>
+```
+
+### Multi-Level Nesting
+
+For hierarchical data (e.g., Company > Department > Employee):
+
+1. **Top Level**: Use `DataTableShell` with `rowExpansion`
+2. **Nested Levels**: Use raw `DataTable` from mantine-datatable with `noHeader`
+3. **Each level manages its own expansion state**
+
+```tsx
+// Nested table component (uses raw DataTable)
+function DepartmentsTable({ companyId }: { companyId: string }) {
+  const { records, loading } = useDepartmentsAsync({ companyId });
+  const [expandedIds, setExpandedIds] = useState<string[]>([]);
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={departmentColumns}
+      records={records}
+      fetching={loading}
+      rowExpansion={{
+        allowMultiple: true,
+        expanded: { recordIds: expandedIds, onRecordIdsChange: setExpandedIds },
+        content: ({ record }) => <EmployeesTable departmentId={record.id} />,
+      }}
+    />
+  );
+}
+```
+
+### rowExpansion Props
+
+| Property       | Type                        | Description                           |
+| -------------- | --------------------------- | ------------------------------------- |
+| `allowMultiple`| `boolean`                   | Allow multiple rows expanded at once  |
+| `expanded`     | `object`                    | Expansion state control               |
+| `expanded.recordIds` | `string[]`            | Currently expanded record IDs         |
+| `expanded.onRecordIdsChange` | `function`   | Callback when expansion changes       |
+| `content`      | `({ record }) => ReactNode` | Component to render in expanded area  |
 
 ## Notes
 

@@ -129,10 +129,10 @@ function isTokenExpiredError(error: AxiosError<any>): boolean {
   if (error.response?.status === 401) {
     const data = error.response?.data;
     // Check various token expiry response formats
+    // Note: "authentication_failed" is NOT a token expiry - it's invalid credentials on login
     return (
       data?.message === "Token Expired" ||
       data?.error?.detail?.code === "token_not_valid" ||
-      data?.error?.alias === "authentication_failed" ||
       data?.code === "token_not_valid"
     );
   }

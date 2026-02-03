@@ -113,6 +113,7 @@ export function UsersPage() {
 | `pageSizes` | `number[]` | No | `[10, 20, 50, 100]` | Available page sizes |
 | `hasServerSearch` | `boolean` | No | `false` | Enable server-side search |
 | `disableActions` | `boolean` | No | `false` | Hide action buttons |
+| `rowExpansion` | `object` | No | `undefined` | Row expansion config for nested tables |
 | **Filters** |
 | `hideFilters` | `boolean` | No | `false` | Hide filter toolbar |
 | `filterList` | `array` | No | `[]` | Filter configurations |
@@ -449,6 +450,182 @@ const filterList = [
   hideFilters={false}  // Show filter toolbar
   onEditClick={handleEdit}
 />
+```
+
+## Row Expansion (Nested Tables)
+
+DataTableShell supports expandable rows with nested tables using mantine-datatable's `rowExpansion` prop. This is useful for displaying hierarchical data like Companies > Departments > Employees.
+
+### Basic Row Expansion
+
+```tsx
+import { useState } from "react";
+import { DataTableShell } from "@settle/admin";
+import { DataTableWrapper } from "@settle/core";
+
+export function CompaniesPage() {
+  const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+
+  return (
+    <DataTableWrapper queryKey="companies.list" queryGetFn={fetchCompanies}>
+      <DataTableShell
+        moduleInfo={{ name: "Companies", term: "Company" }}
+        columns={companyColumns}
+        rowExpansion={{
+          allowMultiple: true,
+          expanded: {
+            recordIds: expandedRecordIds,
+            onRecordIdsChange: setExpandedRecordIds
+          },
+          content: ({ record }) => <DepartmentsTable companyId={record.id} />,
+        }}
+      />
+    </DataTableWrapper>
+  );
+}
+```
+
+### Multi-Level Nested Tables
+
+For multi-level nesting (e.g., Company > Department > Employee), each nested level uses its own `DataTable` with its own expansion state:
+
+```tsx
+import { useState } from "react";
+import { Box } from "@mantine/core";
+import { DataTable } from "mantine-datatable";
+import { IconChevronRight, IconUsers, IconUser } from "@tabler/icons-react";
+import clsx from "clsx";
+
+// Level 3: Employees (leaf level - no expansion)
+function EmployeesTable({ departmentId }: { departmentId: string }) {
+  const { records, loading } = useEmployeesAsync({ departmentId });
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={[
+        {
+          accessor: "name",
+          noWrap: true,
+          render: ({ firstName, lastName }) => (
+            <Box component="span" ml={40}>
+              <IconUser className={classes.icon} />
+              <span>{firstName} {lastName}</span>
+            </Box>
+          ),
+        },
+        {
+          accessor: "birthDate",
+          render: ({ birthDate }) => dayjs(birthDate).format("DD MMM YYYY"),
+          textAlign: "right",
+          width: 200,
+        },
+      ]}
+      records={records}
+      fetching={loading}
+    />
+  );
+}
+
+// Level 2: Departments (has expansion to employees)
+function DepartmentsTable({ companyId }: { companyId: string }) {
+  const { records, loading } = useDepartmentsAsync({ companyId });
+  const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+
+  return (
+    <DataTable
+      noHeader
+      minHeight={100}
+      withColumnBorders
+      columns={[
+        {
+          accessor: "name",
+          noWrap: true,
+          render: ({ id, name }) => (
+            <Box component="span" ml={20}>
+              <IconChevronRight
+                className={clsx(classes.icon, classes.expandIcon, {
+                  [classes.expandIconRotated]: expandedRecordIds.includes(id),
+                })}
+              />
+              <IconUsers className={classes.icon} />
+              <span>{name}</span>
+            </Box>
+          ),
+        },
+        { accessor: "employees", textAlign: "right", width: 200 },
+      ]}
+      records={records}
+      fetching={loading}
+      rowExpansion={{
+        allowMultiple: true,
+        expanded: { recordIds: expandedRecordIds, onRecordIdsChange: setExpandedRecordIds },
+        content: ({ record }) => <EmployeesTable departmentId={record.id} />,
+      }}
+    />
+  );
+}
+
+// Level 1: Companies (top level - uses DataTableShell)
+export function CompaniesPage() {
+  const [expandedRecordIds, setExpandedRecordIds] = useState<string[]>([]);
+
+  const columns = [
+    {
+      accessor: "name",
+      header: "Company / Department / Employee",
+      render: ({ id, name }) => (
+        <>
+          <IconChevronRight
+            className={clsx(classes.icon, classes.expandIcon, {
+              [classes.expandIconRotated]: expandedRecordIds.includes(id),
+            })}
+          />
+          <IconBuilding className={classes.icon} />
+          <span>{name}</span>
+        </>
+      ),
+    },
+    { accessor: "employees", header: "Employees / Birth date", width: 200 },
+  ];
+
+  return (
+    <DataTableWrapper queryKey="companies.list" queryGetFn={fetchCompanies}>
+      <DataTableShell
+        moduleInfo={{ name: "Companies", term: "Company" }}
+        columns={columns}
+        rowExpansion={{
+          allowMultiple: true,
+          expanded: { recordIds: expandedRecordIds, onRecordIdsChange: setExpandedRecordIds },
+          content: ({ record }) => <DepartmentsTable companyId={record.id} />,
+        }}
+      />
+    </DataTableWrapper>
+  );
+}
+```
+
+### Key Points for Nested Tables
+
+1. **Top Level**: Use `DataTableShell` with `rowExpansion` prop
+2. **Nested Levels**: Use raw `DataTable` from mantine-datatable with `noHeader` prop
+3. **Each Level Manages Its Own State**: Each table has its own `expandedRecordIds` state
+4. **Async Data**: Nested tables can fetch data independently based on parent record ID
+5. **Styling**: Use `ml` (margin-left) to indent nested content for visual hierarchy
+
+### rowExpansion Prop Structure
+
+```typescript
+rowExpansion={{
+  allowMultiple: boolean,           // Allow multiple rows expanded at once
+  expanded: {
+    recordIds: string[],            // Currently expanded record IDs
+    onRecordIdsChange: (ids) => void // Callback when expansion changes
+  },
+  content: ({ record }) => ReactNode // Component to render in expanded area
+}}
 ```
 
 ## Tab Filtering

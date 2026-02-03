@@ -11,7 +11,7 @@ import {
   HouseIcon,
 } from "@phosphor-icons/react";
 import { NavConfig, NavGroup } from "@settle/admin";
-import { navItems as mainNavItems } from "./navs/main-nav";
+
 
 // Dashboard / General Group
 const mainGroup: NavGroup = {
