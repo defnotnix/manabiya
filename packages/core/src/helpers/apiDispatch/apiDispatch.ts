@@ -52,23 +52,26 @@ async function handleTokenExpiry(): Promise<boolean> {
 }
 
 // Actual token refresh logic
+// Supports both: sessionStorage refresh token (sent in body) AND HttpOnly cookie (sent automatically)
 async function performTokenRefresh(): Promise<boolean> {
   const refreshToken = sessionStorage.getItem(TOKEN_KEYS.refresh);
 
-  if (!refreshToken) {
-    console.error("No refresh token available");
-    return false;
-  }
+  // Build request body - if we have a refresh token in sessionStorage, include it
+  // If not, rely on HttpOnly cookie (withCredentials: true sends cookies automatically)
+  const requestBody = refreshToken ? { refresh: refreshToken } : {};
+
+  console.log("Attempting refresh with:", refreshToken ? "sessionStorage token" : "HttpOnly cookie");
 
   try {
     const response = await axios.post(
       "/api/auth/token/refresh/",
-      { refresh: refreshToken },
+      requestBody,
       { withCredentials: true }
     );
 
     if (response.data.access) {
       sessionStorage.setItem(TOKEN_KEYS.access, response.data.access);
+      // Store new refresh token if returned (for sessionStorage mode)
       if (response.data.refresh) {
         sessionStorage.setItem(TOKEN_KEYS.refresh, response.data.refresh);
       }
@@ -76,6 +79,7 @@ async function performTokenRefresh(): Promise<boolean> {
       return true;
     }
 
+    console.log("Refresh response missing access token");
     return false;
   } catch (err) {
     console.error("Token refresh failed:", err);
@@ -124,22 +128,20 @@ export async function verifySession(): Promise<boolean> {
 function isTokenExpiredError(error: AxiosError<any>): boolean {
   if (error.response?.status === 401) {
     const url = error.config?.url || "";
-    // Don't treat login/auth endpoints as token expiry
-    if (url.includes("/auth/login") || url.includes("/auth/token/") && !url.includes("/refresh")) {
+
+    // Don't treat auth endpoints as token expiry (login, verify, refresh)
+    const isAuthEndpoint =
+      url.includes("/auth/login") ||
+      url.includes("/auth/token/verify") ||
+      url.includes("/auth/token/refresh");
+
+    if (isAuthEndpoint) {
+      console.log("401 on auth endpoint, not treating as token expiry:", url);
       return false;
     }
 
-    const data = error.response?.data;
-    // Check various token expiry response formats
-    return (
-      data?.message === "Token Expired" ||
-      data?.error?.detail?.code === "token_not_valid" ||
-      data?.code === "token_not_valid" ||
-      data?.detail?.includes?.("token") ||
-      data?.detail?.includes?.("expired") ||
-      // Fallback: treat any 401 on non-auth endpoints as token expiry
-      true
-    );
+    console.log("401 detected on:", url, "- will attempt token refresh");
+    return true;
   }
   return false;
 }
@@ -151,12 +153,25 @@ async function handleApiError<T>(
   isRetry = false
 ): Promise<ApiResponse<T>> {
   // Don't attempt refresh if already logging out or this is a retry
-  if (isTokenExpiredError(error) && !isLoggingOut && !isRetry) {
+  const isExpired = isTokenExpiredError(error);
+
+  console.log("handleApiError:", {
+    status: error.response?.status,
+    url: error.config?.url,
+    isExpired,
+    isLoggingOut,
+    isRetry,
+    hasRefreshToken: !!sessionStorage.getItem("kcrtoken"),
+  });
+
+  if (isExpired && !isLoggingOut && !isRetry) {
+    console.log("Attempting token refresh...");
     const refreshed = await handleTokenExpiry();
     if (refreshed) {
-      // Mark as retry to prevent infinite loops
+      console.log("Token refresh successful, retrying request...");
       return retryFn();
     }
+    console.log("Token refresh failed, logging out...");
     triggerLogout();
     return { err: true, data: null, error: "Session expired" };
   } else if (error.code === "ERR_NETWORK") {
