@@ -33,6 +33,7 @@ interface NavContextType {
 
   // Helpers
   activeGroup: NavGroup | undefined;
+  activeGroupHasPanel: boolean;
 }
 
 const NavContext = createContext<NavContextType | undefined>(undefined);
@@ -83,6 +84,15 @@ export function NavProvider({ config, children, singleNavLayout = false }: NavPr
 
   const activeGroup = navGroups.find((g) => g.id === activeGroupId);
 
+  // A group has panel content if it has modules with items
+  const activeGroupHasPanel = useMemo(() => {
+    if (!activeGroup) return false;
+    return (
+      activeGroup.modules.length > 0 &&
+      activeGroup.modules.some((m) => m.items.length > 0)
+    );
+  }, [activeGroup]);
+
   const value = {
     config,
     singleNavLayout,
@@ -93,6 +103,7 @@ export function NavProvider({ config, children, singleNavLayout = false }: NavPr
     toggleItemExpansion,
     setSearchQuery,
     activeGroup,
+    activeGroupHasPanel,
   };
 
   return <NavContext.Provider value={value}>{children}</NavContext.Provider>;

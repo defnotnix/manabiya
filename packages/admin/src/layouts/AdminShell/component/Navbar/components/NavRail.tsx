@@ -45,10 +45,9 @@ export function NavRail() {
       : activeGroupId === group.id;
 
     const handleClick = () => {
+      setActiveGroupId(group.id);
       if ((singleNavLayout || isDirectLink) && group.href) {
         router.push(group.href);
-      } else {
-        setActiveGroupId(group.id);
       }
     };
 

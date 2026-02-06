@@ -89,7 +89,10 @@ function SignInForm({
     },
     validate: {
       username: (value: string) => {
-        if (!value.trim()) return skipEmailValidation ? "Username is required" : "Email is required";
+        if (!value.trim())
+          return skipEmailValidation
+            ? "Username is required"
+            : "Email is required";
         if (!skipEmailValidation) {
           const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
           if (!emailRegex.test(value))
@@ -207,7 +210,9 @@ export function PageSignIn({
     try {
       const response = await apiDispatch.post({
         endpoint: loginApi,
-        body: skipEmailValidation ? { username, password } : { email: username, password },
+        body: skipEmailValidation
+          ? { username, password }
+          : { email: username, password },
         noAuthorization: true,
       });
 
@@ -307,7 +312,7 @@ export function PageSignIn({
       display="flex"
       style={{ alignItems: "center" }}
     >
-      <Paper w="100%" withBorder p={{ base: "xl", lg: "4rem" }} radius="md">
+      <Paper w="100%" p={{ base: "xl", lg: "4rem" }} radius="md">
         <Stack gap="md" w="100%">
           <Center>{icon || <BowlSteamIcon weight="fill" size={32} />}</Center>
 

@@ -9,6 +9,7 @@ import { AdminShellNavbarWrapper } from "./component/Navbar/Navbar.dynamic";
 import { PropAdminNavLayout } from "./AdminShell.type";
 
 import "mantine-datatable/styles.css";
+import { useCallback, useState } from "react";
 
 export function AdminShell({
   children,
@@ -23,12 +24,17 @@ export function AdminShell({
   // * STATES
 
   const [opened, { toggle }] = useDisclosure();
+  const [navbarWidth, setNavbarWidth] = useState(singleNavLayout ? 45 : 300);
+
+  const handleNavbarWidthChange = useCallback((width: number) => {
+    setNavbarWidth(width);
+  }, []);
 
   return (
     <>
       <AppShell
         navbar={{
-          width: singleNavLayout ? 45 : 300,
+          width: navbarWidth,
           breakpoint: "sm",
           // collapsed: { mobile: !opened },
         }}
@@ -39,6 +45,7 @@ export function AdminShell({
             navModules={navModules}
             navConfig={navConfig}
             singleNavLayout={singleNavLayout}
+            onNavbarWidthChange={handleNavbarWidthChange}
           />
         </AppShell.Navbar>
 

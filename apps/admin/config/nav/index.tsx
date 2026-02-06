@@ -14,7 +14,7 @@ export const navItems: PropAdminNavItems[] = [
   {
     label: "Map View",
     icon: MapTrifoldIcon,
-    value: "/admin/home",
+    value: "/admin",
     description: "Overview",
   },
   {

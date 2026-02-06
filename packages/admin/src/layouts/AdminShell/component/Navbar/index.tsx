@@ -10,7 +10,7 @@ import {
   Divider,
 } from "@mantine/core";
 import { Spotlight, spotlight, SpotlightActionData } from "@mantine/spotlight";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { PropAdminNavItems, PropAdminNavSideNav } from "../../AdminShell.type";
 import {
@@ -151,16 +151,61 @@ function NavPanelContainer() {
   );
 }
 
+/** Observes nav context and reports effective navbar width back to AdminShell */
+function NavWidthObserver({
+  onNavbarWidthChange,
+  singleNavLayout,
+}: {
+  onNavbarWidthChange?: (width: number) => void;
+  singleNavLayout: boolean;
+}) {
+  const { activeGroupHasPanel } = useNav();
+
+  useEffect(() => {
+    const width = singleNavLayout || !activeGroupHasPanel ? 45 : 300;
+    onNavbarWidthChange?.(width);
+  }, [activeGroupHasPanel, singleNavLayout, onNavbarWidthChange]);
+
+  return null;
+}
+
 type AdminShellNavbarProps = PropAdminNavSideNav & {
   navItems?: PropAdminNavItems[];
   navConfig?: NavConfig;
 };
+
+/** Inner component that reads NavContext to conditionally render the panel */
+function NavbarContent({
+  singleNavLayout,
+}: {
+  singleNavLayout: boolean;
+}) {
+  const { activeGroupHasPanel } = useNav();
+  const showPanel = !singleNavLayout && activeGroupHasPanel;
+
+  return (
+    <Group
+      gap={0}
+      align="stretch"
+      h="100%"
+      wrap="nowrap"
+      style={{ overflow: "hidden" }}
+    >
+      {/* Left Rail */}
+      <NavRail />
+
+      {/* Right Panel - Hidden when singleNavLayout or active group has no children */}
+      {showPanel && <NavPanelContainer />}
+    </Group>
+  );
+}
 
 export function AdminShellNavbar({
   navItems = [],
   navConfig,
   navModules,
   singleNavLayout = false,
+  onNavbarWidthChange,
 }: AdminShellNavbarProps) {
   // Normalize configuration: Use provided navConfig or migrate legacy items
   const config = useMemo(() => {
@@ -172,6 +217,11 @@ export function AdminShellNavbar({
 
   return (
     <NavProvider config={config} singleNavLayout={singleNavLayout}>
+      <NavWidthObserver
+        onNavbarWidthChange={onNavbarWidthChange}
+        singleNavLayout={singleNavLayout}
+      />
+
       <Spotlight
         actions={spotlightActions}
         nothingFound="No matching pages found"
@@ -183,19 +233,7 @@ export function AdminShellNavbar({
         shortcut={["mod + K", "mod + P"]}
       />
 
-      <Group
-        gap={0}
-        align="stretch"
-        h="100%"
-        wrap="nowrap"
-        style={{ overflow: "hidden" }}
-      >
-        {/* Left Rail */}
-        <NavRail />
-
-        {/* Right Panel - Hidden in singleNavLayout mode */}
-        {!singleNavLayout && <NavPanelContainer />}
-      </Group>
+      <NavbarContent singleNavLayout={singleNavLayout} />
     </NavProvider>
   );
 }
