@@ -227,6 +227,20 @@ export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
           Data Entry Account
         </Text>
         <TextInput
+          label="Name"
+          placeholder="Ram Bahadur"
+          {...form.getInputProps("name")}
+          required
+          size="xs"
+        />
+        <TextInput
+          label="Email"
+          placeholder="new@example.com"
+          {...form.getInputProps("email")}
+          required
+          size="xs"
+        />
+        <TextInput
           label="Username"
           placeholder="username"
           {...form.getInputProps("username")}

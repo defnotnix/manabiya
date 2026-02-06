@@ -1,0 +1,51 @@
+﻿
+> rea_admin@0.1.0 build C:\Projects\zetsel-web\apps\admin
+> next build
+
+Γû▓ Next.js 16.1.0 (Turbopack)
+- Environments: .env
+- Experiments (use with caution):
+  ┬╖ optimizePackageImports
+
+  Creating an optimized production build ...
+Γ£ô Compiled successfully in 7.9s
+  Running TypeScript ...
+node.exe : Failed to compile.
+At C:\Users\Anamol\AppData\Local\nvm\symlink\pnpm.ps
+1:16 char:5
++     & "$basedir/node$exe"  
+"$basedir/node_modules/pnpm/bin/pnpm.cjs"  ...
++     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Failed 
+    to compile.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+../../packages/core/src/helpers/apiDispatch/apiDispa
+tch.ts:189:5
+Type error: Type 'ApiResponse<unknown>' is not 
+assignable to type 'ApiResponse<T>'.
+  Type 'unknown' is not assignable to type 'T'.
+    'T' could be instantiated with an arbitrary 
+type which could be unrelated to 'unknown'.
+
+[0m [90m 187 |[39m     [36mconst[39m retryFn 
+[33m=[39m () [33m=>[39m
+ [90m 188 |[39m       
+makeRequest(method[33m,[39m endpoint[33m,[39m 
+data[33m,[39m { [33m...[39mconfig[33m,[39m 
+headers[33m:[39m { 
+[33m...[39mconfig[33m.[39mheaders[33m,[39m 
+[33m...[39mgetAuthHeader() } }[33m,[39m 
+[36mtrue[39m)[33m;[39m
+[31m[1m>[22m[39m[90m 189 |[39m     
+[36mreturn[39m handleApiError(error[33m,[39m 
+retryFn[33m,[39m isRetry)[33m;[39m
+ [90m     |[39m     [31m[1m^[22m[39m
+ [90m 190 |[39m   }
+ [90m 191 |[39m }
+ [90m 192 |[39m[0m
+Next.js build worker exited with code: 1 and 
+signal: null
+ΓÇëELIFECYCLEΓÇë Command failed with exit code 1.

@@ -10,6 +10,18 @@ export function DataEntryAccountForm() {
   return (
     <Stack gap="md" p="md">
       <TextInput
+        label="Name"
+        placeholder="Ram Bahadur"
+        {...form.getInputProps("name")}
+        withAsterisk
+      />
+      <TextInput
+        label="Email"
+        placeholder="new@example.com"
+        {...form.getInputProps("email")}
+        withAsterisk
+      />
+      <TextInput
         label="Username"
         {...form.getInputProps("username")}
         withAsterisk

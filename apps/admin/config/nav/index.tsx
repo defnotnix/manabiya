@@ -12,15 +12,16 @@ import { PropAdminNavItems } from "@settle/admin";
 export const navItems: PropAdminNavItems[] = [
   // General Group
   {
+    label: "Map View",
+    icon: MapTrifoldIcon,
+    value: "/admin/home",
+    description: "Overview",
+  },
+  {
     label: "General",
     icon: HouseIcon,
     description: "Overview",
     children: [
-      {
-        label: "Map View",
-        icon: MapTrifoldIcon,
-        value: "/admin/home",
-      },
       {
         label: "Reporting",
         icon: GraphIcon,

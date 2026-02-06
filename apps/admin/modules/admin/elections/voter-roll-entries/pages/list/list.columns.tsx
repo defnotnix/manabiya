@@ -1,6 +1,7 @@
 import { Stack, Text } from "@mantine/core";
 
 export const voterRollEntryListColumns = [
+  { accessor: "serial_no", header: "S.N.", size: 60 },
   { accessor: "voter_no", header: "Voter No", size: 120 },
   {
     accessor: "name_ne",
@@ -20,7 +21,21 @@ export const voterRollEntryListColumns = [
     ),
   },
   { accessor: "age", header: "Age", size: 60 },
-  { accessor: "gender", header: "Gender", size: 80 },
+  {
+    accessor: "gender_ne",
+    header: "Gender",
+    size: 100,
+    render: (record: any) => (
+      <Stack gap={0}>
+        <Text size="sm">{record.gender_ne || "-"}</Text>
+        {record.gender_en && (
+          <Text size="xs" c="dimmed">
+            {record.gender_en}
+          </Text>
+        )}
+      </Stack>
+    ),
+  },
   {
     accessor: "parents",
     header: "Parents",
@@ -33,6 +48,12 @@ export const voterRollEntryListColumns = [
               Father:{" "}
             </Text>
             {record.father_name_ne}
+            {record.father_name_en && (
+              <Text span c="dimmed">
+                {" "}
+                ({record.father_name_en})
+              </Text>
+            )}
           </Text>
         )}
         {record.mother_name_ne && (
@@ -41,6 +62,12 @@ export const voterRollEntryListColumns = [
               Mother:{" "}
             </Text>
             {record.mother_name_ne}
+            {record.mother_name_en && (
+              <Text span c="dimmed">
+                {" "}
+                ({record.mother_name_en})
+              </Text>
+            )}
           </Text>
         )}
         {!record.father_name_ne && !record.mother_name_ne && (
@@ -56,7 +83,14 @@ export const voterRollEntryListColumns = [
     header: "Spouse",
     size: 150,
     render: (record: any) => (
-      <Text size="sm">{record.spouse_name_ne || "-"}</Text>
+      <Stack gap={0}>
+        <Text size="sm">{record.spouse_name_ne || "-"}</Text>
+        {record.spouse_name_en && (
+          <Text size="xs" c="dimmed">
+            {record.spouse_name_en}
+          </Text>
+        )}
+      </Stack>
     ),
   },
 ];

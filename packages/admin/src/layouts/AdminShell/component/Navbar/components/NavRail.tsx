@@ -36,13 +36,16 @@ export function NavRail() {
     const group = item;
     const Icon = group.icon;
 
-    // In singleNavLayout mode, check if current path matches href
-    const isActive = singleNavLayout
+    // Check if this is a direct link (has href but no sub-navigation)
+    const isDirectLink = group.href && group.modules.length === 0;
+
+    // Check if active: for direct links or singleNavLayout, check path; otherwise check activeGroupId
+    const isActive = (singleNavLayout || isDirectLink)
       ? group.href ? pathname.startsWith(group.href) : false
       : activeGroupId === group.id;
 
     const handleClick = () => {
-      if (singleNavLayout && group.href) {
+      if ((singleNavLayout || isDirectLink) && group.href) {
         router.push(group.href);
       } else {
         setActiveGroupId(group.id);

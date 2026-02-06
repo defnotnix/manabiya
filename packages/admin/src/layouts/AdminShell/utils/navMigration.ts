@@ -51,9 +51,23 @@ function generateId(label: string): string {
 /**
  * Converts a top-level navItem into a NavGroup.
  * Each top-level item becomes a group in the rail, with its children shown in the panel.
+ * If the item has no children but has a value, it becomes a direct link.
  */
 function convertTopLevelItemToGroup(item: PropAdminNavItemLink): NavGroup {
   const groupId = generateId(item.label);
+
+  // If item has no children but has a value, make it a direct link
+  if ((!item.children || item.children.length === 0) && item.value) {
+    return {
+      id: groupId,
+      label: item.label,
+      description: item.description,
+      icon: item.icon || HouseIcon,
+      color: item.color,
+      href: item.value,
+      modules: [],
+    };
+  }
 
   // Convert children to NavElements for the panel
   const panelItems: NavElement[] = item.children

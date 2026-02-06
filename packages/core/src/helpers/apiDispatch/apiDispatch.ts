@@ -147,12 +147,13 @@ function isTokenExpiredError(error: AxiosError<any>): boolean {
 }
 
 // Generic error handler
+const MAX_NETWORK_RETRIES = 3;
+
 async function handleApiError<T>(
   error: AxiosError<ApiErrorResponse>,
   retryFn: () => Promise<ApiResponse<T>>,
-  isRetry = false
+  retryCount = 0
 ): Promise<ApiResponse<T>> {
-  // Don't attempt refresh if already logging out or this is a retry
   const isExpired = isTokenExpiredError(error);
 
   console.log("handleApiError:", {
@@ -160,11 +161,12 @@ async function handleApiError<T>(
     url: error.config?.url,
     isExpired,
     isLoggingOut,
-    isRetry,
+    retryCount,
     hasRefreshToken: !!sessionStorage.getItem("kcrtoken"),
   });
 
-  if (isExpired && !isLoggingOut && !isRetry) {
+  // Token expired - attempt refresh (only on first try)
+  if (isExpired && !isLoggingOut && retryCount === 0) {
     console.log("Attempting token refresh...");
     const refreshed = await handleTokenExpiry();
     if (refreshed) {
@@ -174,12 +176,21 @@ async function handleApiError<T>(
     console.log("Token refresh failed, logging out...");
     triggerLogout();
     return { err: true, data: null, error: "Session expired" };
+  } else if (error.code === "ERR_NETWORK" && retryCount < MAX_NETWORK_RETRIES) {
+    // Server unreachable - retry with exponential backoff
+    const delay = Math.min(1000 * Math.pow(2, retryCount), 8000); // 1s, 2s, 4s, max 8s
+    console.log(`Server unreachable, retry ${retryCount + 1}/${MAX_NETWORK_RETRIES} in ${delay}ms...`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return retryFn();
   } else if (error.code === "ERR_NETWORK") {
-    console.error("Server Offline");
+    // Max retries reached, give up
+    console.error(`Server Offline after ${MAX_NETWORK_RETRIES} retries`);
     return { err: true, data: null, error: "Server is offline" };
-  } else if (error.code === "ERR_NETWORK_CHANGED" && !isRetry) {
-    // Network changed during request - retry once
-    console.log("Network changed, retrying request...");
+  } else if (error.code === "ERR_NETWORK_CHANGED" && retryCount < MAX_NETWORK_RETRIES) {
+    // Network changed during request - retry with backoff
+    const delay = Math.min(500 * Math.pow(2, retryCount), 4000);
+    console.log(`Network changed, retry ${retryCount + 1}/${MAX_NETWORK_RETRIES} in ${delay}ms...`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
     return retryFn();
   }
 
@@ -196,7 +207,7 @@ async function makeRequest<T>(
   endpoint: string,
   data: any,
   config: any,
-  isRetry = false
+  retryCount = 0
 ): Promise<ApiResponse<T>> {
   try {
     let response;
@@ -207,10 +218,10 @@ async function makeRequest<T>(
     }
     return { err: false, data: response.data };
   } catch (error: any) {
-    // Create retry function with fresh auth header
+    // Create retry function with fresh auth header and incremented retry count
     const retryFn = () =>
-      makeRequest<T>(method, endpoint, data, { ...config, headers: { ...config.headers, ...getAuthHeader() } }, true);
-    return handleApiError(error, retryFn, isRetry);
+      makeRequest<T>(method, endpoint, data, { ...config, headers: { ...config.headers, ...getAuthHeader() } }, retryCount + 1);
+    return handleApiError(error, retryFn, retryCount);
   }
 }
 

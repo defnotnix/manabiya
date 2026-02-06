@@ -27,6 +27,8 @@ export function ListPage() {
           // Data entry users use the data entry accounts API
           if (userType === USER_TYPES.DATA_ENTRY) {
             return DATA_ENTRY_ACCOUNTS_API.createAccount({
+              name: userData.name,
+              email: userData.email,
               username: userData.username,
               password: userData.password,
               polling_stations: userData.polling_stations,

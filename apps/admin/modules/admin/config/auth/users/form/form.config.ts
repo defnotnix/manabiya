@@ -3,6 +3,7 @@ import { zodResolver } from "mantine-form-zod-resolver";
 
 export const UserFormSchema = z.object({
   userType: z.string().optional(),
+  name: z.string().optional(),
   username: z.string().min(1, "Username is required"),
   email: z.string().email("Invalid email").optional().or(z.literal("")),
   password: z.string().min(6, "Password must be at least 6 characters").optional(),
@@ -21,6 +22,7 @@ export const UserFormConfig = {
   steps: 1,
   initial: {
     userType: "",
+    name: "",
     username: "",
     email: "",
     password: "",

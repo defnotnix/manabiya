@@ -44,6 +44,8 @@ export const UsersFormSchema = {
 
   // Data Entry Account Schema
   dataEntry: z.object({
+    name: z.string().min(1, "Name is required"),
+    email: z.string().email("Invalid email"),
     username: z.string().min(1, "Username is required"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     polling_stations: z
@@ -174,6 +176,7 @@ export const UsersFormConfig = {
     },
 
     // Data entry specific fields
+    name: "",
     polling_stations: [] as string[],
   },
   validation: [

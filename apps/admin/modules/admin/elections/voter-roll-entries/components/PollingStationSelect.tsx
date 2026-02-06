@@ -29,6 +29,8 @@ interface GeoUnit {
   unit_type: string;
   parent_id: number | null;
   display_name: string;
+  display_name_ne?: string;
+  display_name_en?: string;
   official_code?: string;
   ward_no?: number | null;
 }
@@ -147,6 +149,16 @@ export function PollingStationSelect({
     onChange(null);
   }, [selectedWard]);
 
+  // Helper to format display name with English in brackets
+  const formatDisplayName = (unit: GeoUnit, fallback: string) => {
+    const nepaliName = unit.display_name || unit.display_name_ne;
+    const englishName = unit.display_name_en;
+    if (nepaliName && englishName) {
+      return `${nepaliName} (${englishName})`;
+    }
+    return nepaliName || englishName || fallback;
+  };
+
   // Build select options
   const provinceOptions = useMemo(
     () =>
@@ -154,7 +166,7 @@ export function PollingStationSelect({
         .filter((unit) => unit.id != null)
         .map((unit) => ({
           value: String(unit.id),
-          label: unit.display_name || `Province ${unit.id}`,
+          label: formatDisplayName(unit, `Province ${unit.id}`),
         })),
     [provincesData],
   );
@@ -165,7 +177,7 @@ export function PollingStationSelect({
         .filter((unit) => unit.id != null)
         .map((unit) => ({
           value: String(unit.id),
-          label: unit.display_name || `District ${unit.id}`,
+          label: formatDisplayName(unit, `District ${unit.id}`),
         })),
     [districtsData],
   );
@@ -176,7 +188,7 @@ export function PollingStationSelect({
         .filter((unit) => unit.id != null)
         .map((unit) => ({
           value: String(unit.id),
-          label: unit.display_name || `Local Body ${unit.id}`,
+          label: formatDisplayName(unit, `Local Body ${unit.id}`),
         })),
     [localBodiesData],
   );
@@ -198,11 +210,22 @@ export function PollingStationSelect({
     () =>
       (pollingStationsData || [])
         .filter((station) => station.id != null)
-        .map((station) => ({
-          value: String(station.id),
-          label:
-            station.place_name || station.place_name_en || `Station ${station.id}`,
-        })),
+        .map((station) => {
+          const nepaliName = station.place_name;
+          const englishName = station.place_name_en;
+          let label = `Station ${station.id}`;
+          if (nepaliName && englishName) {
+            label = `${nepaliName} (${englishName})`;
+          } else if (nepaliName) {
+            label = nepaliName;
+          } else if (englishName) {
+            label = englishName;
+          }
+          return {
+            value: String(station.id),
+            label,
+          };
+        }),
     [pollingStationsData],
   );
 
@@ -211,9 +234,15 @@ export function PollingStationSelect({
       const station = pollingStationsData?.find(
         (s) => String(s.id) === stationId,
       );
-      setSelectedStationName(
-        station?.place_name || station?.place_name_en || `Station ${stationId}`,
-      );
+      let stationName = `Station ${stationId}`;
+      if (station) {
+        if (station.place_name && station.place_name_en) {
+          stationName = `${station.place_name} (${station.place_name_en})`;
+        } else {
+          stationName = station.place_name || station.place_name_en || stationName;
+        }
+      }
+      setSelectedStationName(stationName);
       onChange(stationId, station);
     } else {
       setSelectedStationName("");

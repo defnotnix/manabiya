@@ -163,6 +163,18 @@ export function UsersForm({
             </Grid.Col>
             <Grid.Col span={6}>
               <Text size="sm" fw={700}>
+                Name
+              </Text>
+              <Text size="sm">{form.values.name}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Email
+              </Text>
+              <Text size="sm">{form.values.email}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
                 Username
               </Text>
               <Text size="sm">{form.values.username}</Text>
@@ -194,6 +206,18 @@ export function UsersForm({
         <Text fw={600} size="sm" c="dimmed">
           Data Entry Account Details
         </Text>
+        <TextInput
+          label="Name"
+          placeholder="Ram Bahadur"
+          {...form.getInputProps("name")}
+          withAsterisk
+        />
+        <TextInput
+          label="Email"
+          placeholder="new@example.com"
+          {...form.getInputProps("email")}
+          withAsterisk
+        />
         <TextInput
           label="Username"
           {...form.getInputProps("username")}
@@ -477,6 +501,18 @@ export function UsersForm({
                 Account Type
               </Text>
               <Text size="sm">Data Entry Account</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Name
+              </Text>
+              <Text size="sm">{form.values.name}</Text>
+            </Grid.Col>
+            <Grid.Col span={6}>
+              <Text size="sm" fw={700}>
+                Email
+              </Text>
+              <Text size="sm">{form.values.email}</Text>
             </Grid.Col>
             <Grid.Col span={6}>
               <Text size="sm" fw={700}>
