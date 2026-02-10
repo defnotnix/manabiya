@@ -50,6 +50,7 @@ type PropAdminNavSideNav = {
   onLogout?: () => void;
   singleNavLayout?: boolean; // When true, only shows rail with direct href navigation
   onNavbarWidthChange?: (width: number) => void;
+  toggle: () => void;
 };
 
 type PropAdminNavStyles = {

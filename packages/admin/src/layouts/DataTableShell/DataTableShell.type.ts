@@ -55,6 +55,10 @@ export type PropDataTableToolbar = PropSustained & {
   setCustomColumns?: any;
   onToggleColumn?: any;
   onResetColumns?: any;
+  // Mobile new button props
+  newButtonHref?: string;
+  onNewClick?: () => void;
+  disableCreateButton?: boolean;
 };
 
 // ─────────────────────────────────────────────

@@ -1,7 +1,7 @@
 "use client";
 
 //mantine
-import { AppShell } from "@mantine/core";
+import { ActionIcon, AppShell, Button, Group } from "@mantine/core";
 //hooks
 import { useDisclosure } from "@mantine/hooks";
 import { AdminShellNavbarWrapper } from "./component/Navbar/Navbar.dynamic";
@@ -9,7 +9,9 @@ import { AdminShellNavbarWrapper } from "./component/Navbar/Navbar.dynamic";
 import { PropAdminNavLayout } from "./AdminShell.type";
 
 import "mantine-datatable/styles.css";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { ArrowRightIcon } from "@phosphor-icons/react";
+import { usePathname } from "next/navigation";
 
 export function AdminShell({
   children,
@@ -23,8 +25,14 @@ export function AdminShell({
 }: PropAdminNavLayout) {
   // * STATES
 
-  const [opened, { toggle }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure();
   const [navbarWidth, setNavbarWidth] = useState(singleNavLayout ? 45 : 300);
+  const pathname = usePathname();
+
+  // Close navbar on route change (mobile)
+  useEffect(() => {
+    close();
+  }, [pathname, close]);
 
   const handleNavbarWidthChange = useCallback((width: number) => {
     setNavbarWidth(width);
@@ -35,10 +43,21 @@ export function AdminShell({
       <AppShell
         navbar={{
           width: navbarWidth,
-          breakpoint: "sm",
-          // collapsed: { mobile: !opened },
+          breakpoint: "xs",
+          collapsed: { mobile: !opened },
         }}
       >
+
+        <AppShell.Header hiddenFrom="md">
+          <Group h={50} justify="space-between" px="md">
+            <ActionIcon onClick={() => {
+              toggle()
+            }}>
+              <ArrowRightIcon />
+            </ActionIcon>
+          </Group>
+        </AppShell.Header>
+
         <AppShell.Navbar bg="none">
           <AdminShellNavbarWrapper
             navItems={navItems}
@@ -46,10 +65,16 @@ export function AdminShell({
             navConfig={navConfig}
             singleNavLayout={singleNavLayout}
             onNavbarWidthChange={handleNavbarWidthChange}
+            toggle={toggle}
           />
         </AppShell.Navbar>
 
-        <AppShell.Main bg="none">{children}</AppShell.Main>
+        <AppShell.Main style={{
+          position: "relative",
+          zIndex: 10,
+        }} bg="none" pt={{
+          base: opened ? 0 : 50,
+        }}>{children}</AppShell.Main>
       </AppShell>
     </>
   );

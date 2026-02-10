@@ -127,6 +127,10 @@ export function DataTableShell({
           customColumns={customColumns}
           onToggleColumn={handleToggleColumn}
           onResetColumns={handleResetColumns}
+          sustained={sustained}
+          newButtonHref={newButtonHref}
+          onNewClick={onNewClick}
+          disableCreateButton={disableCreateButton}
         />
       </Container>
 

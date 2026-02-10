@@ -111,7 +111,7 @@ function useSpotlightActions(config: NavConfig): SpotlightActionData[] {
   }, [config, router]);
 }
 
-function NavPanelContainer() {
+function NavPanelContainer({ toggle }: { toggle: () => void }) {
   const { activeGroup } = useNav();
 
   return (
@@ -128,7 +128,7 @@ function NavPanelContainer() {
       <Group justify="space-between" p="sm">
         <Text size="sm">{activeGroup?.label ?? "Navigation"}</Text>
 
-        <ActionIcon size="sm" variant="light">
+        <ActionIcon size="sm" variant="light" onClick={toggle} hiddenFrom="md">
           <CaretLeftIcon size={12} weight="bold" />
         </ActionIcon>
       </Group>
@@ -177,8 +177,10 @@ type AdminShellNavbarProps = PropAdminNavSideNav & {
 /** Inner component that reads NavContext to conditionally render the panel */
 function NavbarContent({
   singleNavLayout,
+  toggle,
 }: {
   singleNavLayout: boolean;
+  toggle: () => void;
 }) {
   const { activeGroupHasPanel } = useNav();
   const showPanel = !singleNavLayout && activeGroupHasPanel;
@@ -195,7 +197,7 @@ function NavbarContent({
       <NavRail />
 
       {/* Right Panel - Hidden when singleNavLayout or active group has no children */}
-      {showPanel && <NavPanelContainer />}
+      {showPanel && <NavPanelContainer toggle={toggle} />}
     </Group>
   );
 }
@@ -206,6 +208,7 @@ export function AdminShellNavbar({
   navModules,
   singleNavLayout = false,
   onNavbarWidthChange,
+  toggle,
 }: AdminShellNavbarProps) {
   // Normalize configuration: Use provided navConfig or migrate legacy items
   const config = useMemo(() => {
@@ -233,7 +236,7 @@ export function AdminShellNavbar({
         shortcut={["mod + K", "mod + P"]}
       />
 
-      <NavbarContent singleNavLayout={singleNavLayout} />
+      <NavbarContent singleNavLayout={singleNavLayout} toggle={toggle} />
     </NavProvider>
   );
 }
