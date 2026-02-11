@@ -25,7 +25,7 @@ export function AdminShell({
 }: PropAdminNavLayout) {
   // * STATES
 
-  const [opened, { toggle, close }] = useDisclosure();
+  const [opened, { toggle, close }] = useDisclosure(false);
   const [navbarWidth, setNavbarWidth] = useState(singleNavLayout ? 45 : 300);
   const pathname = usePathname();
 
@@ -69,12 +69,16 @@ export function AdminShell({
           />
         </AppShell.Navbar>
 
-        <AppShell.Main style={{
-          position: "relative",
-          zIndex: 10,
-        }} bg="none" pt={{
-          base: opened ? 0 : 50,
-        }}>{children}</AppShell.Main>
+        <AppShell.Main
+          style={{
+            position: "relative",
+            zIndex: 10,
+          }}
+          bg="none"
+          pt={{
+            base: opened ? 0 : 50,
+            md: 0,
+          }}>{children}</AppShell.Main>
       </AppShell>
     </>
   );

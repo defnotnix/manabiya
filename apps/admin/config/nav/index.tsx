@@ -6,6 +6,12 @@ import {
   GraphIcon,
   UsersThree,
   User,
+  AddressBookIcon,
+  ListBulletsIcon,
+  BuildingsIcon,
+  ShieldCheckIcon,
+  FlagIcon,
+  CheckSquareIcon,
 } from "@phosphor-icons/react";
 import { PropAdminNavItems } from "@settle/admin";
 
@@ -40,6 +46,61 @@ export const navItems: PropAdminNavItems[] = [
         label: "Accounts",
         icon: User,
         value: "/admin/elections/data-entry-accounts",
+      },
+    ],
+  },
+
+  {
+    divider: true,
+  },
+
+  // Contact Directory Group
+  {
+    label: "Contact Directory",
+    icon: AddressBookIcon,
+    description: "Manage Contacts",
+    children: [
+      {
+        label: "Assignments",
+        icon: ListBulletsIcon,
+        value: "/admin/contacts/assignments",
+      },
+      {
+        divider: true,
+        dividerLabel: "Masters",
+      },
+      {
+        label: "People",
+        icon: User,
+        value: "/admin/contacts/people",
+      },
+      {
+        label: "Organizations",
+        icon: BuildingsIcon,
+        value: "/admin/contacts/organizations",
+      },
+      {
+        label: "Roles",
+        icon: ShieldCheckIcon,
+        value: "/admin/contacts/roles",
+      },
+    ],
+  },
+
+  {
+    divider: true,
+  },
+
+  // Elections Group
+  {
+    label: "Elections",
+    icon: CheckSquareIcon,
+    description: "Election Management",
+    children: [
+      {
+        label: "Political Parties",
+        icon: FlagIcon,
+        value: "/admin/elections/parties",
       },
     ],
   },

@@ -964,3 +964,24 @@ Sustained modules provide:
 - Cleaner UI for simple CRUD operations
 - Reduced routing complexity
 - Quick implementation for simple modules
+
+## Troubleshooting
+
+### Runtime TypeError: createContext only works in Client Components
+
+If you encounter this error when importing icons in `module.config.ts`:
+
+```
+Runtime TypeError: createContext only works in Client Components
+```
+
+This happens because many icon libraries (like `@phosphor-icons/react`) use React Context under the hood. Since `module.config.ts` is imported in both server and client components, it may be evaluated in a Server Component context where `createContext` is not allowed.
+
+**Fix:** Add `"use client";` at the very top of your `module.config.ts` file.
+
+```typescript
+"use client";
+
+import { AddressBookIcon } from "@phosphor-icons/react";
+// ...
+```

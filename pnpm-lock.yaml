@@ -182,7 +182,7 @@ importers:
         specifier: ^5
         version: 5.9.3
 
-  apps/katalogue:
+  apps/contact:
     dependencies:
       '@mantine/carousel':
         specifier: ^8.3.10

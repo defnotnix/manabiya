@@ -1,2 +1,2 @@
-import { ListPage } from "@/modules/admin/elections/data-entry-accounts";
+import { ListPage } from "@/modules/elections/data-entry-accounts";
 export default ListPage;

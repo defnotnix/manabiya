@@ -9,6 +9,13 @@ import {
   PolygonIcon,
   ChartLineUpIcon,
   HouseIcon,
+  AddressBookIcon,
+  BuildingsIcon,
+  UserGearIcon,
+  UsersThreeIcon,
+  IdentificationCardIcon,
+  FlagIcon,
+  CheckSquareIcon,
 } from "@phosphor-icons/react";
 import { NavConfig, NavGroup } from "@settle/admin";
 
@@ -23,19 +30,83 @@ const mainGroup: NavGroup = {
       id: "general-main",
       label: "General",
       items: [
-         // Keep existing main nav items (Home, etc.) if needed, or just Dashboard
-         // User asked for "just dashboard for my the main module"
-         // But maybe keep the standard navItems or just a Dashboard link. 
-         // I'll add Dashboard explicitly and then the standard ones if they are generic.
-         { 
-            type: "link", 
-            label: "Dashboard", 
-            href: "/admin", 
-            icon: ChartBarIcon 
-         },
+        // Keep existing main nav items (Home, etc.) if needed, or just Dashboard
+        // User asked for "just dashboard for my the main module"
+        // But maybe keep the standard navItems or just a Dashboard link. 
+        // I'll add Dashboard explicitly and then the standard ones if they are generic.
+        {
+          type: "link",
+          label: "Dashboard",
+          href: "/admin",
+          icon: ChartBarIcon
+        },
       ]
     }
   ]
+};
+
+
+
+// Contacts Module Group
+const contactsGroup: NavGroup = {
+  id: "contacts",
+  label: "Contacts",
+  icon: AddressBookIcon,
+  color: "green",
+  modules: [
+    {
+      id: "contacts-main",
+      label: "Directory",
+      items: [
+        {
+          type: "link",
+          label: "Directory (Assignments)",
+          href: "/admin/contacts/assignments",
+          icon: AddressBookIcon,
+        },
+        {
+          type: "link",
+          label: "People",
+          href: "/admin/contacts/people",
+          icon: UsersThreeIcon,
+        },
+        {
+          type: "link",
+          label: "Organizations",
+          href: "/admin/contacts/organizations",
+          icon: BuildingsIcon,
+        },
+        {
+          type: "link",
+          label: "Roles",
+          href: "/admin/contacts/roles",
+          icon: IdentificationCardIcon,
+        },
+      ],
+    },
+  ],
+};
+
+// Elections Module Group
+const electionsGroup: NavGroup = {
+  id: "elections",
+  label: "Elections",
+  icon: CheckSquareIcon,
+  color: "violet",
+  modules: [
+    {
+      id: "elections-main",
+      label: "Elections",
+      items: [
+        {
+          type: "link",
+          label: "Political Parties",
+          href: "/admin/elections/parties",
+          icon: FlagIcon,
+        },
+      ],
+    },
+  ],
 };
 
 // Configuration Module Group
@@ -92,8 +163,8 @@ const configGroup: NavGroup = {
           icon: PolygonIcon,
         },
         {
-           type: "divider",
-           label: "Places"
+          type: "divider",
+          label: "Places"
         },
         {
           type: "link",
@@ -108,8 +179,8 @@ const configGroup: NavGroup = {
           icon: MapPinIcon,
         },
         {
-           type: "divider",
-           label: "Metrics"
+          type: "divider",
+          label: "Metrics"
         },
         {
           type: "link",
@@ -131,6 +202,8 @@ const configGroup: NavGroup = {
 export const navConfig: NavConfig = {
   groups: [
     mainGroup,
+    contactsGroup,
+    electionsGroup,
     configGroup,
   ],
   settings: {

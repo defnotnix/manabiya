@@ -226,20 +226,18 @@ export function DataTableShellToolbar({
           <div suppressHydrationWarning>
             <Popover withArrow shadow="md">
               <Popover.Target>
-                <UnstyledButton>
-                  <Button
-                    color="dark"
-                    variant="white"
-                    style={{
-                      border: "1px solid var(--mantine-color-gray-3)",
-                    }}
-                    size="xs"
-                    leftSection={<GearSixIcon />}
-                    rightSection={<CaretDownIcon />}
-                  >
-                    Columns
-                  </Button>
-                </UnstyledButton>
+                <Button
+                  color="dark"
+                  variant="white"
+                  style={{
+                    border: "1px solid var(--mantine-color-gray-3)",
+                  }}
+                  size="xs"
+                  leftSection={<GearSixIcon />}
+                  rightSection={<CaretDownIcon />}
+                >
+                  Columns
+                </Button>
               </Popover.Target>
               <Popover.Dropdown p={0} w={200}>
                 <Stack gap={0}>
