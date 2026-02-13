@@ -9,7 +9,7 @@ export function ModuleSignIn() {
       subheading="Enter your credentials to access your account."
       loginApi="/api/auth/token/"
       skipEmailValidation
-      successRedirectUrl="/admin/home"
+      successRedirectUrl="/admin"
       forgotRedirectUrl="/forgot-password"
       // hasGoogleLogin={true}
       // hasAppleLogin={true}

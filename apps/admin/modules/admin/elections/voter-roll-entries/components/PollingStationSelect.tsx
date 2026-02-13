@@ -15,7 +15,7 @@ import {
 import { CaretDown, CaretUp, X } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { GEO_UNIT_API } from "@/modules/config/location/geo-units/module.api";
-import { POLLING_STATIONS_API } from "../../data-entry-accounts/module.api";
+import { POLLING_STATIONS_API } from "@/modules/elections/data-entry-accounts/module.api";
 
 interface PollingStation {
   id: number;

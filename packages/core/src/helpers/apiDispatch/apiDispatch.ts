@@ -133,7 +133,9 @@ function isTokenExpiredError(error: AxiosError<any>): boolean {
     const isAuthEndpoint =
       url.includes("/auth/login") ||
       url.includes("/auth/token/verify") ||
-      url.includes("/auth/token/refresh");
+      url.includes("/auth/token/refresh") ||
+      url.endsWith("/auth/token/") ||
+      url.endsWith("/auth/token");
 
     if (isAuthEndpoint) {
       console.log("401 on auth endpoint, not treating as token expiry:", url);

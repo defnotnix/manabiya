@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 import { FormWrapper } from "@settle/core";
 import { USERS_API } from "../module.api";
 import { useMemo, useState } from "react";
-import { PollingStationMultiSelect } from "@/modules/admin/elections/data-entry-accounts/form/PollingStationMultiSelect";
+import { PollingStationMultiSelect } from "@/modules/elections/data-entry-accounts/form/PollingStationMultiSelect";
 
 // User Type Constants
 export const USER_TYPES = {
@@ -258,6 +258,7 @@ export function UserForm({ currentStep = 0, isCreate = true }: UserFormProps) {
           value={form.values.polling_stations || []}
           onChange={(val) => form.setFieldValue("polling_stations", val)}
           error={form.errors.polling_stations as string}
+          showMap={false}
         />
         <Select
           label="Account Status"

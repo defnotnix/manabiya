@@ -6,7 +6,7 @@ import { USERS_MODULE_CONFIG, USERS_API } from "../../module.config";
 import { UserForm, USER_TYPES } from "../../form/UserForm";
 import { UserFormConfig } from "../../form/form.config";
 import { columns } from "./list.column";
-import { DATA_ENTRY_ACCOUNTS_API } from "@/modules/admin/elections/data-entry-accounts/module.api";
+import { DATA_ENTRY_ACCOUNTS_API } from "@/modules/elections/data-entry-accounts/module.api";
 
 export function ListPage() {
   return (

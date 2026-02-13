@@ -111,7 +111,7 @@ function useSpotlightActions(config: NavConfig): SpotlightActionData[] {
   }, [config, router]);
 }
 
-function NavPanelContainer({ toggle }: { toggle: () => void }) {
+function NavPanelContainer({ toggle }: { toggle?: () => void }) {
   const { activeGroup } = useNav();
 
   return (
@@ -180,7 +180,7 @@ function NavbarContent({
   toggle,
 }: {
   singleNavLayout: boolean;
-  toggle: () => void;
+  toggle?: () => void;
 }) {
   const { activeGroupHasPanel } = useNav();
   const showPanel = !singleNavLayout && activeGroupHasPanel;
