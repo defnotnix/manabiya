@@ -13,11 +13,14 @@ export function ListPage() {
             queryKey="assignment.list"
             queryGetFn={ASSIGNMENT_API.getAssignments}
             dataKey="results"
+            enableServerQuery={true}
+            paginationDataKey="pagination"
         >
             <DataTableModalShell
                 moduleInfo={ASSIGNMENT_MODULE_CONFIG}
                 columns={columns}
                 idAccessor="id"
+                hasServerSearch={true}
                 filterList={[
                     { label: "Role", value: "role" },
                     { label: "Party", value: "party" },
