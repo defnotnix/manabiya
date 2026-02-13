@@ -5,7 +5,7 @@ import { PageSignIn } from "@settle/admin";
 export function ModuleSignIn() {
   return (
     <PageSignIn
-      heading={["Welcome Back!", "to your zetsel portal."]}
+      heading={["Welcome Back!", "to your zetsel contact catalogue."]}
       subheading="Enter your credentials to access your account."
       loginApi="/api/auth/token/"
       skipEmailValidation

@@ -17,6 +17,11 @@ export const columns = [
         width: 200,
     },
     {
+        accessor: "address",
+        title: "Address",
+        width: 200,
+    },
+    {
         accessor: "is_active",
         title: "Active",
         width: 100,

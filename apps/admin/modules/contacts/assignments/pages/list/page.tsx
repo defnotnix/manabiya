@@ -33,6 +33,7 @@ export function ListPage() {
                         primary_phone: data.person_primary_phone,
                         secondary_phone: data.person_secondary_phone,
                         email: data.person_email,
+                        address: data.person_address || null,
                         is_active: true,
                     };
 

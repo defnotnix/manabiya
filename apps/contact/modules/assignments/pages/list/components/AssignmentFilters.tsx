@@ -7,7 +7,6 @@ import {
   Select,
   SimpleGrid,
   Stack,
-  Text,
 } from "@mantine/core";
 import {
   FlagIcon,
@@ -48,14 +47,11 @@ export function AssignmentFilters({
 }: AssignmentFiltersProps) {
   return (
     <Collapse in={isOpen}>
-      <Card withBorder p="md">
+      <Card withBorder p="md" shadow="md">
         <Stack gap="md">
-          {/* Location Filters */}
-          <Text size="sm" fw={500} c="dimmed">
-            Location
-          </Text>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="sm">
             <Select
+              size="xs"
               label="Province"
               placeholder="Select province"
               data={locationSelector.provinceOptions}
@@ -66,58 +62,72 @@ export function AssignmentFilters({
               searchable
             />
             <Select
+              size="xs"
               label="District"
               placeholder="Select district"
               data={locationSelector.districtOptions}
               value={locationSelector.selectedDistrict}
               onChange={locationSelector.setSelectedDistrict}
-              disabled={!locationSelector.selectedProvince || locationSelector.loadingDistricts}
+              disabled={
+                !locationSelector.selectedProvince ||
+                locationSelector.loadingDistricts
+              }
               clearable
               searchable
             />
             <Select
+              size="xs"
               label="Local Body"
               placeholder="Select local body"
               data={locationSelector.localBodyOptions}
               value={locationSelector.selectedLocalBody}
               onChange={locationSelector.setSelectedLocalBody}
-              disabled={!locationSelector.selectedDistrict || locationSelector.loadingLocalBodies}
+              disabled={
+                !locationSelector.selectedDistrict ||
+                locationSelector.loadingLocalBodies
+              }
               clearable
               searchable
             />
             <Select
+              size="xs"
               label="Ward"
               placeholder="Select ward"
               data={locationSelector.wardOptions}
               value={locationSelector.selectedWard}
               onChange={locationSelector.setSelectedWard}
-              disabled={!locationSelector.selectedLocalBody || locationSelector.loadingWards}
+              disabled={
+                !locationSelector.selectedLocalBody ||
+                locationSelector.loadingWards
+              }
               clearable
               searchable
             />
           </SimpleGrid>
 
-          {/* Party & Role Filters */}
-          <Text size="sm" fw={500} c="dimmed">
-            Party & Role
-          </Text>
           <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
             <Select
+              size="xs"
               label="Party"
               placeholder="Select party"
               data={partyOptions}
               value={filters.party}
-              onChange={(value) => setFilters((f) => ({ ...f, party: value, page: 1 }))}
+              onChange={(value) =>
+                setFilters((f) => ({ ...f, party: value, page: 1 }))
+              }
               disabled={loadingParties}
               clearable
               searchable
             />
             <Select
+              size="xs"
               label="Role"
               placeholder="Select role"
               data={roleOptions}
               value={filters.role}
-              onChange={(value) => setFilters((f) => ({ ...f, role: value, page: 1 }))}
+              onChange={(value) =>
+                setFilters((f) => ({ ...f, role: value, page: 1 }))
+              }
               disabled={loadingRoles}
               clearable
               searchable
@@ -129,17 +139,29 @@ export function AssignmentFilters({
             <Group justify="space-between" mt="xs">
               <Group gap="xs">
                 {locationPath && (
-                  <Badge variant="light" size="sm" leftSection={<MapPinIcon size={12} />}>
+                  <Badge
+                    variant="light"
+                    size="sm"
+                    leftSection={<MapPinIcon size={12} />}
+                  >
                     {locationPath}
                   </Badge>
                 )}
                 {filters.party && (
-                  <Badge variant="light" size="sm" leftSection={<FlagIcon size={12} />}>
+                  <Badge
+                    variant="light"
+                    size="sm"
+                    leftSection={<FlagIcon size={12} />}
+                  >
                     {partyOptions.find((p) => p.value === filters.party)?.label}
                   </Badge>
                 )}
                 {filters.role && (
-                  <Badge variant="light" size="sm" leftSection={<IdentificationBadgeIcon size={12} />}>
+                  <Badge
+                    variant="light"
+                    size="sm"
+                    leftSection={<IdentificationBadgeIcon size={12} />}
+                  >
                     {roleOptions.find((r) => r.value === filters.role)?.label}
                   </Badge>
                 )}

@@ -7,7 +7,7 @@ import { PropsWithChildren } from "react";
 export function LayoutAdmin({ children }: PropsWithChildren) {
   return (
     <AdminShell navItems={navItems}>
-      <AutoBreadcrumb hidden={["/admin/home"]} />
+      <AutoBreadcrumb hidden={["/admin"]} />
       {children}
     </AdminShell>
   );

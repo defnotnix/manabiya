@@ -19,6 +19,7 @@ export interface Assignment {
     name_en?: string;
     primary_phone?: string;
     email?: string;
+    address?: string;
   };
   role?: {
     id: number;

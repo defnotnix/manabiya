@@ -2,7 +2,7 @@ import { Card, Divider, Group, Pagination, Select, Text } from "@mantine/core";
 
 import type { AssignmentFilters } from "../types";
 
-const PAGE_SIZES = [12, 24, 48, 96];
+const PAGE_SIZES = [100, 250, 500];
 
 interface AssignmentsPaginationProps {
   filters: AssignmentFilters;

@@ -1,8 +1,7 @@
-import { useMemo } from "react";
-import { Badge, Box, Group, Stack, Text, ThemeIcon } from "@mantine/core";
-import { IdentificationBadgeIcon } from "@phosphor-icons/react";
+import { Fragment, useMemo } from "react";
+import { Badge, Group, Table, Text } from "@mantine/core";
 
-import { AssignmentTable } from "./AssignmentTable";
+import { AssignmentRow, AssignmentTableHead, COLUMN_COUNT } from "./AssignmentTable";
 import type { Assignment, RoleGroup } from "../types";
 
 interface GroupedAssignmentsProps {
@@ -14,7 +13,7 @@ export function GroupedAssignments({ assignments }: GroupedAssignmentsProps) {
     const groups: Record<string, RoleGroup> = {};
 
     assignments.forEach((assignment) => {
-      const role = assignment.role || {};
+      const role = assignment.role ?? ({} as Partial<NonNullable<Assignment['role']>>);
       const roleId = role.id ? String(role.id) : "no-role";
       const roleName = role.name || role.name_en || "No Role";
 
@@ -36,26 +35,27 @@ export function GroupedAssignments({ assignments }: GroupedAssignmentsProps) {
   }, [assignments]);
 
   return (
-    <Stack gap="xl">
-      {groupedByRole.map((group) => (
-        <Box key={group.role.id}>
-          {/* Role Header */}
-          <Group gap="sm" mb="md">
-            <ThemeIcon size="md" variant="light" color="gray">
-              <IdentificationBadgeIcon size={16} />
-            </ThemeIcon>
-            <Text fw={600} size="lg">
-              {group.role.name}
-            </Text>
-            <Badge variant="light" size="sm">
-              {group.assignments.length}
-            </Badge>
-          </Group>
-
-          {/* Assignments Table */}
-          <AssignmentTable assignments={group.assignments} />
-        </Box>
-      ))}
-    </Stack>
+    <Table striped highlightOnHover withTableBorder>
+      <AssignmentTableHead />
+      <Table.Tbody>
+        {groupedByRole.map((group) => (
+          <Fragment key={group.role.id}>
+            <Table.Tr>
+              <Table.Td colSpan={COLUMN_COUNT} bg="brand.0" py="xs">
+                <Group gap="sm">
+                  <Text fw={500} size="xs" c="dimmed">{group.role.name}</Text>
+                  <Badge variant="light" size="sm">
+                    {group.assignments.length}
+                  </Badge>
+                </Group>
+              </Table.Td>
+            </Table.Tr>
+            {group.assignments.map((assignment) => (
+              <AssignmentRow key={assignment.id} assignment={assignment} />
+            ))}
+          </Fragment>
+        ))}
+      </Table.Tbody>
+    </Table>
   );
 }

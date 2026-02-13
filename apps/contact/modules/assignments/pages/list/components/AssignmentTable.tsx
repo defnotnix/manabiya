@@ -1,127 +1,111 @@
-import { ActionIcon, Badge, Group, Table, Text, Tooltip } from "@mantine/core";
-import {
-  PhoneCallIcon,
-  WhatsappLogoIcon,
-} from "@phosphor-icons/react";
+import { Table, Text } from "@mantine/core";
 
-import { ViberIcon } from "./ViberIcon";
 import { getName, formatPhoneForLink, getPhoneLinks } from "../utils";
 import type { Assignment } from "../types";
+
+const COLUMN_COUNT = 3;
+
+const COL_WIDTHS = {
+  role: "10%",
+  name: "20%",
+  contact: "18%",
+};
+
+export function AssignmentTableHead() {
+  return (
+    <Table.Thead>
+      <Table.Tr>
+        <Table.Th w={COL_WIDTHS.role}>Role</Table.Th>
+        <Table.Th w={COL_WIDTHS.name}>Name</Table.Th>
+
+        <Table.Th w={COL_WIDTHS.contact}>Contact</Table.Th>
+      </Table.Tr>
+    </Table.Thead>
+  );
+}
+
+export { COLUMN_COUNT };
+
+export function AssignmentRow({ assignment }: { assignment: Assignment }) {
+  const contact =
+    assignment.contact ?? ({} as Partial<NonNullable<Assignment["contact"]>>);
+  const location =
+    assignment.location ?? ({} as Partial<NonNullable<Assignment["location"]>>);
+
+  const localBody = getName(location.local_body);
+  const ward = location.ward;
+  const wardDisplay = ward
+    ? `Ward ${typeof ward === "object" ? ward.ward_no || ward.name : ward}`
+    : null;
+  const district = getName(location.district);
+
+  const locationParts = [localBody, wardDisplay].filter(Boolean);
+  const locationDisplay =
+    locationParts.length > 0
+      ? `${locationParts.join(", ")}${district ? ` (${district})` : ""}`
+      : district || null;
+
+  const addressDisplay = contact.address || locationDisplay || "-";
+
+  const phoneNumber = formatPhoneForLink(contact.primary_phone);
+  const hasPhone = !!phoneNumber;
+  const phoneLinks = hasPhone ? getPhoneLinks(phoneNumber) : null;
+
+  const role = assignment.role;
+
+  const handleRowClick = () => {
+    if (phoneLinks) {
+      window.location.href = phoneLinks.tel;
+    }
+  };
+
+  return (
+    <Table.Tr
+      onClick={handleRowClick}
+      style={{ cursor: hasPhone ? "pointer" : "default" }}
+    >
+      <Table.Td>
+        <Text size="xs">{role?.name || role?.name_en || "-"}</Text>
+      </Table.Td>
+      <Table.Td>
+        <Text fw={500} size="xs">
+          {contact.name || contact.name_en || "Unknown"}
+        </Text>
+        <Text size="xs" c="dimmed">
+          {addressDisplay}
+        </Text>
+      </Table.Td>
+
+      <Table.Td>
+        <Text size="xs">
+          {hasPhone ? (
+            contact.primary_phone
+          ) : (
+            <Text span size="xs" c="dimmed">
+              -
+            </Text>
+          )}
+        </Text>
+      </Table.Td>
+    </Table.Tr>
+  );
+}
 
 interface AssignmentTableProps {
   assignments: Assignment[];
 }
 
 export function AssignmentTable({ assignments }: AssignmentTableProps) {
-  const rows = assignments.map((assignment) => {
-    const contact = assignment.contact || {};
-    const party = assignment.party;
-    const organization = assignment.organization;
-    const location = assignment.location || {};
-
-    const localBody = getName(location.local_body);
-    const ward = location.ward;
-    const wardDisplay = ward
-      ? `Ward ${typeof ward === "object" ? ward.ward_no || ward.name : ward}`
-      : null;
-    const district = getName(location.district);
-
-    const locationParts = [localBody, wardDisplay].filter(Boolean);
-    const locationDisplay = locationParts.length > 0
-      ? `${locationParts.join(", ")}${district ? ` (${district})` : ""}`
-      : district || "-";
-
-    const phoneNumber = formatPhoneForLink(contact.primary_phone);
-    const hasPhone = !!phoneNumber;
-    const phoneLinks = hasPhone ? getPhoneLinks(phoneNumber) : null;
-
-    return (
-      <Table.Tr key={assignment.id}>
-        <Table.Td>
-          <Text fw={500} size="sm">
-            {contact.name || contact.name_en || "Unknown"}
-          </Text>
-        </Table.Td>
-        <Table.Td>
-          {hasPhone && phoneLinks ? (
-            <Group gap={4} wrap="nowrap">
-              <Text size="sm">{contact.primary_phone}</Text>
-              <Group gap={2}>
-                <Tooltip label="Call" withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="blue"
-                    size="sm"
-                    component="a"
-                    href={phoneLinks.tel}
-                  >
-                    <PhoneCallIcon size={14} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="WhatsApp" withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="green"
-                    size="sm"
-                    component="a"
-                    href={phoneLinks.whatsapp}
-                    target="_blank"
-                  >
-                    <WhatsappLogoIcon size={14} />
-                  </ActionIcon>
-                </Tooltip>
-                <Tooltip label="Viber" withArrow>
-                  <ActionIcon
-                    variant="subtle"
-                    color="violet"
-                    size="sm"
-                    component="a"
-                    href={phoneLinks.viber}
-                  >
-                    <ViberIcon size={14} />
-                  </ActionIcon>
-                </Tooltip>
-              </Group>
-            </Group>
-          ) : (
-            <Text size="sm" c="dimmed">-</Text>
-          )}
-        </Table.Td>
-        <Table.Td>
-          <Text size="sm">{locationDisplay}</Text>
-        </Table.Td>
-        <Table.Td>
-          <Group gap="xs">
-            {party && (
-              <Badge variant="light" size="sm">
-                {party.abbrev || party.name}
-              </Badge>
-            )}
-            {organization && (
-              <Badge variant="outline" size="sm">
-                {organization.name || organization.name_en}
-              </Badge>
-            )}
-            {!party && !organization && (
-              <Text size="sm" c="dimmed">-</Text>
-            )}
-          </Group>
-        </Table.Td>
-      </Table.Tr>
-    );
-  });
-
   return (
-    <Table striped highlightOnHover withTableBorder>
-      <Table.Thead>
-        <Table.Tr>
-          <Table.Th>Name</Table.Th>
-          <Table.Th>Phone</Table.Th>
-          <Table.Th>Location</Table.Th>
-          <Table.Th>Affiliation</Table.Th>
-        </Table.Tr>
-      </Table.Thead>
-      <Table.Tbody>{rows}</Table.Tbody>
-    </Table>
+    <Table.ScrollContainer minWidth={400}>
+      <Table striped highlightOnHover withTableBorder>
+        <AssignmentTableHead />
+        <Table.Tbody>
+          {assignments.map((assignment) => (
+            <AssignmentRow key={assignment.id} assignment={assignment} />
+          ))}
+        </Table.Tbody>
+      </Table>
+    </Table.ScrollContainer>
   );
 }

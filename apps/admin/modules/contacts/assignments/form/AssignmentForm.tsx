@@ -189,6 +189,11 @@ export function AssignmentForm() {
                             placeholder="Optional"
                             {...form.getInputProps("person_email")}
                         />
+                        <TextInput
+                            label="Address"
+                            placeholder="e.g. Ward 1, Aarughat, Gorkha"
+                            {...form.getInputProps("person_address")}
+                        />
                     </Stack>
                 </Paper>
 

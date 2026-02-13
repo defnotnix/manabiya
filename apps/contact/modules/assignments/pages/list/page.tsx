@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import {
   Badge,
+  Box,
   Button,
   Center,
   Group,
@@ -27,7 +28,6 @@ import {
   AssignmentTable,
   AssignmentFilters,
   AssignmentsPagination,
-  GroupedAssignments,
 } from "./components";
 import { extractResults } from "./utils";
 import type { AssignmentFilters as FilterState } from "./types";
@@ -39,11 +39,11 @@ export function AssignmentsListPage() {
     party: null,
     role: null,
     page: 1,
-    page_size: 12,
+    page_size: 100,
   });
 
   const [debouncedSearch] = useDebouncedValue(filters.search, 300);
-  const [filtersOpen, { toggle: toggleFilters }] = useDisclosure(true);
+  const [filtersOpen, { toggle: toggleFilters }] = useDisclosure(false);
 
   // Location selector with cascading dropdowns
   const locationSelector = useLocationSelector({ fetchPlaces: false });
@@ -123,7 +123,14 @@ export function AssignmentsListPage() {
     }
 
     return params;
-  }, [debouncedSearch, activeGeoUnit, filters.party, filters.role, filters.page, filters.page_size]);
+  }, [
+    debouncedSearch,
+    activeGeoUnit,
+    filters.party,
+    filters.role,
+    filters.page,
+    filters.page_size,
+  ]);
 
   // Fetch assignments
   const {
@@ -139,9 +146,12 @@ export function AssignmentsListPage() {
     placeholderData: (previousData) => previousData,
   });
 
-  const assignments = useMemo(() => extractResults(assignmentsData), [assignmentsData]);
-  const totalCount = assignmentsData?.count || 0;
-  const totalPages = Math.ceil(totalCount / filters.page_size);
+  const assignments = useMemo(
+    () => extractResults(assignmentsData),
+    [assignmentsData],
+  );
+  const totalCount = assignmentsData?.pagination?.total_items || 0;
+  const totalPages = assignmentsData?.pagination?.total_pages || 0;
 
   // Clear all filters
   const clearAllFilters = useCallback(() => {
@@ -156,67 +166,64 @@ export function AssignmentsListPage() {
   }, [locationSelector, filters.page_size]);
 
   // Check if any filters are active
-  const hasActiveFilters =
+  const hasActiveFilters = !!(
     filters.search ||
     filters.party ||
     filters.role ||
-    locationSelector.hasActiveFilters;
+    locationSelector.hasActiveFilters
+  );
 
   // Location display for active filter summary
   const locationPath = locationSelector.getFullLocationPath();
 
   return (
     <Stack gap="md">
-      {/* Header */}
-      <Group justify="space-between">
-        <Text size="xl" fw={600}>
-          Assignments Directory
-        </Text>
-        <Group gap="xs">
-          {isFetching && <Loader size="xs" />}
-          <Badge variant="light" size="lg">
-            {totalCount} {totalCount === 1 ? "assignment" : "assignments"}
-          </Badge>
-        </Group>
-      </Group>
+      {/* Search Bar & Filters - Fixed at top */}
+      <Box pos="sticky" top={16} style={{ zIndex: 100 }} bg="white" pb="sm">
+        <Stack gap="sm">
+          <Group gap="sm">
+            <TextInput
+              flex={1}
+              size="xs"
+              leftSection={<MagnifyingGlassIcon size={20} />}
+              placeholder="Search by name, phone, email, or address..."
+              value={filters.search}
+              onChange={(e) =>
+                setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))
+              }
+            />
+            <Button
+              size="xs"
+              variant={filtersOpen ? "filled" : "light"}
+              leftSection={<FunnelIcon size={18} />}
+              rightSection={
+                filtersOpen ? (
+                  <CaretUpIcon size={14} />
+                ) : (
+                  <CaretDownIcon size={14} />
+                )
+              }
+              onClick={toggleFilters}
+            >
+              Filters
+            </Button>
+          </Group>
 
-      {/* Search Bar */}
-      <Group gap="sm">
-        <TextInput
-          flex={1}
-          size="md"
-          leftSection={<MagnifyingGlassIcon size={20} />}
-          placeholder="Search by name, phone, or email..."
-          value={filters.search}
-          onChange={(e) =>
-            setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))
-          }
-        />
-        <Button
-          size="md"
-          variant={filtersOpen ? "filled" : "light"}
-          leftSection={<FunnelIcon size={18} />}
-          rightSection={filtersOpen ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
-          onClick={toggleFilters}
-        >
-          Filters
-        </Button>
-      </Group>
-
-      {/* Filters Panel */}
-      <AssignmentFilters
-        isOpen={filtersOpen}
-        filters={filters}
-        setFilters={setFilters}
-        locationSelector={locationSelector}
-        partyOptions={partyOptions}
-        roleOptions={roleOptions}
-        loadingParties={loadingParties}
-        loadingRoles={loadingRoles}
-        hasActiveFilters={hasActiveFilters}
-        locationPath={locationPath}
-        onClearAll={clearAllFilters}
-      />
+          <AssignmentFilters
+            isOpen={filtersOpen}
+            filters={filters}
+            setFilters={setFilters}
+            locationSelector={locationSelector}
+            partyOptions={partyOptions}
+            roleOptions={roleOptions}
+            loadingParties={loadingParties}
+            loadingRoles={loadingRoles}
+            hasActiveFilters={hasActiveFilters}
+            locationPath={locationPath}
+            onClearAll={clearAllFilters}
+          />
+        </Stack>
+      </Box>
 
       {/* Results */}
       {loadingAssignments && !assignments.length ? (
@@ -239,12 +246,7 @@ export function AssignmentsListPage() {
         </Center>
       ) : (
         <>
-          {/* Assignments Table - Grouped by role when no role filter */}
-          {!filters.role ? (
-            <GroupedAssignments assignments={assignments} />
-          ) : (
-            <AssignmentTable assignments={assignments} />
-          )}
+          <AssignmentTable assignments={assignments} />
 
           {/* Pagination */}
           <AssignmentsPagination

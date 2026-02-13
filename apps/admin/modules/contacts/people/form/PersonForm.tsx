@@ -45,6 +45,11 @@ export function PersonForm() {
                     {...form.getInputProps("email")}
                 />
 
+                <TextInput
+                    label="Address"
+                    {...form.getInputProps("address")}
+                />
+
                 <Textarea
                     label="Notes"
                     {...form.getInputProps("notes")}
