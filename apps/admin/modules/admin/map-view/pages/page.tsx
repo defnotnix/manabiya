@@ -1150,8 +1150,8 @@ export default function MapViewPage() {
       const booth = booths.find((b) => b.id === Number(selectedBooth));
       if (booth && booth.latitude && booth.longitude) {
         map.panTo({
-          lat: parseFloat(booth.latitude),
-          lng: parseFloat(booth.longitude),
+          lat: booth.latitude,
+          lng: booth.longitude,
         });
         map.setZoom(16); // Zoom in close for booth view
       }
@@ -1164,8 +1164,8 @@ export default function MapViewPage() {
       booths.forEach((booth) => {
         if (booth.latitude && booth.longitude) {
           bounds.extend({
-            lat: parseFloat(booth.latitude),
-            lng: parseFloat(booth.longitude),
+            lat: booth.latitude,
+            lng: booth.longitude,
           });
           hasValidCoords = true;
         }
