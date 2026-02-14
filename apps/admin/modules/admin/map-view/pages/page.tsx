@@ -2,20 +2,26 @@
 
 import { useCallback, useRef, useState, useEffect } from "react";
 import {
-  Box,
-  Loader,
-  Center,
-  Paper,
-  Stack,
-  Text,
-  Group,
   ActionIcon,
   Badge,
+  Box,
+  Button,
+  Center,
   Divider,
+  Drawer,
+  Group,
+  Loader,
+  Menu,
+  Paper,
   ScrollArea,
-  Tooltip,
+  Select,
+  Stack,
+  Text,
   TextInput,
+  Title,
+  Tooltip,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import {
   TrashIcon,
   MapPinIcon,
@@ -29,25 +35,50 @@ import {
   PlusIcon,
   ClockIcon,
   MagnifyingGlassIcon,
+  StackIcon,
+  ChartBarIcon,
+  ListIcon,
 } from "@phosphor-icons/react";
+import { useGeoBoundaries } from "../hooks/useGeoBoundaries";
+import { LocationSelector } from "../components/LocationSelector";
+import { ReportDashboard } from "../components/ReportDashboard";
+import { VoterHeatmap } from "../components/VoterHeatmap";
 import {
   GoogleMap,
   useJsApiLoader,
   MarkerF,
+  InfoWindowF,
   DirectionsRenderer,
 } from "@react-google-maps/api";
+import { useQuery } from "@tanstack/react-query";
+import { POLLING_STATIONS_API } from "@/modules/elections/data-entry-accounts/module.api";
+import { moduleApiCall } from "@settle/core";
+import { REPORTING_API } from "../api/reporting.api";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY || "";
-const LIBRARIES: ("places" | "geometry")[] = ["places", "geometry"];
+const LIBRARIES: ("places" | "geometry" | "visualization")[] = [
+  "places",
+  "geometry",
+  "visualization",
+];
 const GORKHA_1_CENTER = { lat: 28.0, lng: 84.63 };
 const DEFAULT_ZOOM = 12;
 
-type MapMode = "browse" | "route" | "measure";
+type MapMode = "browse" | "route" | "measure" | "reporting";
+
+type ReportLevel =
+  | "dashboard"
+  | "district"
+  | "municipality"
+  | "ward"
+  | "booth"
+  | "religion-levels";
 
 const MODES: { key: MapMode; icon: typeof CursorIcon; label: string }[] = [
   { key: "browse", icon: CursorIcon, label: "Browse" },
   { key: "route", icon: PathIcon, label: "Route" },
   { key: "measure", icon: RulerIcon, label: "Measure" },
+  { key: "reporting", icon: ChartBarIcon, label: "Reporting" },
 ];
 
 interface Activity {
@@ -55,6 +86,30 @@ interface Activity {
   name: string;
   startTime: string;
   endTime: string;
+}
+
+interface Booth {
+  id: number;
+  station_code: string | null;
+  election_id: number;
+  place_id: number;
+  place_name_ne: string;
+  place_name_en: string;
+  ward_id: number;
+  ward_no: number;
+  ward_name_ne: string;
+  ward_name_en: string;
+  municipality_id: number;
+  municipality_name_ne: string;
+  municipality_name_en: string;
+  district_id: number;
+  district_name_ne: string;
+  district_name_en: string;
+  province_id: number;
+  province_name_ne: string;
+  province_name_en: string;
+  latitude: number;
+  longitude: number;
 }
 
 interface Waypoint {
@@ -109,56 +164,53 @@ function ModeToolbar({
   active,
   onChange,
   mapRef,
+  boundariesEnabled,
+  onToggleBoundaries,
 }: {
   active: MapMode;
   onChange: (mode: MapMode) => void;
   mapRef: React.RefObject<google.maps.Map | null>;
+  boundariesEnabled: boolean;
+  onToggleBoundaries: () => void;
 }) {
   const [search, setSearch] = useState("");
   const [predictions, setPredictions] = useState<
     google.maps.places.AutocompletePrediction[]
   >([]);
   const autocompleteRef = useRef<google.maps.places.AutocompleteService | null>(
-    null
+    null,
   );
 
-  const handleSearch = useCallback(
-    (value: string) => {
-      setSearch(value);
-      if (!value.trim()) {
-        setPredictions([]);
-        return;
-      }
-      if (!autocompleteRef.current) {
-        autocompleteRef.current =
-          new google.maps.places.AutocompleteService();
-      }
-      autocompleteRef.current.getPlacePredictions(
-        { input: value, componentRestrictions: { country: "np" } },
-        (results) => setPredictions(results || [])
-      );
-    },
-    []
-  );
+  const handleSearch = useCallback((value: string) => {
+    setSearch(value);
+    if (!value.trim()) {
+      setPredictions([]);
+      return;
+    }
+    if (!autocompleteRef.current) {
+      autocompleteRef.current = new google.maps.places.AutocompleteService();
+    }
+    autocompleteRef.current.getPlacePredictions(
+      { input: value, componentRestrictions: { country: "np" } },
+      (results) => setPredictions(results || []),
+    );
+  }, []);
 
   const selectPlace = useCallback(
     (placeId: string) => {
       const placesService = new google.maps.places.PlacesService(
-        mapRef.current!
+        mapRef.current!,
       );
-      placesService.getDetails(
-        { placeId, fields: ["geometry"] },
-        (place) => {
-          if (place?.geometry?.location) {
-            mapRef.current?.panTo(place.geometry.location);
-            mapRef.current?.setZoom(15);
-          }
+      placesService.getDetails({ placeId, fields: ["geometry"] }, (place) => {
+        if (place?.geometry?.location) {
+          mapRef.current?.panTo(place.geometry.location);
+          mapRef.current?.setZoom(15);
         }
-      );
+      });
       setSearch("");
       setPredictions([]);
     },
-    [mapRef]
+    [mapRef],
   );
 
   return (
@@ -181,12 +233,7 @@ function ModeToolbar({
           const Icon = mode.icon;
           const isActive = active === mode.key;
           return (
-            <Tooltip
-              key={mode.key}
-              label={mode.label}
-              position="top"
-              withArrow
-            >
+            <Tooltip key={mode.key} label={mode.label} position="top" withArrow>
               <ActionIcon
                 size="md"
                 variant={isActive ? "filled" : "subtle"}
@@ -208,7 +255,9 @@ function ModeToolbar({
             placeholder="Search places..."
             value={search}
             onChange={(e) => handleSearch(e.currentTarget.value)}
-            leftSection={<MagnifyingGlassIcon size={14} color="rgba(255,255,255,0.5)" />}
+            leftSection={
+              <MagnifyingGlassIcon size={14} color="rgba(255,255,255,0.5)" />
+            }
             w={200}
             styles={{
               input: {
@@ -237,7 +286,9 @@ function ModeToolbar({
                   py={6}
                   style={{
                     cursor: "pointer",
-                    "&:hover": { backgroundColor: "var(--mantine-color-gray-0)" },
+                    "&:hover": {
+                      backgroundColor: "var(--mantine-color-gray-0)",
+                    },
                   }}
                   onClick={() => selectPlace(p.place_id)}
                 >
@@ -252,6 +303,27 @@ function ModeToolbar({
             </Paper>
           )}
         </Box>
+        <Divider orientation="vertical" color="rgba(255,255,255,0.15)" />
+        <Tooltip
+          label={boundariesEnabled ? "Hide Boundaries" : "Show Boundaries"}
+          position="top"
+          withArrow
+        >
+          <ActionIcon
+            size="md"
+            variant={boundariesEnabled ? "filled" : "subtle"}
+            color={boundariesEnabled ? "teal" : "gray"}
+            onClick={onToggleBoundaries}
+            style={{
+              color: boundariesEnabled ? "#fff" : "rgba(255,255,255,0.7)",
+            }}
+          >
+            <StackIcon
+              size={18}
+              weight={boundariesEnabled ? "fill" : "regular"}
+            />
+          </ActionIcon>
+        </Tooltip>
       </Group>
     </Paper>
   );
@@ -288,7 +360,11 @@ function RoutePanel({
   onDragOver: (e: React.DragEvent, index: number) => void;
   onDragEnd: () => void;
   onAddActivity: (waypointId: string) => void;
-  onUpdateActivity: (waypointId: string, activityId: string, updates: Partial<Activity>) => void;
+  onUpdateActivity: (
+    waypointId: string,
+    activityId: string,
+    updates: Partial<Activity>,
+  ) => void;
   onRemoveActivity: (waypointId: string, activityId: string) => void;
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -467,7 +543,10 @@ function RoutePanel({
                   {wp.activities.map((act) => (
                     <Stack key={act.id} gap={0} py={3}>
                       <Group gap={4} wrap="nowrap">
-                        <ClockIcon size={12} color="var(--mantine-color-gray-5)" />
+                        <ClockIcon
+                          size={12}
+                          color="var(--mantine-color-gray-5)"
+                        />
                         <TextInput
                           size="xs"
                           placeholder="Activity name"
@@ -478,7 +557,9 @@ function RoutePanel({
                             })
                           }
                           style={{ flex: 1 }}
-                          styles={{ input: { height: 24, minHeight: 24, fontSize: 11 } }}
+                          styles={{
+                            input: { height: 24, minHeight: 24, fontSize: 11 },
+                          }}
                         />
                         <ActionIcon
                           size="xs"
@@ -500,9 +581,13 @@ function RoutePanel({
                             })
                           }
                           w={70}
-                          styles={{ input: { height: 24, minHeight: 24, fontSize: 11 } }}
+                          styles={{
+                            input: { height: 24, minHeight: 24, fontSize: 11 },
+                          }}
                         />
-                        <Text size="xs" c="dimmed">–</Text>
+                        <Text size="xs" c="dimmed">
+                          –
+                        </Text>
                         <TextInput
                           size="xs"
                           type="time"
@@ -513,7 +598,9 @@ function RoutePanel({
                             })
                           }
                           w={70}
-                          styles={{ input: { height: 24, minHeight: 24, fontSize: 11 } }}
+                          styles={{
+                            input: { height: 24, minHeight: 24, fontSize: 11 },
+                          }}
                         />
                       </Group>
                     </Stack>
@@ -736,6 +823,9 @@ export default function MapViewPage() {
     libraries: LIBRARIES,
   });
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
+  // Map instance ref
   const mapRef = useRef<google.maps.Map | null>(null);
   const [mode, setMode] = useState<MapMode>("browse");
 
@@ -750,10 +840,133 @@ export default function MapViewPage() {
   // Measure mode state
   const [measureWaypoints, setMeasureWaypoints] = useState<Waypoint[]>([]);
 
+  // Location selection state
+  const [selectedProvince, setSelectedProvince] = useState<string | null>(null);
+  const [selectedDistrict, setSelectedDistrict] = useState<string | null>(null);
+  const [selectedLocalBody, setSelectedLocalBody] = useState<string | null>(
+    null,
+  );
+  const [selectedWard, setSelectedWard] = useState<string | null>(null);
+  const [selectedBooth, setSelectedBooth] = useState<string | null>(null);
+  const [infoWindowBoothId, setInfoWindowBoothId] = useState<number | null>(
+    null,
+  );
+
+  // Fetch voter data for heatmap when booth is selected
+  const { data: voterData } = useQuery({
+    queryKey: ["voter-roll-entries", selectedBooth],
+    queryFn: async () => {
+      if (!selectedBooth) return null;
+      const response = await fetch(
+        `/api/elections/voter-roll-entries/?polling_station=${selectedBooth}`,
+      );
+      const data = await response.json();
+      return data;
+    },
+    enabled: !!selectedBooth && mode === "reporting",
+  });
+
+  // Cascading resets
+  useEffect(() => {
+    setSelectedDistrict(null);
+    setSelectedLocalBody(null);
+    setSelectedWard(null);
+    setSelectedBooth(null);
+  }, [selectedProvince]);
+
+  useEffect(() => {
+    setSelectedLocalBody(null);
+    setSelectedWard(null);
+    setSelectedBooth(null);
+  }, [selectedDistrict]);
+
+  useEffect(() => {
+    setSelectedWard(null);
+    setSelectedBooth(null);
+  }, [selectedLocalBody]);
+
+  useEffect(() => {
+    setSelectedBooth(null);
+  }, [selectedWard]);
+
+  // Fetch polling stations based on current selection level
+  const { data: booths } = useQuery({
+    queryKey: [
+      "polling-stations",
+      selectedProvince,
+      selectedDistrict,
+      selectedLocalBody,
+      selectedWard,
+    ],
+    queryFn: async () => {
+      // Build query parameters based on selection level
+      const params: any = {};
+
+      // Priority: Ward > Municipality > District > Province
+      if (selectedWard && selectedLocalBody) {
+        params.municipality = Number(selectedLocalBody);
+        params.ward_no = Number(selectedWard);
+      } else if (selectedLocalBody) {
+        // Fetch all polling stations for the municipality
+        params.municipality = Number(selectedLocalBody);
+      } else if (selectedDistrict) {
+        params.district = Number(selectedDistrict);
+      } else if (selectedProvince) {
+        params.province = Number(selectedProvince);
+        params.election = 1;
+        params.page = 1;
+        params.page_size = 500;
+      } else {
+        return [];
+      }
+
+      const data = await moduleApiCall.getRecords({
+        endpoint: "/api/location/polling-stations/",
+        params,
+      });
+      return (data?.results as Booth[]) || data || [];
+    },
+    enabled:
+      !!(selectedProvince || selectedDistrict || selectedLocalBody) &&
+      mode === "reporting",
+  });
+
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-    map.setOptions({ controlSize: 24 });
   }, []);
+
+  // Mapping from GeoJSON municipality names to API municipality IDs
+  const MUNICIPALITY_NAME_TO_ID: Record<string, string> = {
+    Aarughat: "110",
+    Arughat: "110",
+    Gandaki: "121",
+    Gorkha: "130",
+    Chumnuwri: "145",
+    Chumanuvri: "145",
+    Dharche: "153",
+    Bhimsen: "161",
+    Bhimasenathapa: "161",
+    "Sahid Lakhan": "170",
+  };
+
+  // Handle municipality boundary click
+  const handleMunicipalityClick = useCallback((municipalityName: string) => {
+    const municipalityId = MUNICIPALITY_NAME_TO_ID[municipalityName];
+    if (municipalityId) {
+      setSelectedLocalBody(municipalityId);
+    }
+  }, []);
+
+  // Geo-boundary overlays
+  const {
+    isLoading: boundariesLoading,
+    activeLayer,
+    boundariesEnabled,
+    setBoundariesEnabled,
+  } = useGeoBoundaries({
+    map: mapRef.current,
+    onMunicipalityClick: handleMunicipalityClick,
+  });
 
   // ── Reverse geocode to get place name ──
   const reverseGeocode = useCallback((id: string, lat: number, lng: number) => {
@@ -861,8 +1074,8 @@ export default function MapViewPage() {
                 },
               ],
             }
-          : w
-      )
+          : w,
+      ),
     );
   }, []);
 
@@ -874,14 +1087,14 @@ export default function MapViewPage() {
             ? {
                 ...w,
                 activities: w.activities.map((a) =>
-                  a.id === activityId ? { ...a, ...updates } : a
+                  a.id === activityId ? { ...a, ...updates } : a,
                 ),
               }
-            : w
-        )
+            : w,
+        ),
       );
     },
-    []
+    [],
   );
 
   const removeActivity = useCallback(
@@ -893,11 +1106,11 @@ export default function MapViewPage() {
                 ...w,
                 activities: w.activities.filter((a) => a.id !== activityId),
               }
-            : w
-        )
+            : w,
+        ),
       );
     },
-    []
+    [],
   );
 
   // ── Measure helpers ──
@@ -911,6 +1124,192 @@ export default function MapViewPage() {
   const clearMeasure = useCallback(() => {
     setMeasureWaypoints([]);
   }, []);
+
+  // Location selection handlers
+  const handleClearAllLocations = useCallback(() => {
+    setSelectedProvince(null);
+    setSelectedDistrict(null);
+    setSelectedLocalBody(null);
+    setSelectedWard(null);
+    setSelectedBooth(null);
+  }, []);
+
+  // Handle booth marker click
+  const handleBoothClick = useCallback((boothId: number) => {
+    setSelectedBooth(String(boothId));
+    setInfoWindowBoothId(boothId);
+  }, []);
+
+  // Auto-focus map on selected location
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // If booth is selected, center on that booth
+    if (selectedBooth && booths && booths.length > 0) {
+      const booth = booths.find((b) => b.id === Number(selectedBooth));
+      if (booth && booth.latitude && booth.longitude) {
+        map.panTo({
+          lat: parseFloat(booth.latitude),
+          lng: parseFloat(booth.longitude),
+        });
+        map.setZoom(16); // Zoom in close for booth view
+      }
+    }
+    // If no booth selected, fit bounds to all booths
+    else if (booths && booths.length > 0) {
+      const bounds = new google.maps.LatLngBounds();
+      let hasValidCoords = false;
+
+      booths.forEach((booth) => {
+        if (booth.latitude && booth.longitude) {
+          bounds.extend({
+            lat: parseFloat(booth.latitude),
+            lng: parseFloat(booth.longitude),
+          });
+          hasValidCoords = true;
+        }
+      });
+
+      if (hasValidCoords) {
+        map.fitBounds(bounds);
+        // Limit max zoom after fitBounds
+        const listener = google.maps.event.addListenerOnce(
+          map,
+          "bounds_changed",
+          () => {
+            const currentZoom = map.getZoom();
+            if (currentZoom && currentZoom > 15) {
+              map.setZoom(15);
+            }
+          },
+        );
+      }
+    }
+  }, [selectedBooth, selectedWard, booths]);
+
+  // Report modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [reportLevel, setReportLevel] = useState<ReportLevel | null>(null);
+  const [reportParams, setReportParams] = useState<any>(null);
+  const [reportTitle, setReportTitle] = useState("");
+
+  // Fetch report data when modal is open
+  const {
+    data: reportData,
+    isLoading: loadingReport,
+    error: reportError,
+  } = useQuery({
+    queryKey: ["reporting", reportLevel, reportParams],
+    queryFn: async () => {
+      if (!reportLevel) return null;
+      switch (reportLevel) {
+        case "dashboard":
+          return REPORTING_API.getDashboardSummary(reportParams);
+        case "district":
+          return REPORTING_API.getDistricts(reportParams);
+        case "municipality":
+          return REPORTING_API.getMunicipalities(reportParams);
+        case "ward":
+          return REPORTING_API.getWards(reportParams);
+        case "booth":
+          return REPORTING_API.getBooths(reportParams);
+        case "religion-levels":
+          return REPORTING_API.getReligionLevels(reportParams);
+        default:
+          return null;
+      }
+    },
+    enabled: modalOpen && !!reportLevel,
+  });
+
+  const openReport = (level: ReportLevel, params: any, title: string) => {
+    setReportLevel(level);
+    setReportParams(params);
+    setReportTitle(title);
+    setModalOpen(true);
+  };
+
+  // Auto-open report panel when a location is selected
+  useEffect(() => {
+    if ((selectedDistrict || selectedLocalBody) && mode === "reporting") {
+      const report = getCurrentLocationReport();
+      if (report) {
+        setReportLevel(report.level);
+        setReportParams(report.params);
+        setReportTitle(report.title);
+        setModalOpen(true);
+      }
+    }
+  }, [selectedDistrict, selectedLocalBody, selectedWard, selectedBooth, mode]);
+
+  // Determine current location level and params
+  const getCurrentLocationReport = () => {
+    if (selectedBooth && selectedWard) {
+      return {
+        level: "booth" as ReportLevel,
+        params: {
+          polling_station: Number(selectedBooth),
+          ward: Number(selectedWard),
+        },
+        title: "Booth Report",
+      };
+    }
+    if (selectedWard && selectedLocalBody) {
+      return {
+        level: "ward" as ReportLevel,
+        params: {
+          ward: Number(selectedWard),
+          municipality: Number(selectedLocalBody),
+          district: Number(selectedDistrict),
+        },
+        title: "Ward Report",
+      };
+    }
+    if (selectedLocalBody && selectedDistrict) {
+      return {
+        level: "municipality" as ReportLevel,
+        params: {
+          municipality: Number(selectedLocalBody),
+          district: Number(selectedDistrict),
+        },
+        title: "Municipality Report",
+      };
+    }
+    if (selectedDistrict) {
+      return {
+        level: "district" as ReportLevel,
+        params: { district: Number(selectedDistrict) },
+        title: "District Report",
+      };
+    }
+    return null;
+  };
+
+  const getReligionParams = () => {
+    if (selectedBooth) {
+      return {
+        scope: "BOOTH" as const,
+        polling_station: Number(selectedBooth),
+      };
+    }
+    if (selectedWard) {
+      return { scope: "WARD" as const, geo_unit: Number(selectedWard) };
+    }
+    if (selectedLocalBody) {
+      return {
+        scope: "MUNICIPALITY" as const,
+        geo_unit: Number(selectedLocalBody),
+      };
+    }
+    if (selectedDistrict) {
+      return {
+        scope: "DISTRICT" as const,
+        geo_unit: Number(selectedDistrict),
+      };
+    }
+    return { scope: "NATIONAL" as const };
+  };
 
   // ── Directions calculation ──
   useEffect(() => {
@@ -972,150 +1371,372 @@ export default function MapViewPage() {
   }
 
   return (
-    <Box h="100vh" w="100%" pos="relative">
-      {/* Mode Toolbar */}
-      <ModeToolbar active={mode} onChange={setMode} mapRef={mapRef} />
-
-      {/* Route Panel */}
-      {mode === "route" && (
-        <RoutePanel
-          waypoints={routeWaypoints}
-          routeLegs={routeLegs}
-          isCalculating={isCalculating}
-          totalDistance={totalDistance}
-          totalDuration={totalDuration}
-          draggedIndex={draggedIndex}
-          onRemove={removeRouteWaypoint}
-          onRename={renameRouteWaypoint}
-          onClearAll={clearRoute}
-          onDragStart={handleDragStart}
-          onDragOver={handleDragOver}
-          onDragEnd={handleDragEnd}
-          onAddActivity={addActivity}
-          onUpdateActivity={updateActivity}
-          onRemoveActivity={removeActivity}
-        />
-      )}
-
-      {/* Measure Panel */}
-      {mode === "measure" && (
-        <MeasurePanel
-          waypoints={measureWaypoints}
-          onRemove={removeMeasureWaypoint}
-          onClearAll={clearMeasure}
-        />
-      )}
-
-      {/* Google Map */}
-      <GoogleMap
-        mapContainerStyle={{ width: "100%", height: "100%" }}
-        center={GORKHA_1_CENTER}
-        zoom={DEFAULT_ZOOM}
-        onLoad={onMapLoad}
-        onClick={onMapClick}
-        options={{
-          mapTypeControl: true,
-          streetViewControl: true,
-          fullscreenControl: true,
-          zoomControl: true,
-          mapTypeId: "roadmap",
-          draggableCursor: mode === "browse" ? undefined : "crosshair",
+    <Box pos="relative" h="100vh" style={{ overflow: "hidden" }}>
+      {/* Main Map Container */}
+      <Box
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: modalOpen && mode === "reporting" ? "500px" : 0,
+          bottom: 0,
+          transition: "right 0.3s ease",
         }}
       >
-        {/* Route markers */}
-        {mode === "route" &&
-          routeWaypoints.map((wp, index) => (
-            <MarkerF
-              key={wp.id}
-              position={{ lat: wp.lat, lng: wp.lng }}
-              label={{
-                text: String(index + 1),
-                color: "#fff",
-                fontSize: "11px",
-                fontWeight: "bold",
-              }}
-              icon={getMarkerIcon(index, routeWaypoints.length)}
-              draggable
-              onDragEnd={(e) => {
-                if (!e.latLng) return;
-                setRouteWaypoints((prev) =>
-                  prev.map((w, i) =>
-                    i === index
-                      ? { ...w, lat: e.latLng!.lat(), lng: e.latLng!.lng() }
-                      : w,
-                  ),
-                );
-              }}
-            />
-          ))}
-
-        {/* Route directions */}
-        {mode === "route" && directionsResult && (
-          <DirectionsRenderer
-            directions={directionsResult}
-            options={{
-              suppressMarkers: true,
-              preserveViewport: true,
-              polylineOptions: {
-                strokeColor: "#3b82f6",
-                strokeWeight: 4,
-                strokeOpacity: 0.85,
-              },
-            }}
+        <Box h="100vh" w="100%" pos="relative">
+          {/* Mode Toolbar */}
+          <ModeToolbar
+            active={mode}
+            onChange={setMode}
+            mapRef={mapRef}
+            boundariesEnabled={boundariesEnabled}
+            onToggleBoundaries={() => setBoundariesEnabled(!boundariesEnabled)}
           />
-        )}
+          {boundariesEnabled && (
+            <Badge
+              pos="absolute"
+              top={16}
+              left={16}
+              style={{ zIndex: 1000 }}
+              variant="light"
+              color="blue"
+              size="sm"
+              leftSection={boundariesLoading ? <Loader size={10} /> : undefined}
+            >
+              {activeLayer === "constituency"
+                ? "Constituency"
+                : activeLayer === "municipalities"
+                  ? "Municipalities"
+                  : "Wards"}
+            </Badge>
+          )}
 
-        {/* Measure markers + lines */}
-        {mode === "measure" &&
-          measureWaypoints.map((wp, index) => (
-            <MarkerF
-              key={wp.id}
-              position={{ lat: wp.lat, lng: wp.lng }}
-              label={{
-                text: String(index + 1),
-                color: "#fff",
-                fontSize: "11px",
-                fontWeight: "bold",
-              }}
-              icon={{
-                path: "M12 0C7.31 0 3.5 3.81 3.5 8.5C3.5 14.88 12 24 12 24S20.5 14.88 20.5 8.5C20.5 3.81 16.69 0 12 0Z",
-                fillColor: "#e8590c",
-                fillOpacity: 1,
-                strokeColor: "#fff",
-                strokeWeight: 2,
-                scale: 1.4,
-                anchor: { x: 12, y: 24 } as google.maps.Point,
-                labelOrigin: { x: 12, y: 9 } as google.maps.Point,
-              }}
-              draggable
-              onDragEnd={(e) => {
-                if (!e.latLng) return;
-                setMeasureWaypoints((prev) =>
-                  prev.map((w, i) =>
-                    i === index
-                      ? { ...w, lat: e.latLng!.lat(), lng: e.latLng!.lng() }
-                      : w,
-                  ),
-                );
-              }}
+          {/* Route Panel */}
+          {mode === "route" && (
+            <RoutePanel
+              waypoints={routeWaypoints}
+              routeLegs={routeLegs}
+              isCalculating={isCalculating}
+              totalDistance={totalDistance}
+              totalDuration={totalDuration}
+              draggedIndex={draggedIndex}
+              onRemove={removeRouteWaypoint}
+              onRename={renameRouteWaypoint}
+              onClearAll={clearRoute}
+              onDragStart={handleDragStart}
+              onDragOver={handleDragOver}
+              onDragEnd={handleDragEnd}
+              onAddActivity={addActivity}
+              onUpdateActivity={updateActivity}
+              onRemoveActivity={removeActivity}
             />
-          ))}
+          )}
 
-        {/* Measure polyline (straight lines) */}
-        {mode === "measure" && measureWaypoints.length >= 2 && (
+          {/* Measure Panel */}
+          {mode === "measure" && (
+            <MeasurePanel
+              waypoints={measureWaypoints}
+              onRemove={removeMeasureWaypoint}
+              onClearAll={clearMeasure}
+            />
+          )}
+
+          {/* Location Selector (only in reporting mode) */}
+          {mode === "reporting" && (
+            <LocationSelector
+              selectedProvince={selectedProvince}
+              selectedDistrict={selectedDistrict}
+              selectedLocalBody={selectedLocalBody}
+              selectedWard={selectedWard}
+              selectedBooth={selectedBooth}
+              onProvinceChange={setSelectedProvince}
+              onDistrictChange={setSelectedDistrict}
+              onLocalBodyChange={setSelectedLocalBody}
+              onWardChange={setSelectedWard}
+              onBoothChange={setSelectedBooth}
+              onClearAll={handleClearAllLocations}
+            />
+          )}
+
+          {/* Google Map */}
+          <GoogleMap
+            mapContainerStyle={{ width: "100%", height: "100%" }}
+            center={GORKHA_1_CENTER}
+            zoom={DEFAULT_ZOOM}
+            onLoad={onMapLoad}
+            onClick={onMapClick}
+            options={{
+              mapTypeControl: true,
+              streetViewControl: true,
+              fullscreenControl: true,
+              zoomControl: true,
+              mapTypeId: "roadmap",
+              draggableCursor:
+                mode === "browse" || mode === "reporting"
+                  ? undefined
+                  : "crosshair",
+            }}
+          >
+            {/* Route markers */}
+            {mode === "route" &&
+              routeWaypoints.map((wp, index) => (
+                <MarkerF
+                  key={wp.id}
+                  position={{ lat: wp.lat, lng: wp.lng }}
+                  label={{
+                    text: String(index + 1),
+                    color: "#fff",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                  }}
+                  icon={getMarkerIcon(index, routeWaypoints.length)}
+                  draggable
+                  onDragEnd={(e) => {
+                    if (!e.latLng) return;
+                    setRouteWaypoints((prev) =>
+                      prev.map((w, i) =>
+                        i === index
+                          ? { ...w, lat: e.latLng!.lat(), lng: e.latLng!.lng() }
+                          : w,
+                      ),
+                    );
+                  }}
+                />
+              ))}
+
+            {/* Route directions */}
+            {mode === "route" && directionsResult && (
+              <DirectionsRenderer
+                directions={directionsResult}
+                options={{
+                  suppressMarkers: true,
+                  preserveViewport: true,
+                  polylineOptions: {
+                    strokeColor: "#3b82f6",
+                    strokeWeight: 4,
+                    strokeOpacity: 0.85,
+                  },
+                }}
+              />
+            )}
+
+            {/* Measure markers + lines */}
+            {mode === "measure" &&
+              measureWaypoints.map((wp, index) => (
+                <MarkerF
+                  key={wp.id}
+                  position={{ lat: wp.lat, lng: wp.lng }}
+                  label={{
+                    text: String(index + 1),
+                    color: "#fff",
+                    fontSize: "11px",
+                    fontWeight: "bold",
+                  }}
+                  icon={{
+                    path: "M12 0C7.31 0 3.5 3.81 3.5 8.5C3.5 14.88 12 24 12 24S20.5 14.88 20.5 8.5C20.5 3.81 16.69 0 12 0Z",
+                    fillColor: "#e8590c",
+                    fillOpacity: 1,
+                    strokeColor: "#fff",
+                    strokeWeight: 2,
+                    scale: 1.4,
+                    anchor: { x: 12, y: 24 } as google.maps.Point,
+                    labelOrigin: { x: 12, y: 9 } as google.maps.Point,
+                  }}
+                  draggable
+                  onDragEnd={(e) => {
+                    if (!e.latLng) return;
+                    setMeasureWaypoints((prev) =>
+                      prev.map((w, i) =>
+                        i === index
+                          ? { ...w, lat: e.latLng!.lat(), lng: e.latLng!.lng() }
+                          : w,
+                      ),
+                    );
+                  }}
+                />
+              ))}
+
+            {/* Measure polyline (straight lines) */}
+            {mode === "measure" && measureWaypoints.length >= 2 && (
+              <>
+                {(() => {
+                  const path = measureWaypoints.map((wp) => ({
+                    lat: wp.lat,
+                    lng: wp.lng,
+                  }));
+                  return <MarkerF visible={false} position={path[0]} />;
+                })()}
+                {/* Render polyline via map ref */}
+                <MeasurePolyline mapRef={mapRef} waypoints={measureWaypoints} />
+              </>
+            )}
+
+            {/* TODO: Booth markers disabled for now — re-enable when lat/lng ready */}
+
+            {/* Voter Heatmap - shows when booth is selected */}
+            {mode === "reporting" && selectedBooth && voterData && (
+              <VoterHeatmap map={mapRef.current} voterData={voterData} />
+            )}
+          </GoogleMap>
+        </Box>
+      </Box>
+
+      {/* Report Panel Content */}
+      {(() => {
+        if (!modalOpen || mode !== "reporting") return null;
+
+        const reportContent = (
           <>
-            {(() => {
-              const path = measureWaypoints.map((wp) => ({
-                lat: wp.lat,
-                lng: wp.lng,
-              }));
-              return <MarkerF visible={false} position={path[0]} />;
-            })()}
-            {/* Render polyline via map ref */}
-            <MeasurePolyline mapRef={mapRef} waypoints={measureWaypoints} />
+            <Box p="md" style={{ borderBottom: "1px solid #e0e0e0" }}>
+              <Group justify="space-between" mb="sm">
+                <Group gap="xs">
+                  <ChartBarIcon size={20} weight="bold" />
+                  <Text fw={600}>{reportTitle}</Text>
+                </Group>
+                {!isMobile && (
+                  <ActionIcon
+                    variant="subtle"
+                    color="gray"
+                    onClick={() => setModalOpen(false)}
+                  >
+                    <XIcon size={18} />
+                  </ActionIcon>
+                )}
+              </Group>
+
+              {/* Report Navigation Buttons */}
+              <Group gap="xs" wrap="wrap">
+                <Button
+                  size="xs"
+                  variant={reportLevel === "dashboard" ? "filled" : "light"}
+                  color="indigo"
+                  onClick={() => {
+                    openReport(
+                      "dashboard",
+                      {
+                        ...(selectedDistrict && {
+                          district: Number(selectedDistrict),
+                        }),
+                        ...(selectedLocalBody && {
+                          municipality: Number(selectedLocalBody),
+                        }),
+                        top_n: 5,
+                      },
+                      "Dashboard Summary",
+                    );
+                  }}
+                  leftSection={<ChartBarIcon size={14} />}
+                >
+                  Dashboard
+                </Button>
+
+                {getCurrentLocationReport() && (
+                  <Button
+                    size="xs"
+                    variant={
+                      reportLevel === getCurrentLocationReport()!.level
+                        ? "filled"
+                        : "light"
+                    }
+                    color="blue"
+                    onClick={() => {
+                      const report = getCurrentLocationReport()!;
+                      openReport(report.level, report.params, report.title);
+                    }}
+                    leftSection={<ChartBarIcon size={14} />}
+                  >
+                    Current Location
+                  </Button>
+                )}
+
+                <Button
+                  size="xs"
+                  variant={reportLevel === "religion-levels" ? "filled" : "light"}
+                  color="violet"
+                  onClick={() => {
+                    openReport(
+                      "religion-levels",
+                      { ...getReligionParams(), ordering: "-count" },
+                      "Religion Levels",
+                    );
+                  }}
+                  leftSection={<ChartBarIcon size={14} />}
+                >
+                  Religion
+                </Button>
+              </Group>
+            </Box>
+
+            <ScrollArea h={isMobile ? "calc(70vh - 65px)" : "calc(100vh - 65px)"} px="md">
+              {loadingReport && (
+                <Stack align="center" py="xl">
+                  <Loader size="md" />
+                  <Text size="sm" c="dimmed">
+                    Loading report data...
+                  </Text>
+                </Stack>
+              )}
+
+              {reportError && (
+                <Stack align="center" py="xl">
+                  <Badge color="red" size="lg">
+                    Error
+                  </Badge>
+                  <Text size="sm" c="red">
+                    {(reportError as Error).message || "Failed to load report"}
+                  </Text>
+                </Stack>
+              )}
+
+              {!loadingReport && !reportError && reportData && (
+                <ReportDashboard
+                  data={reportData}
+                  reportType={reportLevel || "booth"}
+                />
+              )}
+
+              {!loadingReport && !reportError && !reportData && (
+                <Text c="dimmed" ta="center" py="xl">
+                  No report data available
+                </Text>
+              )}
+            </ScrollArea>
           </>
-        )}
-      </GoogleMap>
+        );
+
+        if (isMobile) {
+          return (
+            <Drawer
+              opened={modalOpen}
+              onClose={() => setModalOpen(false)}
+              position="bottom"
+              size="75%"
+              withCloseButton
+              title={reportTitle}
+            >
+              {reportContent}
+            </Drawer>
+          );
+        }
+
+        return (
+          <Box
+            style={{
+              position: "absolute",
+              top: 0,
+              right: 0,
+              width: "500px",
+              height: "100vh",
+              backgroundColor: "white",
+              borderLeft: "1px solid #e0e0e0",
+              overflow: "hidden",
+              zIndex: 1000,
+            }}
+          >
+            {reportContent}
+          </Box>
+        );
+      })()}
     </Box>
   );
 }

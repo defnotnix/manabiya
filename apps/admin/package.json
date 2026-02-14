@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "generate:geojson": "node scripts/generate-gorkha1-geojson.mjs"
   },
   "dependencies": {
     "@mantine/carousel": "^8.3.10",
@@ -49,6 +50,8 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@turf/helpers": "^7.3.4",
+    "@turf/union": "^7.3.4",
     "@types/geojson": "^7946.0.16",
     "@types/leaflet": "^1.9.21",
     "@types/node": "^20",
