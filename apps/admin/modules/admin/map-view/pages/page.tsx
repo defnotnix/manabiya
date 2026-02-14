@@ -1230,9 +1230,29 @@ export default function MapViewPage() {
     setModalOpen(true);
   };
 
-  // Auto-open report panel when a location is selected
+  // Auto-open report panel only when a new selection is made (not on clear)
+  const prevSelectionRef = useRef({
+    district: selectedDistrict,
+    localBody: selectedLocalBody,
+    ward: selectedWard,
+    booth: selectedBooth,
+  });
   useEffect(() => {
-    if ((selectedDistrict || selectedLocalBody) && mode === "reporting") {
+    const prev = prevSelectionRef.current;
+    const isNewSelection =
+      (selectedDistrict && selectedDistrict !== prev.district) ||
+      (selectedLocalBody && selectedLocalBody !== prev.localBody) ||
+      (selectedWard && selectedWard !== prev.ward) ||
+      (selectedBooth && selectedBooth !== prev.booth);
+
+    prevSelectionRef.current = {
+      district: selectedDistrict,
+      localBody: selectedLocalBody,
+      ward: selectedWard,
+      booth: selectedBooth,
+    };
+
+    if (isNewSelection && mode === "reporting") {
       const report = getCurrentLocationReport();
       if (report) {
         setReportLevel(report.level);

@@ -8,7 +8,10 @@ import {
   Loader,
   ActionIcon,
   Tooltip,
+  Stack,
+  Badge,
 } from "@mantine/core";
+import { useMediaQuery } from "@mantine/hooks";
 import { XIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { GEO_UNIT_API } from "@/modules/config/location/geo-units/module.api";
@@ -67,7 +70,7 @@ export function LocationSelector({
   onClearAll,
 }: LocationSelectorProps) {
   // Fetch geo-units
-  const { data: provinces, isLoading: loadingProvinces } = useQuery({
+  const { data: provinces } = useQuery({
     queryKey: ["geo-units", "PROVINCE"],
     queryFn: async () => {
       const response = await GEO_UNIT_API.getGeoUnits({
@@ -78,7 +81,7 @@ export function LocationSelector({
     },
   });
 
-  const { data: districts, isLoading: loadingDistricts } = useQuery({
+  const { data: districts } = useQuery({
     queryKey: ["geo-units", "DISTRICT", selectedProvince],
     queryFn: async () => {
       const response = await GEO_UNIT_API.getGeoUnits({
@@ -143,24 +146,6 @@ export function LocationSelector({
   }, [districts, selectedDistrict, onDistrictChange]);
 
   // Build select options
-  const provinceOptions = useMemo(
-    () =>
-      (provinces || []).map((u) => ({
-        value: String(u.id),
-        label: formatDisplayName(u, `Province ${u.id}`),
-      })),
-    [provinces],
-  );
-
-  const districtOptions = useMemo(
-    () =>
-      (districts || []).map((u) => ({
-        value: String(u.id),
-        label: formatDisplayName(u, `District ${u.id}`),
-      })),
-    [districts],
-  );
-
   const localBodyOptions = useMemo(
     () =>
       (localBodies || []).map((u) => ({
@@ -195,12 +180,123 @@ export function LocationSelector({
     [booths],
   );
 
+  const isMobile = useMediaQuery("(max-width: 768px)");
+
   const hasFilters =
     selectedProvince ||
     selectedDistrict ||
     selectedLocalBody ||
     selectedWard ||
     selectedBooth;
+
+  // Mobile: determine which select to show (the next unselected level)
+  const mobileCurrentLevel = !selectedLocalBody
+    ? "municipality"
+    : !selectedWard
+      ? "ward"
+      : "booth";
+
+  // Mobile: build breadcrumb of selected items
+  const mobileBreadcrumb = useMemo(() => {
+    const parts: { label: string; onClear: () => void }[] = [];
+    if (selectedLocalBody) {
+      const item = localBodyOptions.find((o) => o.value === selectedLocalBody);
+      if (item)
+        parts.push({ label: item.label, onClear: () => onLocalBodyChange(null) });
+    }
+    if (selectedWard) {
+      const item = wardOptions.find((o) => o.value === selectedWard);
+      if (item)
+        parts.push({ label: item.label, onClear: () => onWardChange(null) });
+    }
+    return parts;
+  }, [selectedLocalBody, selectedWard, localBodyOptions, wardOptions, onLocalBodyChange, onWardChange]);
+
+  if (isMobile) {
+    return (
+      <Paper
+        pos="absolute"
+        bottom={76}
+        left="50%"
+        style={{
+          zIndex: 1000,
+          transform: "translateX(-50%)",
+        }}
+        radius="md"
+        p="xs"
+        shadow="lg"
+        withBorder
+        w="90%"
+        maw={360}
+      >
+        <Stack gap={6}>
+          {mobileBreadcrumb.length > 0 && (
+            <Group gap={4} wrap="wrap">
+              {mobileBreadcrumb.map((item, i) => (
+                <Badge
+                  key={i}
+                  size="sm"
+                  variant="light"
+                  rightSection={
+                    <XIcon
+                      size={10}
+                      style={{ cursor: "pointer" }}
+                      onClick={item.onClear}
+                    />
+                  }
+                  style={{ cursor: "pointer" }}
+                >
+                  {item.label}
+                </Badge>
+              ))}
+            </Group>
+          )}
+
+          {mobileCurrentLevel === "municipality" && (
+            <Select
+              size="xs"
+              placeholder="Select Municipality"
+              data={localBodyOptions}
+              value={selectedLocalBody}
+              onChange={onLocalBodyChange}
+              searchable
+              clearable
+              disabled={!selectedDistrict || loadingLocalBodies}
+              rightSection={loadingLocalBodies ? <Loader size="xs" /> : undefined}
+            />
+          )}
+
+          {mobileCurrentLevel === "ward" && (
+            <Select
+              size="xs"
+              placeholder="Select Ward"
+              data={wardOptions}
+              value={selectedWard}
+              onChange={onWardChange}
+              searchable
+              clearable
+              disabled={!selectedLocalBody || loadingWards}
+              rightSection={loadingWards ? <Loader size="xs" /> : undefined}
+            />
+          )}
+
+          {mobileCurrentLevel === "booth" && (
+            <Select
+              size="xs"
+              placeholder="Select Booth"
+              data={boothOptions}
+              value={selectedBooth}
+              onChange={onBoothChange}
+              searchable
+              clearable
+              disabled={!selectedWard || loadingBooths}
+              rightSection={loadingBooths ? <Loader size="xs" /> : undefined}
+            />
+          )}
+        </Stack>
+      </Paper>
+    );
+  }
 
   return (
     <Paper
@@ -217,30 +313,6 @@ export function LocationSelector({
       withBorder
     >
       <Group gap="xs" wrap="nowrap">
-        <Select
-          size="xs"
-          placeholder="Province"
-          data={provinceOptions}
-          value={selectedProvince}
-          onChange={onProvinceChange}
-          searchable
-          disabled={true}
-          rightSection={loadingProvinces ? <Loader size="xs" /> : undefined}
-          w={180}
-        />
-
-        <Select
-          size="xs"
-          placeholder="District"
-          data={districtOptions}
-          value={selectedDistrict}
-          onChange={onDistrictChange}
-          searchable
-          disabled={true}
-          rightSection={loadingDistricts ? <Loader size="xs" /> : undefined}
-          w={180}
-        />
-
         <Select
           size="xs"
           placeholder="Municipality"
