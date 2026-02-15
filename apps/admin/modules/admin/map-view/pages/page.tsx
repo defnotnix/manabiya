@@ -49,6 +49,8 @@ import {
   MarkerF,
   InfoWindowF,
   DirectionsRenderer,
+  OverlayViewF,
+  OverlayView,
 } from "@react-google-maps/api";
 import { useQuery } from "@tanstack/react-query";
 import { POLLING_STATIONS_API } from "@/modules/elections/data-entry-accounts/module.api";
@@ -1592,6 +1594,31 @@ export default function MapViewPage() {
             )}
 
             {/* TODO: Booth markers disabled for now — re-enable when lat/lng ready */}
+
+            {/* Gorkha-1 constituency label */}
+            {boundariesEnabled && (
+              <OverlayViewF
+                position={{ lat: 28.28, lng: 84.83 }}
+                mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+              >
+                <div
+                  style={{
+                    transform: "translate(-50%, -50%)",
+                    fontSize: "22px",
+                    fontWeight: 800,
+                    color: "#1e3a5f",
+                    textShadow:
+                      "0 0 6px rgba(255,255,255,0.9), 0 0 12px rgba(255,255,255,0.7)",
+                    whiteSpace: "nowrap",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  गोरखा-१ | Gorkha-1
+                </div>
+              </OverlayViewF>
+            )}
 
             {/* Voter Heatmap - shows when booth is selected */}
             {mode === "reporting" && selectedBooth && voterData && (
