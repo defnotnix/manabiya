@@ -27,6 +27,7 @@ import {
   CaretDownIcon,
   MountainsIcon,
   MapPinIcon,
+  PathIcon,
 } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
 import { useGeoBoundaries } from "../hooks/useGeoBoundaries";
@@ -46,6 +47,7 @@ import {
   OverlayView,
   MarkerF,
   InfoWindowF,
+  DirectionsRenderer,
 } from "@react-google-maps/api";
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY || "";
@@ -219,8 +221,16 @@ export default function MapViewPage() {
   // UI state
   const [showFilters, setShowFilters] = useState(false);
   const [showLabels, setShowLabels] = useState(true);
-  const [mapType, setMapType] = useState<"roadmap" | "terrain">("roadmap");
+  const [mapType, setMapType] = useState<"roadmap" | "satellite">("roadmap");
   const [showProblems, setShowProblems] = useState(true);
+  const [routeMode, setRouteMode] = useState(false);
+  const [routePoints, setRoutePoints] = useState<google.maps.LatLngLiteral[]>(
+    [],
+  );
+  const [directionsResult, setDirectionsResult] =
+    useState<google.maps.DirectionsResult | null>(null);
+  const directionsServiceRef =
+    useRef<google.maps.DirectionsService | null>(null);
 
   // Problem marker state
   const [clickedLocation, setClickedLocation] = useState<{
@@ -283,15 +293,52 @@ export default function MapViewPage() {
     });
   }, [mapType]);
 
-  // ── Handle map click for problem markers ──
-  const handleMapClick = useCallback((e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      const lat = e.latLng.lat();
-      const lng = e.latLng.lng();
-      setClickedLocation({ lat, lng });
-      setShowProblemDialog(true);
+  // ── Calculate route via Directions API ──
+  useEffect(() => {
+    if (routePoints.length < 2) {
+      setDirectionsResult(null);
+      return;
     }
-  }, []);
+    if (!directionsServiceRef.current) {
+      directionsServiceRef.current = new google.maps.DirectionsService();
+    }
+    const origin = routePoints[0];
+    const destination = routePoints[routePoints.length - 1];
+    const waypoints = routePoints.slice(1, -1).map((point) => ({
+      location: new google.maps.LatLng(point.lat, point.lng),
+      stopover: true,
+    }));
+    directionsServiceRef.current.route(
+      {
+        origin,
+        destination,
+        waypoints,
+        travelMode: google.maps.TravelMode.DRIVING,
+      },
+      (result, status) => {
+        if (status === google.maps.DirectionsStatus.OK && result) {
+          setDirectionsResult(result);
+        }
+      },
+    );
+  }, [routePoints]);
+
+  // ── Handle map click ──
+  const handleMapClick = useCallback(
+    (e: google.maps.MapMouseEvent) => {
+      if (e.latLng) {
+        const lat = e.latLng.lat();
+        const lng = e.latLng.lng();
+        if (routeMode) {
+          setRoutePoints((prev) => [...prev, { lat, lng }]);
+        } else {
+          setClickedLocation({ lat, lng });
+          setShowProblemDialog(true);
+        }
+      }
+    },
+    [routeMode],
+  );
 
   // ── Fetch problem markers ──
   const { data: problemsData } = useQuery({
@@ -349,6 +396,8 @@ export default function MapViewPage() {
     setReportTitle("");
     setBottomSheetExpanded(false);
     setShowFilters(false);
+    setRouteMode(false);
+    setRoutePoints([]);
     mapRef.current?.panTo(GORKHA_1_CENTER);
     mapRef.current?.setZoom(DEFAULT_ZOOM);
   }, []);
@@ -559,6 +608,26 @@ export default function MapViewPage() {
   });
 
   // Extract report summary data
+  // ── Extract route leg info (distance + duration at midpoint) ──
+  const routeLegs = useMemo(() => {
+    if (!directionsResult) return [];
+    const legs = directionsResult.routes[0]?.legs || [];
+    return legs.map((leg) => {
+      const startLat = leg.start_location.lat();
+      const startLng = leg.start_location.lng();
+      const endLat = leg.end_location.lat();
+      const endLng = leg.end_location.lng();
+      return {
+        midpoint: {
+          lat: (startLat + endLat) / 2,
+          lng: (startLng + endLng) / 2,
+        },
+        distance: leg.distance?.text || "",
+        duration: leg.duration?.text || "",
+      };
+    });
+  }, [directionsResult]);
+
   const reportSummary = useMemo(() => {
     if (!reportData || loadingReport) return null;
     let d = reportData;
@@ -598,11 +667,67 @@ export default function MapViewPage() {
           fullscreenControl: false,
           zoomControl: false,
           mapTypeId: mapType,
-          styles: showLabels
-            ? MAP_STYLES_DARK_THEME
-            : [...MAP_STYLES_DARK_THEME, ...MAP_STYLES_NO_LABELS],
+          styles:
+            mapType === "satellite"
+              ? showLabels
+                ? []
+                : MAP_STYLES_NO_LABELS
+              : showLabels
+                ? MAP_STYLES_DARK_THEME
+                : [...MAP_STYLES_DARK_THEME, ...MAP_STYLES_NO_LABELS],
         }}
       >
+        {/* Route via Directions API */}
+        {routePoints.length === 1 && (
+          <MarkerF
+            position={routePoints[0]}
+            label={{
+              text: "A",
+              color: "#fff",
+              fontWeight: "bold",
+              fontSize: "12px",
+            }}
+          />
+        )}
+        {directionsResult && (
+          <DirectionsRenderer
+            directions={directionsResult}
+            options={{
+              polylineOptions: {
+                strokeColor: "#4dabf7",
+                strokeWeight: 5,
+                strokeOpacity: 0.9,
+              },
+            }}
+          />
+        )}
+        {routeLegs.map((leg, idx) => (
+          <OverlayViewF
+            key={`leg-info-${idx}`}
+            position={leg.midpoint}
+            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
+          >
+            <Box
+              style={{
+                transform: "translate(-50%, -50%)",
+                backgroundColor: "rgba(0,0,0,0.75)",
+                color: "#fff",
+                borderRadius: 8,
+                padding: "4px 8px",
+                whiteSpace: "nowrap",
+                pointerEvents: "none",
+              }}
+            >
+              <Text size="xs" fw={600} lh={1.3} ta="center">
+                {leg.distance}
+              </Text>
+              <Text size="xs" c="rgba(255,255,255,0.7)" lh={1.3} ta="center">
+                {leg.duration}
+              </Text>
+            </Box>
+          </OverlayViewF>
+        ))}
+
         {/* Problem markers */}
         {showProblems &&
           problemMarkers
@@ -839,32 +964,35 @@ export default function MapViewPage() {
       >
         <ActionIcon
           variant="white"
-          color="dark"
           radius="xl"
           size={40}
           onClick={() => setShowFilters((v) => !v)}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: showFilters ? "#e0e0e0" : "#fff",
+            backgroundColor: showFilters ? "#4c6ef5" : "#fff",
           }}
         >
-          <FunnelIcon size={20} weight={showFilters ? "fill" : "regular"} />
+          <FunnelIcon
+            size={20}
+            color={showFilters ? "#fff" : "#333"}
+            weight={showFilters ? "fill" : "regular"}
+          />
         </ActionIcon>
 
         {reportSummary && (
           <ActionIcon
             variant="white"
-            color="dark"
             radius="xl"
             size={40}
             onClick={() => setBottomSheetExpanded((v) => !v)}
             style={{
               boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-              backgroundColor: bottomSheetExpanded ? "#e0e0e0" : "#fff",
+              backgroundColor: bottomSheetExpanded ? "#7c3aed" : "#fff",
             }}
           >
             <SparkleIcon
               size={20}
+              color={bottomSheetExpanded ? "#fff" : "#333"}
               weight={bottomSheetExpanded ? "fill" : "regular"}
             />
           </ActionIcon>
@@ -872,49 +1000,80 @@ export default function MapViewPage() {
 
         <ActionIcon
           variant="white"
-          color="dark"
           radius="xl"
           size={40}
-          onClick={() => setShowProblems((v) => !v)}
+          onClick={() => {
+            setRouteMode((v) => {
+              if (v) {
+                setRoutePoints([]);
+                setDirectionsResult(null);
+              }
+              return !v;
+            });
+          }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: showProblems ? "#e0e0e0" : "#fff",
+            backgroundColor: routeMode ? "#1098ad" : "#fff",
           }}
         >
-          <MapPinIcon size={20} weight={showProblems ? "fill" : "regular"} />
-        </ActionIcon>
-
-        <ActionIcon
-          variant="white"
-          color="dark"
-          radius="xl"
-          size={40}
-          onClick={() =>
-            setMapType((v) => (v === "roadmap" ? "terrain" : "roadmap"))
-          }
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: mapType === "terrain" ? "#e0e0e0" : "#fff",
-          }}
-        >
-          <MountainsIcon
+          <PathIcon
             size={20}
-            weight={mapType === "terrain" ? "fill" : "regular"}
+            color={routeMode ? "#fff" : "#333"}
+            weight={routeMode ? "fill" : "regular"}
           />
         </ActionIcon>
 
         <ActionIcon
           variant="white"
-          color="dark"
+          radius="xl"
+          size={40}
+          onClick={() => setShowProblems((v) => !v)}
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+            backgroundColor: showProblems ? "#e03131" : "#fff",
+          }}
+        >
+          <MapPinIcon
+            size={20}
+            color={showProblems ? "#fff" : "#333"}
+            weight={showProblems ? "fill" : "regular"}
+          />
+        </ActionIcon>
+
+        <ActionIcon
+          variant="white"
+          radius="xl"
+          size={40}
+          onClick={() =>
+            setMapType((v) => (v === "roadmap" ? "satellite" : "roadmap"))
+          }
+          style={{
+            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
+            backgroundColor: mapType === "satellite" ? "#2f9e44" : "#fff",
+          }}
+        >
+          <MountainsIcon
+            size={20}
+            color={mapType === "satellite" ? "#fff" : "#333"}
+            weight={mapType === "satellite" ? "fill" : "regular"}
+          />
+        </ActionIcon>
+
+        <ActionIcon
+          variant="white"
           radius="xl"
           size={40}
           onClick={() => setShowLabels((v) => !v)}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: !showLabels ? "#e0e0e0" : "#fff",
+            backgroundColor: !showLabels ? "#e8590c" : "#fff",
           }}
         >
-          <TagIcon size={20} weight={!showLabels ? "fill" : "regular"} />
+          <TagIcon
+            size={20}
+            color={!showLabels ? "#fff" : "#333"}
+            weight={!showLabels ? "fill" : "regular"}
+          />
         </ActionIcon>
       </Group>
 
