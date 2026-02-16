@@ -96,6 +96,45 @@ export const REPORTING_API = {
     });
   },
 
+  // District-level top polling stations with optional ward filter
+  getDistrictTopPollingStations: async (params?: {
+    district?: number;
+    ward?: number;
+    top_n?: number;
+  }) => {
+    return moduleApiCall.getRecords({
+      endpoint: "/api/reporting/district-top-polling-stations/",
+      params,
+    });
+  },
+
+  // Municipality-level top polling stations
+  getMunicipalityTopPollingStations: async (params?: {
+    municipality?: number;
+    top_n?: number;
+  }) => {
+    return moduleApiCall.getRecords({
+      endpoint: "/api/reporting/municipality-top-polling-stations/",
+      params,
+    });
+  },
+
+  // Ward political affiliations
+  getWardPoliticalAffiliations: async (params?: {
+    ward?: number;
+  }) => {
+    return moduleApiCall.getRecords({
+      endpoint: "/api/reporting/ward-political-affiliations/",
+      params,
+    });
+  },
+
+  getWardPoliticalAffiliationsByWard: async (wardId: number) => {
+    return moduleApiCall.getRecords({
+      endpoint: `/api/reporting/ward-political-affiliations/by-ward/${wardId}/`,
+    });
+  },
+
   // Religion level reports
   getReligionLevels: async (params?: {
     scope?: "NATIONAL" | "DISTRICT" | "MUNICIPALITY" | "WARD" | "BOOTH";

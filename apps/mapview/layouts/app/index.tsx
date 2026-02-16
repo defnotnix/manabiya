@@ -12,6 +12,8 @@ import "@mantine/core/styles.css";
 import "@mantine/dates/styles.css";
 import "@mantine/spotlight/styles.css";
 import "@mantine/notifications/styles.css";
+import "@mantine/charts/styles.css";
+import "@mantine/carousel/styles.css";
 
 import "@/public/styles/global.css";
 import { PreferenceWrapper, RolePermsWrapper } from "@settle/core";

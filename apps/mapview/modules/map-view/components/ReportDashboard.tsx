@@ -9,8 +9,10 @@ import {
   Divider,
   Group,
   Badge,
+  ColorSwatch,
+  useMantineTheme,
 } from "@mantine/core";
-import { BarChart, PieChart, DonutChart } from "@mantine/charts";
+import { PieChart, DonutChart } from "@mantine/charts";
 import { StatCard } from "./StatCard";
 import {
   UsersIcon,
@@ -19,7 +21,50 @@ import {
   IdentificationCardIcon,
   PhoneIcon,
   ChurchIcon,
+  CaretRightIcon,
 } from "@phosphor-icons/react";
+import { ThemeIcon } from "@mantine/core";
+
+function resolveColor(color: string, theme: any): string {
+  // Handle Mantine color tokens like "cyan.6", "blue.5"
+  if (color.includes(".")) {
+    const [name, shade] = color.split(".");
+    const palette = theme.colors?.[name];
+    if (palette) return palette[parseInt(shade)] || color;
+  }
+  return color;
+}
+
+function ChartLegend({
+  data,
+}: {
+  data: { name: string; value: number; color: string }[];
+}) {
+  const theme = useMantineTheme();
+  const total = data.reduce((sum, d) => sum + d.value, 0);
+  return (
+    <Stack gap={4} mt="sm">
+      {data.map((item) => (
+        <Group key={item.name} gap="xs" wrap="nowrap">
+          <ColorSwatch
+            color={resolveColor(item.color, theme)}
+            size={12}
+            withShadow={false}
+          />
+          <Text size="xs" c="dimmed" style={{ flex: 1 }} lineClamp={1}>
+            {item.name}
+          </Text>
+          <Text size="xs" fw={500}>
+            {item.value.toLocaleString()}
+          </Text>
+          <Text size="xs" c="dimmed" w={45} ta="right">
+            {total > 0 ? `${((item.value / total) * 100).toFixed(1)}%` : "0%"}
+          </Text>
+        </Group>
+      ))}
+    </Stack>
+  );
+}
 
 type ReportLevel =
   | "dashboard"
@@ -32,9 +77,16 @@ type ReportLevel =
 interface ReportDashboardProps {
   data: any;
   reportType: ReportLevel;
+  showMunicipalitySelection?: boolean;
+  onMunicipalityClick?: (name: string) => void;
 }
 
-export function ReportDashboard({ data, reportType }: ReportDashboardProps) {
+export function ReportDashboard({
+  data,
+  reportType,
+  showMunicipalitySelection,
+  onMunicipalityClick,
+}: ReportDashboardProps) {
   if (!data) {
     return (
       <Text c="dimmed" ta="center" py="xl">
@@ -45,7 +97,13 @@ export function ReportDashboard({ data, reportType }: ReportDashboardProps) {
 
   // Handle dashboard summary differently
   if (reportType === "dashboard") {
-    return <DashboardSummaryView data={data} />;
+    return (
+      <DashboardSummaryView
+        data={data}
+        showSelection={showMunicipalitySelection}
+        onSelect={onMunicipalityClick}
+      />
+    );
   }
 
   // For booth, ward, municipality, district reports
@@ -113,14 +171,22 @@ function LocationReportView({
   ];
 
   // Prepare age group data
-  const ageData = [
-    { age: "10-20", count: total_voters_10_20_age },
-    { age: "20-30", count: total_voters_20_30_age },
-    { age: "30-40", count: total_voters_30_40_age },
-    { age: "40-50", count: total_voters_40_50_age },
-    { age: "50-60", count: total_voters_50_60_age },
-    { age: "60+", count: total_voters_60_plus_age },
+  const ageColors = [
+    "cyan.6",
+    "blue.6",
+    "indigo.6",
+    "teal.6",
+    "green.6",
+    "gray.6",
   ];
+  const ageData = [
+    { name: "10-20", value: total_voters_10_20_age, color: ageColors[0] },
+    { name: "20-30", value: total_voters_20_30_age, color: ageColors[1] },
+    { name: "30-40", value: total_voters_30_40_age, color: ageColors[2] },
+    { name: "40-50", value: total_voters_40_50_age, color: ageColors[3] },
+    { name: "50-60", value: total_voters_50_60_age, color: ageColors[4] },
+    { name: "60+", value: total_voters_60_plus_age, color: ageColors[5] },
+  ].filter((d) => d.value > 0);
 
   // Prepare marital status data
   const maritalData = [
@@ -133,21 +199,47 @@ function LocationReportView({
   ];
 
   // Prepare religion data (top 10)
+  const religionColors = [
+    "orange.6",
+    "yellow.6",
+    "red.6",
+    "pink.6",
+    "grape.6",
+    "violet.5",
+    "indigo.5",
+    "teal.5",
+    "lime.6",
+    "gray.5",
+  ];
   const religionData = Object.entries(religion_counts)
-    .map(([religion, count]) => ({
-      religion,
-      count: count as number,
+    .map(([religion, count], idx) => ({
+      name: religion,
+      value: count as number,
+      color: religionColors[idx % religionColors.length],
     }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => b.value - a.value)
     .slice(0, 10);
 
   // Prepare caste data (top 10)
+  const casteColors = [
+    "violet.6",
+    "grape.6",
+    "indigo.6",
+    "blue.5",
+    "cyan.5",
+    "teal.5",
+    "green.5",
+    "lime.5",
+    "yellow.5",
+    "orange.5",
+  ];
   const casteData = Object.entries(caste_counts)
-    .map(([caste, count]) => ({
-      caste,
-      count: count as number,
+    .map(([caste, count], idx) => ({
+      name: caste,
+      value: count as number,
+      color: casteColors[idx % casteColors.length],
     }))
-    .sort((a, b) => b.count - a.count)
+    .sort((a, b) => b.value - a.value)
     .slice(0, 10);
 
   return (
@@ -211,15 +303,16 @@ function LocationReportView({
               Gender Distribution
             </Text>
             {total_voters_count > 0 ? (
-              <PieChart
-                data={genderData}
-                withLabelsLine
-                labelsPosition="outside"
-                labelsType="percent"
-                withLabels
-                size={200}
-                mx="auto"
-              />
+              <>
+                <PieChart
+                  data={genderData}
+                  withTooltip
+                  tooltipDataSource="segment"
+                  size={160}
+                  mx="auto"
+                />
+                <ChartLegend data={genderData} />
+              </>
             ) : (
               <Text c="dimmed" ta="center" py="md">
                 No data
@@ -233,13 +326,17 @@ function LocationReportView({
               Marital Status
             </Text>
             {total_voters_married_count + total_voters_unmarried_count > 0 ? (
-              <DonutChart
-                data={maritalData}
-                chartLabel={`${total_voters_married_count + total_voters_unmarried_count}`}
-                size={200}
-                thickness={30}
-                mx="auto"
-              />
+              <>
+                <DonutChart
+                  data={maritalData}
+                  chartLabel={`${total_voters_married_count + total_voters_unmarried_count}`}
+                  size={160}
+                  thickness={30}
+                  mx="auto"
+                  tooltipDataSource="segment"
+                />
+                <ChartLegend data={maritalData} />
+              </>
             ) : (
               <Text c="dimmed" ta="center" py="md">
                 No data
@@ -250,34 +347,19 @@ function LocationReportView({
       </div>
 
       {/* Age Groups */}
-      {ageData.some((d) => d.count > 0) && (
+      {ageData.length > 0 && (
         <Paper withBorder p="md" radius="md">
           <Text fw={600} size="sm" mb="md">
             Age Group Distribution
           </Text>
-          <BarChart
-            h={300}
+          <PieChart
             data={ageData}
-            dataKey="age"
-            series={[{ name: "count", color: "blue.6", label: "Voters" }]}
-            tickLine="y"
-            gridAxis="y"
-            tooltipProps={{
-              content: ({ label, payload }) => {
-                if (!payload || payload.length === 0) return null;
-                return (
-                  <Paper p="xs" shadow="md" radius="sm" withBorder>
-                    <Text size="sm" fw={600}>
-                      {label}
-                    </Text>
-                    <Text size="sm" c="blue">
-                      Voters: {payload[0]?.value?.toLocaleString()}
-                    </Text>
-                  </Paper>
-                );
-              },
-            }}
+            withTooltip
+            tooltipDataSource="segment"
+            size={160}
+            mx="auto"
           />
+          <ChartLegend data={ageData} />
         </Paper>
       )}
 
@@ -287,29 +369,14 @@ function LocationReportView({
           <Text fw={600} size="sm" mb="md">
             Religion Distribution (Top 10)
           </Text>
-          <BarChart
-            h={300}
+          <PieChart
             data={religionData}
-            dataKey="religion"
-            series={[{ name: "count", color: "orange.6", label: "Count" }]}
-            tickLine="y"
-            gridAxis="y"
-            tooltipProps={{
-              content: ({ label, payload }) => {
-                if (!payload || payload.length === 0) return null;
-                return (
-                  <Paper p="xs" shadow="md" radius="sm" withBorder>
-                    <Text size="sm" fw={600}>
-                      {label}
-                    </Text>
-                    <Text size="sm" c="orange">
-                      Count: {payload[0]?.value?.toLocaleString()}
-                    </Text>
-                  </Paper>
-                );
-              },
-            }}
+            withTooltip
+            tooltipDataSource="segment"
+            size={160}
+            mx="auto"
           />
+          <ChartLegend data={religionData} />
         </Paper>
       )}
 
@@ -319,36 +386,42 @@ function LocationReportView({
           <Text fw={600} size="sm" mb="md">
             Caste Distribution (Top 10)
           </Text>
-          <BarChart
-            h={300}
+          <PieChart
             data={casteData}
-            dataKey="caste"
-            series={[{ name: "count", color: "violet.6", label: "Count" }]}
-            tickLine="y"
-            gridAxis="y"
-            tooltipProps={{
-              content: ({ label, payload }) => {
-                if (!payload || payload.length === 0) return null;
-                return (
-                  <Paper p="xs" shadow="md" radius="sm" withBorder>
-                    <Text size="sm" fw={600}>
-                      {label}
-                    </Text>
-                    <Text size="sm" c="violet">
-                      Count: {payload[0]?.value?.toLocaleString()}
-                    </Text>
-                  </Paper>
-                );
-              },
-            }}
+            withTooltip
+            tooltipDataSource="segment"
+            size={160}
+            mx="auto"
           />
+          <ChartLegend data={casteData} />
         </Paper>
       )}
     </Stack>
   );
 }
 
-function DashboardSummaryView({ data }: { data: any }) {
+const religionPieColors = [
+  "orange.6",
+  "yellow.6",
+  "red.6",
+  "pink.6",
+  "grape.6",
+  "violet.5",
+  "indigo.5",
+  "teal.5",
+  "lime.6",
+  "gray.5",
+];
+
+function DashboardSummaryView({
+  data,
+  showSelection,
+  onSelect,
+}: {
+  data: any;
+  showSelection?: boolean;
+  onSelect?: (name: string) => void;
+}) {
   console.log("Dashboard Summary data received:", data);
 
   const {
@@ -362,6 +435,52 @@ function DashboardSummaryView({ data }: { data: any }) {
     municipality_summary,
     top_religions,
   });
+
+  if (showSelection && municipality_summary.length > 0) {
+    return (
+      <Stack gap="md">
+        <Group justify="space-between">
+          <Title order={5}>Select Municipality</Title>
+          <Badge variant="light" color="teal">
+            {municipality_summary.length} Options
+          </Badge>
+        </Group>
+        <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+          {municipality_summary.map((municipality: any, idx: number) => (
+            <Paper
+              key={idx}
+              withBorder
+              p="sm"
+              radius="md"
+              style={{ cursor: "pointer", transition: "all 0.2s" }}
+              onClick={() =>
+                onSelect?.(
+                  municipality.municipality_name || municipality.name || "",
+                )
+              }
+            >
+              <Group justify="space-between" align="center">
+                <Stack gap={2}>
+                  <Text fw={600} size="sm">
+                    {municipality.municipality_name ||
+                      municipality.name ||
+                      "Unknown Municipality"}
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {municipality.total_voters_count?.toLocaleString() || 0}{" "}
+                    voters
+                  </Text>
+                </Stack>
+                <ThemeIcon variant="light" color="blue" radius="xl">
+                  <CaretRightIcon size={16} />
+                </ThemeIcon>
+              </Group>
+            </Paper>
+          ))}
+        </SimpleGrid>
+      </Stack>
+    );
+  }
 
   return (
     <Stack gap="lg">
@@ -495,34 +614,25 @@ function DashboardSummaryView({ data }: { data: any }) {
                     <Text fw={600} size="sm" mb="md" tt="capitalize">
                       {scope} Level
                     </Text>
-                    <BarChart
-                      h={250}
-                      data={religions.map((r: any) => ({
-                        religion: r.religion,
-                        percentage: parseFloat(r.percentage),
-                      }))}
-                      dataKey="religion"
-                      series={[
-                        { name: "percentage", color: "orange.6", label: "%" },
-                      ]}
-                      tickLine="y"
-                      gridAxis="y"
-                      tooltipProps={{
-                        content: ({ label, payload }) => {
-                          if (!payload || payload.length === 0) return null;
-                          return (
-                            <Paper p="xs" shadow="md" radius="sm" withBorder>
-                              <Text size="sm" fw={600}>
-                                {label}
-                              </Text>
-                              <Text size="sm" c="orange">
-                                {payload[0]?.value?.toFixed(2)}%
-                              </Text>
-                            </Paper>
-                          );
-                        },
-                      }}
-                    />
+                    {(() => {
+                      const chartData = religions.map((r: any, i: number) => ({
+                        name: r.religion,
+                        value: parseFloat(r.percentage),
+                        color: religionPieColors[i % religionPieColors.length],
+                      }));
+                      return (
+                        <>
+                          <PieChart
+                            data={chartData}
+                            withTooltip
+                            tooltipDataSource="segment"
+                            size={150}
+                            mx="auto"
+                          />
+                          <ChartLegend data={chartData} />
+                        </>
+                      );
+                    })()}
                   </Paper>
                 );
               },

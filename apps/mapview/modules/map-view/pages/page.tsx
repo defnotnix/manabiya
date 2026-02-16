@@ -3,218 +3,50 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActionIcon,
-  Badge,
   Box,
   Center,
   Group,
   Loader,
   Paper,
-  ScrollArea,
-  Select,
-  Stack,
   Text,
-  TextInput,
 } from "@mantine/core";
-import {
-  XIcon,
-  FunnelIcon,
-  SparkleIcon,
-  TagIcon,
-  UsersIcon,
-  GenderFemaleIcon,
-  GenderMaleIcon,
-  MagnifyingGlassIcon,
-  CaretDownIcon,
-  MountainsIcon,
-  MapPinIcon,
-  PathIcon,
-} from "@phosphor-icons/react";
+import { XIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
-import { useGeoBoundaries } from "../hooks/useGeoBoundaries";
-import { ReportDashboard } from "../components/ReportDashboard";
-import { REPORTING_API } from "../api/reporting.api";
-import {
-  GEO_UNIT_API,
-  POLLING_STATIONS_API,
-  PROBLEMS_API,
-} from "../module.api";
-import { ProblemMarkerDialog } from "../components/ProblemMarkerDialog";
-import { ProblemForm } from "../components/ProblemForm";
 import {
   GoogleMap,
   useJsApiLoader,
   OverlayViewF,
   OverlayView,
   MarkerF,
-  InfoWindowF,
   DirectionsRenderer,
 } from "@react-google-maps/api";
 
-const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAP_API_KEY || "";
-const LIBRARIES: ("places" | "geometry" | "visualization")[] = [
-  "places",
-  "geometry",
-  "visualization",
-];
-const GORKHA_1_CENTER = { lat: 28.0, lng: 84.63 };
-const DEFAULT_ZOOM = 12;
+import { useGeoBoundaries } from "../hooks/useGeoBoundaries";
+import { REPORTING_API } from "../api/reporting.api";
+import {
+  GEO_UNIT_API,
+  POLLING_STATIONS_API,
+  PROBLEMS_API,
+} from "../module.api";
+import {
+  GOOGLE_MAPS_API_KEY,
+  LIBRARIES,
+  GORKHA_1_CENTER,
+  DEFAULT_ZOOM,
+  MUNICIPALITY_NAME_TO_ID,
+  MAP_STYLES_NO_LABELS,
+  MAP_STYLES_DARK_THEME,
+} from "../constants";
+import { formatDisplayName } from "../types";
+import type { ReportLevel, GeoUnit, PollingStation } from "../types";
 
-type ReportLevel = "district" | "municipality" | "ward" | "booth";
-
-// GeoJSON municipality name → API municipality ID
-const MUNICIPALITY_NAME_TO_ID: Record<string, number> = {
-  Aarughat: 110,
-  Arughat: 110,
-  Gandaki: 121,
-  Gorkha: 130,
-  Chumnuwri: 145,
-  Chumanuvri: 145,
-  Dharche: 153,
-  Bhimsen: 161,
-  Bhimasenathapa: 161,
-  "Sahid Lakhan": 170,
-};
-
-const MAP_STYLES_NO_LABELS: google.maps.MapTypeStyle[] = [
-  {
-    elementType: "labels",
-    stylers: [{ visibility: "off" }],
-  },
-];
-
-const MAP_STYLES_DARK_THEME: google.maps.MapTypeStyle[] = [
-  {
-    elementType: "geometry",
-    stylers: [{ color: "#212121" }],
-  },
-  {
-    elementType: "labels.icon",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#757575" }],
-  },
-  {
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#212121" }],
-  },
-  {
-    featureType: "administrative",
-    elementType: "geometry",
-    stylers: [{ color: "#757575" }, { visibility: "off" }],
-  },
-  {
-    featureType: "administrative.country",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#9e9e9e" }],
-  },
-  {
-    featureType: "administrative.locality",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#bdbdbd" }],
-  },
-  {
-    featureType: "poi",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "poi",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#757575" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "geometry",
-    stylers: [{ color: "#181818" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#616161" }],
-  },
-  {
-    featureType: "poi.park",
-    elementType: "labels.text.stroke",
-    stylers: [{ color: "#1b1b1b" }],
-  },
-  {
-    featureType: "road",
-    elementType: "geometry.fill",
-    stylers: [{ color: "#2c2c2c" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.icon",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "road",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#8a8a8a" }],
-  },
-  {
-    featureType: "road.arterial",
-    elementType: "geometry",
-    stylers: [{ color: "#373737" }],
-  },
-  {
-    featureType: "road.highway",
-    elementType: "geometry",
-    stylers: [{ color: "#3c3c3c" }],
-  },
-  {
-    featureType: "road.highway.controlled_access",
-    elementType: "geometry",
-    stylers: [{ color: "#4e4e4e" }],
-  },
-  {
-    featureType: "road.local",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#616161" }],
-  },
-  {
-    featureType: "transit",
-    stylers: [{ visibility: "off" }],
-  },
-  {
-    featureType: "transit",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#757575" }],
-  },
-  {
-    featureType: "water",
-    elementType: "geometry",
-    stylers: [{ color: "#000000" }],
-  },
-  {
-    featureType: "water",
-    elementType: "labels.text.fill",
-    stylers: [{ color: "#3d3d3d" }],
-  },
-];
-
-interface GeoUnit {
-  id: number;
-  unit_type: string;
-  display_name: string;
-  display_name_ne?: string;
-  display_name_en?: string;
-  ward_no?: number | null;
-}
-
-interface PollingStation {
-  id: number;
-  place_name: string;
-  place_name_en?: string;
-}
-
-function formatDisplayName(unit: GeoUnit): string {
-  const nepali = unit.display_name || unit.display_name_ne;
-  const english = unit.display_name_en;
-  if (nepali && english) return `${nepali} (${english})`;
-  return nepali || english || `${unit.id}`;
-}
+import { MapToolbar } from "../components/MapToolbar";
+import { FilterOverlay } from "../components/FilterOverlay";
+import { MunicipalityPicker } from "../components/MunicipalityPicker";
+import { ReportDrawer } from "../components/ReportDrawer";
+import { ProblemInfoWindow } from "../components/ProblemInfoWindow";
+import { ProblemMarkerDialog } from "../components/ProblemMarkerDialog";
+import { ProblemForm } from "../components/ProblemForm";
 
 // ── Main Page ─────────────────────────────────────────────────
 export default function MapViewPage() {
@@ -229,8 +61,10 @@ export default function MapViewPage() {
   );
   const [directionsResult, setDirectionsResult] =
     useState<google.maps.DirectionsResult | null>(null);
-  const directionsServiceRef =
-    useRef<google.maps.DirectionsService | null>(null);
+  const directionsServiceRef = useRef<google.maps.DirectionsService | null>(
+    null,
+  );
+  const pendingBoothRef = useRef<string | null>(null);
 
   // Problem marker state
   const [clickedLocation, setClickedLocation] = useState<{
@@ -241,7 +75,7 @@ export default function MapViewPage() {
   const [showProblemForm, setShowProblemForm] = useState(false);
   const [problemMarkers, setProblemMarkers] = useState<any[]>([]);
   const [selectedProblem, setSelectedProblem] = useState<any | null>(null);
-  const [bottomSheetExpanded, setBottomSheetExpanded] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   // Location selection state
   const [selectedProvince, setSelectedProvince] = useState<number | null>(null);
@@ -288,9 +122,7 @@ export default function MapViewPage() {
   // ── Toggle map type ──
   useEffect(() => {
     if (!mapRef.current) return;
-    mapRef.current.setOptions({
-      mapTypeId: mapType,
-    });
+    mapRef.current.setOptions({ mapTypeId: mapType });
   }, [mapType]);
 
   // ── Calculate route via Directions API ──
@@ -395,7 +227,7 @@ export default function MapViewPage() {
     setReportLevel(null);
     setReportParams(null);
     setReportTitle("");
-    setBottomSheetExpanded(false);
+    setDrawerOpen(false);
     setShowFilters(false);
     setRouteMode(false);
     setRoutePoints([]);
@@ -492,8 +324,20 @@ export default function MapViewPage() {
   }, [selectedMunicipality]);
 
   useEffect(() => {
-    setSelectedBooth(null);
+    if (pendingBoothRef.current) {
+      setSelectedBooth(pendingBoothRef.current);
+      pendingBoothRef.current = null;
+    } else {
+      setSelectedBooth(null);
+    }
   }, [selectedWard]);
+
+  // ── Auto-select when ward has single booth ──
+  useEffect(() => {
+    if (booths && booths.length === 1 && !selectedBooth) {
+      setSelectedBooth(String(booths[0].id));
+    }
+  }, [booths, selectedBooth]);
 
   // ── Select options ──
   const municipalityOptions = useMemo(
@@ -560,9 +404,9 @@ export default function MapViewPage() {
       );
       setReportTitle(muni?.label || "Municipality Report");
     } else if (selectedDistrict) {
-      setReportLevel("district");
+      setReportLevel("dashboard");
       setReportParams({ district: selectedDistrict });
-      setReportTitle("District Report");
+      setReportTitle("District Overview");
     }
   }, [
     selectedMunicipality,
@@ -579,6 +423,7 @@ export default function MapViewPage() {
     const municipalityId = MUNICIPALITY_NAME_TO_ID[municipalityName];
     if (municipalityId) {
       setSelectedMunicipality(String(municipalityId));
+      setDrawerOpen(true);
     }
   }, []);
 
@@ -588,7 +433,7 @@ export default function MapViewPage() {
     onMunicipalityClick: handleMunicipalityClick,
   });
 
-  // Fetch report data
+  // ── Fetch report data ──
   const {
     data: reportData,
     isLoading: loadingReport,
@@ -598,6 +443,8 @@ export default function MapViewPage() {
     queryFn: async () => {
       if (!reportLevel) return null;
       switch (reportLevel) {
+        case "dashboard":
+          return REPORTING_API.getDashboardSummary(reportParams);
         case "district":
           return REPORTING_API.getDistricts(reportParams);
         case "municipality":
@@ -614,8 +461,60 @@ export default function MapViewPage() {
     staleTime: 30_000,
   });
 
-  // Extract report summary data
-  // ── Extract route leg info (distance + duration at midpoint) ──
+  // Fetch top polling stations for district
+  const {
+    data: districtTopStationsData,
+    isLoading: loadingDistrictTopStations,
+  } = useQuery({
+    queryKey: ["district-top-polling-stations", selectedDistrict],
+    queryFn: async () => {
+      return REPORTING_API.getDistrictTopPollingStations({
+        district: selectedDistrict!,
+        top_n: 110,
+      });
+    },
+    enabled:
+      !!selectedDistrict &&
+      drawerOpen &&
+      (reportLevel === "district" || reportLevel === "dashboard"),
+    staleTime: 30_000,
+  });
+
+  // Fetch top polling stations for municipality
+  const {
+    data: municipalityTopStationsData,
+    isLoading: loadingMunicipalityTopStations,
+  } = useQuery({
+    queryKey: ["municipality-top-polling-stations", selectedMunicipality],
+    queryFn: async () => {
+      return REPORTING_API.getMunicipalityTopPollingStations({
+        municipality: Number(selectedMunicipality),
+        top_n: 110,
+      });
+    },
+    enabled:
+      !!selectedMunicipality && drawerOpen && reportLevel === "municipality",
+    staleTime: 30_000,
+  });
+
+  // Fetch ward political affiliations for booth reports
+  const {
+    data: wardPoliticalAffiliationsData,
+    isLoading: loadingPoliticalAffiliations,
+  } = useQuery({
+    queryKey: ["ward-political-affiliations", selectedWard],
+    queryFn: async () => {
+      if (!selectedWard) return null;
+      return REPORTING_API.getWardPoliticalAffiliationsByWard(
+        Number(selectedWard),
+      );
+    },
+    enabled:
+      !!selectedWard && (reportLevel === "ward" || reportLevel === "booth"),
+    staleTime: 30_000,
+  });
+
+  // ── Extract route leg info ──
   const routeLegs = useMemo(() => {
     if (!directionsResult) return [];
     const legs = directionsResult.routes[0]?.legs || [];
@@ -684,7 +583,7 @@ export default function MapViewPage() {
                 : [...MAP_STYLES_DARK_THEME, ...MAP_STYLES_NO_LABELS],
         }}
       >
-        {/* Route via Directions API */}
+        {/* Route markers + directions */}
         {routePoints.length === 1 && (
           <MarkerF
             position={routePoints[0]}
@@ -772,134 +671,10 @@ export default function MapViewPage() {
 
         {/* Problem info window */}
         {selectedProblem && (
-          <OverlayViewF
-            position={{
-              lat: selectedProblem.latitude,
-              lng: selectedProblem.longitude,
-            }}
-            mapPaneName={OverlayView.OVERLAY_MOUSE_TARGET}
-          >
-            <Paper
-              radius="md"
-              shadow="sm"
-              style={{
-                transform: "translate(-50%, -100%)",
-                marginTop: -20,
-              }}
-            >
-              <Group
-                p="sm"
-                bg="red.1"
-                justify="space-between"
-                align="center"
-                mb={4}
-              >
-                <Text size="xs" fw={700}>
-                  Problem Pointer
-                </Text>
-                <ActionIcon
-                  size="xs"
-                  variant="subtle"
-                  color="gray"
-                  onClick={() => setSelectedProblem(null)}
-                >
-                  <XIcon size={14} />
-                </ActionIcon>
-              </Group>
-              <Box
-                p="sm"
-                style={{
-                  minWidth: 220,
-                  maxWidth: 320,
-                  backgroundColor: "#fff",
-                }}
-              >
-                <Stack gap={6}>
-                  <Text size="xs" fw={600}>
-                    {selectedProblem.name}
-                  </Text>
-                  {selectedProblem.name_en && (
-                    <Text size="xs" c="dimmed">
-                      {selectedProblem.name_en}
-                    </Text>
-                  )}
-                  {selectedProblem.issues &&
-                    selectedProblem.issues.length > 0 && (
-                      <>
-                        <Text size="xs" fw={500} mt={4}>
-                          Issues:
-                        </Text>
-                        {selectedProblem.issues.map(
-                          (issue: any, idx: number) => (
-                            <Text key={idx} size="xs" c="dimmed">
-                              • {issue.ne} {issue.en && `(${issue.en})`}
-                            </Text>
-                          ),
-                        )}
-                      </>
-                    )}
-                  {selectedProblem.booth &&
-                    selectedProblem.booth.length > 0 && (
-                      <>
-                        <Text size="xs" fw={500} mt={4}>
-                          Booth:
-                        </Text>
-                        {selectedProblem.booth.map((b: any, idx: number) => (
-                          <Text key={idx} size="xs" c="dimmed">
-                            • {b.ne} {b.en && `(${b.en})`}
-                          </Text>
-                        ))}
-                      </>
-                    )}
-                  {selectedProblem.population && (
-                    <Text size="xs" c="dimmed">
-                      Population: {selectedProblem.population}
-                    </Text>
-                  )}
-                  {selectedProblem.houses && (
-                    <Text size="xs" c="dimmed">
-                      Houses: {selectedProblem.houses}
-                    </Text>
-                  )}
-                  {selectedProblem.voters && (
-                    <Text size="xs" c="dimmed">
-                      Voters: {selectedProblem.voters}
-                    </Text>
-                  )}
-                  {selectedProblem.people_present && (
-                    <Text size="xs" c="dimmed">
-                      People Present: {selectedProblem.people_present}
-                    </Text>
-                  )}
-                  {selectedProblem.previous_records && (
-                    <>
-                      <Text size="xs" fw={500} mt={4}>
-                        Previous Records:
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {selectedProblem.previous_records}
-                      </Text>
-                      {selectedProblem.previous_records_en && (
-                        <Text size="xs" c="dimmed">
-                          {selectedProblem.previous_records_en}
-                        </Text>
-                      )}
-                    </>
-                  )}
-                  {selectedProblem.notes && (
-                    <>
-                      <Text size="xs" fw={500} mt={4}>
-                        Notes:
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {selectedProblem.notes}
-                      </Text>
-                    </>
-                  )}
-                </Stack>
-              </Box>
-            </Paper>
-          </OverlayViewF>
+          <ProblemInfoWindow
+            problem={selectedProblem}
+            onClose={() => setSelectedProblem(null)}
+          />
         )}
 
         {/* Confirmation dialog at clicked location */}
@@ -939,8 +714,7 @@ export default function MapViewPage() {
       )}
 
       {/* ── Top floating buttons ── */}
-      {/* Left: X (reset) */}
-      {hasSelection && (
+      {hasSelection && !drawerOpen && (
         <ActionIcon
           variant="white"
           color="dark"
@@ -959,60 +733,15 @@ export default function MapViewPage() {
         </ActionIcon>
       )}
 
-      {/* Right: filter + spark + labels */}
-      <Group
-        gap={10}
-        style={{
-          position: "absolute",
-          top: 16,
-          right: 16,
-          zIndex: 1000,
-        }}
-      >
-        <ActionIcon
-          variant="white"
-          radius="xl"
-          size={40}
-          onClick={() => {
-            setShowFilters((v) => !v);
-            setBottomSheetExpanded(false);
-          }}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: showFilters ? "#4c6ef5" : "#fff",
-          }}
-        >
-          <FunnelIcon
-            size={20}
-            color={showFilters ? "#fff" : "#333"}
-            weight={showFilters ? "fill" : "regular"}
-          />
-        </ActionIcon>
-
-        {reportSummary && (
-          <ActionIcon
-            variant="white"
-            radius="xl"
-            size={40}
-            onClick={() => setBottomSheetExpanded((v) => !v)}
-            style={{
-              boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-              backgroundColor: bottomSheetExpanded ? "#7c3aed" : "#fff",
-            }}
-          >
-            <SparkleIcon
-              size={20}
-              color={bottomSheetExpanded ? "#fff" : "#333"}
-              weight={bottomSheetExpanded ? "fill" : "regular"}
-            />
-          </ActionIcon>
-        )}
-
-        <ActionIcon
-          variant="white"
-          radius="xl"
-          size={40}
-          onClick={() => {
+      {!hasSelection && (
+        <MapToolbar
+          showFilters={showFilters}
+          onToggleFilters={() => setShowFilters((v) => !v)}
+          drawerOpen={drawerOpen}
+          onToggleDrawer={() => setDrawerOpen((v) => !v)}
+          showDrawerButton={!!reportSummary}
+          routeMode={routeMode}
+          onToggleRoute={() => {
             setRouteMode((v) => {
               if (v) {
                 setRoutePoints([]);
@@ -1020,351 +749,113 @@ export default function MapViewPage() {
               }
               return !v;
             });
-            setBottomSheetExpanded(false);
           }}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: routeMode ? "#1098ad" : "#fff",
-          }}
-        >
-          <PathIcon
-            size={20}
-            color={routeMode ? "#fff" : "#333"}
-            weight={routeMode ? "fill" : "regular"}
-          />
-        </ActionIcon>
-
-        <ActionIcon
-          variant="white"
-          radius="xl"
-          size={40}
-          onClick={() => {
-            setShowProblems((v) => !v);
-            setBottomSheetExpanded(false);
-          }}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: showProblems ? "#e03131" : "#fff",
-          }}
-        >
-          <MapPinIcon
-            size={20}
-            color={showProblems ? "#fff" : "#333"}
-            weight={showProblems ? "fill" : "regular"}
-          />
-        </ActionIcon>
-
-        <ActionIcon
-          variant="white"
-          radius="xl"
-          size={40}
-          onClick={() => {
-            setMapType((v) => (v === "roadmap" ? "satellite" : "roadmap"));
-            setBottomSheetExpanded(false);
-          }}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: mapType === "satellite" ? "#2f9e44" : "#fff",
-          }}
-        >
-          <MountainsIcon
-            size={20}
-            color={mapType === "satellite" ? "#fff" : "#333"}
-            weight={mapType === "satellite" ? "fill" : "regular"}
-          />
-        </ActionIcon>
-
-        <ActionIcon
-          variant="white"
-          radius="xl"
-          size={40}
-          onClick={() => {
-            setShowLabels((v) => !v);
-            setBottomSheetExpanded(false);
-          }}
-          style={{
-            boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
-            backgroundColor: !showLabels ? "#e8590c" : "#fff",
-          }}
-        >
-          <TagIcon
-            size={20}
-            color={!showLabels ? "#fff" : "#333"}
-            weight={!showLabels ? "fill" : "regular"}
-          />
-        </ActionIcon>
-      </Group>
+          showProblems={showProblems}
+          onToggleProblems={() => setShowProblems((v) => !v)}
+          mapType={mapType}
+          onToggleMapType={() =>
+            setMapType((v) => (v === "roadmap" ? "satellite" : "roadmap"))
+          }
+          showLabels={showLabels}
+          onToggleLabels={() => setShowLabels((v) => !v)}
+        />
+      )}
 
       {/* ── Filter overlay ── */}
       {showFilters && (
-        <Paper
-          pos="absolute"
-          top={68}
-          right={16}
-          left={16}
-          radius="md"
-          p="sm"
-          shadow="lg"
-          withBorder
-          style={{ zIndex: 1000, overflow: "visible" }}
-        >
-          <Stack gap={8} style={{ overflow: "visible" }}>
-            {/* Places search */}
-            <Box pos="relative">
-              <TextInput
-                size="xs"
-                placeholder="Search places..."
-                value={search}
-                onChange={(e) => handleSearch(e.currentTarget.value)}
-                leftSection={<MagnifyingGlassIcon size={14} />}
-                rightSection={
-                  <img
-                    src="https://www.gstatic.com/images/branding/googlelogo/svg/googlelogo_clr_74x24px.svg"
-                    alt="Google"
-                    style={{ height: 12, opacity: 0.6 }}
-                  />
-                }
-              />
-              {predictions.length > 0 && (
-                <Paper
-                  pos="absolute"
-                  top="100%"
-                  left={0}
-                  right={0}
-                  mt={4}
-                  shadow="md"
-                  radius="sm"
-                  withBorder
-                  style={{ zIndex: 1001, overflow: "hidden" }}
-                >
-                  {predictions.map((p) => (
-                    <Box
-                      key={p.place_id}
-                      px="sm"
-                      py={6}
-                      style={{ cursor: "pointer" }}
-                      onClick={() => selectPlace(p.place_id)}
-                    >
-                      <Text size="xs" truncate>
-                        {p.structured_formatting.main_text}
-                      </Text>
-                      <Text size="xs" c="dimmed" truncate>
-                        {p.structured_formatting.secondary_text}
-                      </Text>
-                    </Box>
-                  ))}
-                </Paper>
-              )}
-            </Box>
-
-            {/* Location selects */}
-            <Select
-              size="xs"
-              placeholder="Municipality"
-              data={municipalityOptions}
-              value={selectedMunicipality}
-              onChange={setSelectedMunicipality}
-              searchable
-              clearable
-              disabled={!selectedDistrict || loadingMunicipalities}
-              rightSection={
-                loadingMunicipalities ? <Loader size={10} /> : undefined
-              }
-              comboboxProps={{ zIndex: 1002 }}
-            />
-            <Select
-              size="xs"
-              placeholder="Ward"
-              data={wardOptions}
-              value={selectedWard}
-              onChange={setSelectedWard}
-              searchable
-              clearable
-              disabled={!selectedMunicipality || loadingWards}
-              rightSection={loadingWards ? <Loader size={10} /> : undefined}
-              comboboxProps={{ zIndex: 1002 }}
-            />
-            <Select
-              size="xs"
-              placeholder="Booth"
-              data={boothOptions}
-              value={selectedBooth}
-              onChange={setSelectedBooth}
-              searchable
-              clearable
-              disabled={!selectedWard || loadingBooths}
-              rightSection={loadingBooths ? <Loader size={10} /> : undefined}
-              comboboxProps={{ zIndex: 1002 }}
-            />
-          </Stack>
-        </Paper>
+        <FilterOverlay
+          search={search}
+          onSearch={handleSearch}
+          predictions={predictions}
+          onSelectPlace={selectPlace}
+          municipalityOptions={municipalityOptions}
+          selectedMunicipality={selectedMunicipality}
+          onMunicipalityChange={setSelectedMunicipality}
+          loadingMunicipalities={loadingMunicipalities}
+          selectedDistrict={selectedDistrict}
+          wardOptions={wardOptions}
+          selectedWard={selectedWard}
+          onWardChange={setSelectedWard}
+          loadingWards={loadingWards}
+          boothOptions={boothOptions}
+          selectedBooth={selectedBooth}
+          onBoothChange={setSelectedBooth}
+          loadingBooths={loadingBooths}
+        />
       )}
 
-      {/* ── Bottom sheet ── */}
-      {reportSummary && !showProblemForm && (
-        <Box
-          style={{
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            width: "100%",
-            zIndex: 1000,
-            maxHeight: bottomSheetExpanded ? "90vh" : "none",
-            height: bottomSheetExpanded ? "90vh" : "auto",
-            display: "flex",
-            flexDirection: "column",
-            transition: "height 0.3s ease-in-out",
-          }}
-        >
-          <Paper
-            radius="20px 20px 0 0"
-            style={{
-              backgroundColor: "#2a2a2a",
-              color: "#fff",
-              overflow: "hidden",
-              display: "flex",
-              flexDirection: "column",
-              height: bottomSheetExpanded ? "90vh" : "auto",
-              paddingTop: 12,
-              paddingBottom: 20,
-              paddingLeft: 20,
-              paddingRight: 20,
-              transition: "height 0.3s ease-in-out",
+      {/* ── Bottom sheet: municipality picker ── */}
+      {municipalities &&
+        municipalities.length > 0 &&
+        !showProblemForm &&
+        !drawerOpen && (
+          <MunicipalityPicker
+            municipalities={municipalities}
+            onSelect={(id) => {
+              setSelectedMunicipality(id);
+              setDrawerOpen(true);
             }}
-          >
-            {/* Drag handle - positioned at very top */}
-            <Center mb="md">
-              <Box
-                style={{
-                  width: 40,
-                  height: 5,
-                  borderRadius: 3,
-                  backgroundColor: "rgba(255,255,255,0.25)",
-                  cursor: "pointer",
-                }}
-                onClick={() => setBottomSheetExpanded((v) => !v)}
-              />
-            </Center>
+          />
+        )}
 
-            {/* Collapsed: summary */}
-            <Box
-              style={{ cursor: "pointer" }}
-              onClick={() => setBottomSheetExpanded((v) => !v)}
-            >
-              <Group gap={8} mb={12}>
-                <Badge
-                  size="sm"
-                  variant="light"
-                  color="gray"
-                  style={{ textTransform: "uppercase", fontWeight: 600 }}
-                >
-                  {reportLevel}
-                </Badge>
-                <CaretDownIcon
-                  size={16}
-                  color="rgba(255,255,255,0.4)"
-                  style={{
-                    transform: bottomSheetExpanded
-                      ? "rotate(180deg)"
-                      : "rotate(0deg)",
-                    transition: "transform 0.2s",
-                  }}
-                />
-              </Group>
-
-              <Text fw={700} size="xl" c="white" mb={4}>
-                {reportTitle}
-              </Text>
-
-              <Text size="sm" c="rgba(255,255,255,0.6)" mb={16}>
-                Voter Statistics Report
-              </Text>
-
-              <Group gap="xl" mb={bottomSheetExpanded ? "lg" : 0}>
-                <Stack gap={4}>
-                  <Group gap={8}>
-                    <UsersIcon size={18} color="#86efac" weight="duotone" />
-                    <Text size="lg" c="white" fw={600}>
-                      {reportSummary.total.toLocaleString()}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="rgba(255,255,255,0.5)">
-                    Total Voters
-                  </Text>
-                </Stack>
-                <Stack gap={4}>
-                  <Group gap={8}>
-                    <GenderMaleIcon
-                      size={18}
-                      color="#93c5fd"
-                      weight="duotone"
-                    />
-                    <Text size="lg" c="white" fw={600}>
-                      {reportSummary.male.toLocaleString()}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="rgba(255,255,255,0.5)">
-                    Male
-                  </Text>
-                </Stack>
-                <Stack gap={4}>
-                  <Group gap={8}>
-                    <GenderFemaleIcon
-                      size={18}
-                      color="#f9a8d4"
-                      weight="duotone"
-                    />
-                    <Text size="lg" c="white" fw={600}>
-                      {reportSummary.female.toLocaleString()}
-                    </Text>
-                  </Group>
-                  <Text size="xs" c="rgba(255,255,255,0.5)">
-                    Female
-                  </Text>
-                </Stack>
-              </Group>
-            </Box>
-
-            {/* Expanded: full report */}
-            {bottomSheetExpanded && (
-              <ScrollArea
-                style={{ flex: 1, minHeight: 0, marginTop: 16 }}
-                offsetScrollbars
-                scrollbarSize={6}
-              >
-                <Box
-                  style={{
-                    backgroundColor: "#fff",
-                    borderRadius: 12,
-                    padding: 16,
-                    color: "#000",
-                  }}
-                >
-                  {loadingReport && (
-                    <Center py="xl">
-                      <Loader size="md" />
-                    </Center>
-                  )}
-                  {reportError && (
-                    <Center py="xl">
-                      <Text size="sm" c="red">
-                        {(reportError as Error).message ||
-                          "Failed to load report"}
-                      </Text>
-                    </Center>
-                  )}
-                  {!loadingReport && !reportError && reportData && (
-                    <ReportDashboard
-                      data={reportData}
-                      reportType={reportLevel || "district"}
-                    />
-                  )}
-                </Box>
-              </ScrollArea>
-            )}
-          </Paper>
-        </Box>
-      )}
+      {/* ── Side Drawer: All reporting ── */}
+      <ReportDrawer
+        opened={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        reportTitle={reportTitle}
+        reportLevel={reportLevel}
+        reportData={reportData}
+        loadingReport={loadingReport}
+        reportError={reportError}
+        reportSummary={reportSummary}
+        municipalities={municipalities}
+        wards={wards}
+        loadingWards={loadingWards}
+        booths={booths}
+        loadingBooths={loadingBooths}
+        districtTopStationsData={districtTopStationsData}
+        loadingDistrictTopStations={loadingDistrictTopStations}
+        municipalityTopStationsData={municipalityTopStationsData}
+        loadingMunicipalityTopStations={loadingMunicipalityTopStations}
+        wardPoliticalAffiliationsData={wardPoliticalAffiliationsData}
+        loadingPoliticalAffiliations={loadingPoliticalAffiliations}
+        onSelectMunicipality={(id) => setSelectedMunicipality(id)}
+        onSelectWard={(id) => setSelectedWard(id)}
+        onSelectBooth={(id) => setSelectedBooth(id)}
+        onBack={() => {
+          if (reportLevel === "booth") {
+            if (booths && booths.length <= 1) {
+              setSelectedWard(null);
+            } else {
+              setSelectedBooth(null);
+            }
+          } else if (reportLevel === "ward") {
+            setSelectedWard(null);
+          } else if (reportLevel === "municipality") {
+            setSelectedMunicipality(null);
+            setDrawerOpen(false);
+          }
+        }}
+        onDistrictStationClick={(station) => {
+          if (station.ward_no && wards) {
+            const ward = wards.find((w) => w.ward_no === station.ward_no);
+            if (ward) {
+              pendingBoothRef.current = String(station.polling_station_id);
+              setSelectedWard(String(ward.id));
+              setSelectedMunicipality(String(station.municipality_id));
+            }
+          }
+        }}
+        onMunicipalityStationClick={(station) => {
+          if (station.ward_no && wards) {
+            const ward = wards.find((w) => w.ward_no === station.ward_no);
+            if (ward) {
+              pendingBoothRef.current = String(station.polling_station_id);
+              setSelectedWard(String(ward.id));
+            }
+          }
+        }}
+      />
 
       {/* Loading indicator for report */}
       {loadingReport && !reportSummary && (
