@@ -346,10 +346,11 @@ export default function MapViewPage() {
     queryFn: async () => {
       return PROBLEMS_API.getProblems({
         is_active: true,
-        page_size: 1000, // Get all problems
+        page_size: 1000,
       });
     },
     enabled: showProblems,
+    staleTime: 30_000,
   });
 
   useEffect(() => {
@@ -412,6 +413,7 @@ export default function MapViewPage() {
       });
       return response?.results || [];
     },
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -431,6 +433,7 @@ export default function MapViewPage() {
       return response?.results || [];
     },
     enabled: !!selectedProvince,
+    staleTime: Infinity,
   });
 
   useEffect(() => {
@@ -451,6 +454,7 @@ export default function MapViewPage() {
       return (response?.results as GeoUnit[]) || [];
     },
     enabled: !!selectedDistrict,
+    staleTime: Infinity,
   });
 
   // ── Fetch wards ──
@@ -465,6 +469,7 @@ export default function MapViewPage() {
       return (response?.results as GeoUnit[]) || [];
     },
     enabled: !!selectedMunicipality,
+    staleTime: Infinity,
   });
 
   // ── Fetch polling stations ──
@@ -477,6 +482,7 @@ export default function MapViewPage() {
       return (response?.results as PollingStation[]) || [];
     },
     enabled: !!selectedWard,
+    staleTime: Infinity,
   });
 
   // ── Cascading resets ──
@@ -605,6 +611,7 @@ export default function MapViewPage() {
       }
     },
     enabled: !!reportLevel && !!reportParams,
+    staleTime: 30_000,
   });
 
   // Extract report summary data
@@ -966,7 +973,10 @@ export default function MapViewPage() {
           variant="white"
           radius="xl"
           size={40}
-          onClick={() => setShowFilters((v) => !v)}
+          onClick={() => {
+            setShowFilters((v) => !v);
+            setBottomSheetExpanded(false);
+          }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
             backgroundColor: showFilters ? "#4c6ef5" : "#fff",
@@ -1010,6 +1020,7 @@ export default function MapViewPage() {
               }
               return !v;
             });
+            setBottomSheetExpanded(false);
           }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
@@ -1027,7 +1038,10 @@ export default function MapViewPage() {
           variant="white"
           radius="xl"
           size={40}
-          onClick={() => setShowProblems((v) => !v)}
+          onClick={() => {
+            setShowProblems((v) => !v);
+            setBottomSheetExpanded(false);
+          }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
             backgroundColor: showProblems ? "#e03131" : "#fff",
@@ -1044,9 +1058,10 @@ export default function MapViewPage() {
           variant="white"
           radius="xl"
           size={40}
-          onClick={() =>
-            setMapType((v) => (v === "roadmap" ? "satellite" : "roadmap"))
-          }
+          onClick={() => {
+            setMapType((v) => (v === "roadmap" ? "satellite" : "roadmap"));
+            setBottomSheetExpanded(false);
+          }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
             backgroundColor: mapType === "satellite" ? "#2f9e44" : "#fff",
@@ -1063,7 +1078,10 @@ export default function MapViewPage() {
           variant="white"
           radius="xl"
           size={40}
-          onClick={() => setShowLabels((v) => !v)}
+          onClick={() => {
+            setShowLabels((v) => !v);
+            setBottomSheetExpanded(false);
+          }}
           style={{
             boxShadow: "0 2px 8px rgba(0,0,0,0.25)",
             backgroundColor: !showLabels ? "#e8590c" : "#fff",
@@ -1088,9 +1106,9 @@ export default function MapViewPage() {
           p="sm"
           shadow="lg"
           withBorder
-          style={{ zIndex: 1000 }}
+          style={{ zIndex: 1000, overflow: "visible" }}
         >
-          <Stack gap={8}>
+          <Stack gap={8} style={{ overflow: "visible" }}>
             {/* Places search */}
             <Box pos="relative">
               <TextInput
@@ -1152,6 +1170,7 @@ export default function MapViewPage() {
               rightSection={
                 loadingMunicipalities ? <Loader size={10} /> : undefined
               }
+              comboboxProps={{ zIndex: 1002 }}
             />
             <Select
               size="xs"
@@ -1163,6 +1182,7 @@ export default function MapViewPage() {
               clearable
               disabled={!selectedMunicipality || loadingWards}
               rightSection={loadingWards ? <Loader size={10} /> : undefined}
+              comboboxProps={{ zIndex: 1002 }}
             />
             <Select
               size="xs"
@@ -1174,6 +1194,7 @@ export default function MapViewPage() {
               clearable
               disabled={!selectedWard || loadingBooths}
               rightSection={loadingBooths ? <Loader size={10} /> : undefined}
+              comboboxProps={{ zIndex: 1002 }}
             />
           </Stack>
         </Paper>
