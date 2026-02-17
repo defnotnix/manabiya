@@ -34,6 +34,7 @@ import {
   GORKHA_1_CENTER,
   DEFAULT_ZOOM,
   MUNICIPALITY_NAME_TO_ID,
+  MUNICIPALITY_ID_TO_NAME,
   MAP_STYLES_NO_LABELS,
   MAP_STYLES_DARK_THEME,
 } from "../constants";
@@ -332,12 +333,8 @@ export default function MapViewPage() {
     }
   }, [selectedWard]);
 
-  // ── Auto-select when ward has single booth ──
-  useEffect(() => {
-    if (booths && booths.length === 1 && !selectedBooth) {
-      setSelectedBooth(String(booths[0].id));
-    }
-  }, [booths, selectedBooth]);
+  // NOTE: Previously auto-selected booth when ward had a single polling station.
+  // Removed to let the user stay on ward-level view and navigate manually.
 
   // ── Select options ──
   const municipalityOptions = useMemo(
@@ -430,6 +427,9 @@ export default function MapViewPage() {
   // Geo-boundary overlays
   const { boundariesEnabled } = useGeoBoundaries({
     map: mapRef.current,
+    selectedMunicipalityName: selectedMunicipality
+      ? MUNICIPALITY_ID_TO_NAME[Number(selectedMunicipality)]
+      : null,
     onMunicipalityClick: handleMunicipalityClick,
   });
 
@@ -497,20 +497,28 @@ export default function MapViewPage() {
     staleTime: 30_000,
   });
 
-  // Fetch ward political affiliations for booth reports
+  // Fetch ward political affiliations (municipality list or ward detail)
   const {
     data: wardPoliticalAffiliationsData,
     isLoading: loadingPoliticalAffiliations,
   } = useQuery({
-    queryKey: ["ward-political-affiliations", selectedWard],
+    queryKey: ["ward-political-affiliations", reportLevel, selectedMunicipality, selectedWard],
     queryFn: async () => {
-      if (!selectedWard) return null;
-      return REPORTING_API.getWardPoliticalAffiliationsByWard(
-        Number(selectedWard),
-      );
+      if (reportLevel === "ward" && selectedWard) {
+        return REPORTING_API.getWardPoliticalAffiliationsByWard(
+          Number(selectedWard),
+        );
+      }
+      if (reportLevel === "municipality" && selectedMunicipality) {
+        return REPORTING_API.getWardPoliticalAffiliations({
+          municipality: Number(selectedMunicipality),
+        });
+      }
+      return null;
     },
     enabled:
-      !!selectedWard && (reportLevel === "ward" || reportLevel === "booth"),
+      (reportLevel === "ward" && !!selectedWard) ||
+      (reportLevel === "municipality" && !!selectedMunicipality),
     staleTime: 30_000,
   });
 
@@ -808,6 +816,8 @@ export default function MapViewPage() {
         loadingReport={loadingReport}
         reportError={reportError}
         reportSummary={reportSummary}
+        selectedMunicipality={selectedMunicipality}
+        selectedWard={selectedWard}
         municipalities={municipalities}
         wards={wards}
         loadingWards={loadingWards}

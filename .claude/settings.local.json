@@ -20,7 +20,8 @@
       "Bash(pnpm add:*)",
       "Bash(powershell -Command:*)",
       "Bash(node -e:*)",
-      "Bash(node scripts/generate-gorkha1-geojson.mjs:*)"
+      "Bash(node scripts/generate-gorkha1-geojson.mjs:*)",
+      "WebFetch(domain:10.0.0.10)"
     ]
   }
 }

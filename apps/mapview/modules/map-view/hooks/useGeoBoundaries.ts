@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 interface UseGeoBoundariesOptions {
   map: google.maps.Map | null;
   enabled?: boolean;
+  selectedMunicipalityName?: string | null;
   onMunicipalityClick?: (municipalityName: string) => void;
 }
 
@@ -33,6 +34,7 @@ const MUNICIPALITY_COLORS: Record<string, string> = {
 export function useGeoBoundaries({
   map,
   enabled = true,
+  selectedMunicipalityName,
   onMunicipalityClick,
 }: UseGeoBoundariesOptions): UseGeoBoundariesReturn {
   const [isLoading, setIsLoading] = useState(false);
@@ -49,9 +51,51 @@ export function useGeoBoundaries({
   const zoomListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const dataLoadedRef = useRef(false);
 
+  // Use a ref for selectedMunicipalityName to avoid dependency cycles
+  const selectedMuniRef = useRef(selectedMunicipalityName);
+  selectedMuniRef.current = selectedMunicipalityName;
+
+  const loadWardsIfNeeded = useCallback(() => {
+    const wLayer = wardLayerRef.current;
+    if (!map || !wLayer || wardsLoadedRef.current || wardsLoadingRef.current)
+      return;
+    wardsLoadingRef.current = true;
+    setIsLoading(true);
+    fetch("/geojson/gorkha1/wards.geojson")
+      .then((r) => r.json())
+      .then((geo) => {
+        wLayer.addGeoJson(geo);
+        wardsLoadedRef.current = true;
+        wardsLoadingRef.current = false;
+        setIsLoading(false);
+        // If a municipality was selected while loading, show the layer now
+        if (selectedMuniRef.current && map) {
+          wLayer.setMap(map);
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to load ward boundaries:", err);
+        wardsLoadingRef.current = false;
+        setIsLoading(false);
+      });
+  }, [map]);
+
   const updateVisibility = useCallback(
     (zoom: number) => {
       if (!map || !boundariesEnabled) return;
+
+      // When a municipality is selected, force ward layer visible
+      // (read from ref to avoid dependency cycle)
+      if (selectedMuniRef.current) {
+        constituencyLayerRef.current?.setMap(null);
+        municipalityLayerRef.current?.setMap(null);
+        loadWardsIfNeeded();
+        if (wardsLoadedRef.current) {
+          wardLayerRef.current?.setMap(map);
+        }
+        setActiveLayer("wards");
+        return;
+      }
 
       const cLayer = constituencyLayerRef.current;
       const mLayer = municipalityLayerRef.current;
@@ -71,31 +115,16 @@ export function useGeoBoundaries({
         cLayer?.setMap(null);
         mLayer?.setMap(null);
         setActiveLayer("wards");
-
-        if (!wardsLoadedRef.current && !wardsLoadingRef.current && wLayer) {
-          wardsLoadingRef.current = true;
-          setIsLoading(true);
-          fetch("/geojson/gorkha1/wards.geojson")
-            .then((r) => r.json())
-            .then((geo) => {
-              wLayer.addGeoJson(geo);
-              wLayer.setMap(map);
-              wardsLoadedRef.current = true;
-              setIsLoading(false);
-            })
-            .catch((err) => {
-              console.error("Failed to load ward boundaries:", err);
-              wardsLoadingRef.current = false;
-              setIsLoading(false);
-            });
-        } else if (wardsLoadedRef.current) {
+        loadWardsIfNeeded();
+        if (wardsLoadedRef.current) {
           wLayer?.setMap(map);
         }
       }
     },
-    [map, boundariesEnabled],
+    [map, boundariesEnabled, loadWardsIfNeeded],
   );
 
+  // Main effect: create layers, load base data, attach zoom listener
   useEffect(() => {
     if (!map) return;
 
@@ -141,7 +170,7 @@ export function useGeoBoundaries({
       };
     });
 
-    // Style: wards with color derived from municipality
+    // Style: wards (default — no municipality filter)
     wLayer.setStyle((feature) => {
       const muni = feature.getProperty("MUNICIPALITY") as string;
       const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
@@ -165,12 +194,9 @@ export function useGeoBoundaries({
         });
       },
     );
-    mLayer.addListener(
-      "mouseout",
-      () => {
-        mLayer.revertStyle();
-      },
-    );
+    mLayer.addListener("mouseout", () => {
+      mLayer.revertStyle();
+    });
 
     // Click handler for municipalities
     if (onMunicipalityClick) {
@@ -205,16 +231,13 @@ export function useGeoBoundaries({
       (event: google.maps.Data.MouseEvent) => {
         wLayer.overrideStyle(event.feature, {
           strokeWeight: 2,
-          fillOpacity: 0,
+          fillOpacity: 0.15,
         });
       },
     );
-    wLayer.addListener(
-      "mouseout",
-      () => {
-        wLayer.revertStyle();
-      },
-    );
+    wLayer.addListener("mouseout", () => {
+      wLayer.revertStyle();
+    });
 
     // Fetch constituency + municipalities in parallel
     if (!dataLoadedRef.current) {
@@ -260,6 +283,57 @@ export function useGeoBoundaries({
       wardsLoadingRef.current = false;
     };
   }, [map, boundariesEnabled, updateVisibility]);
+
+  // When municipality selection changes, update ward layer visibility & style
+  useEffect(() => {
+    if (!map || !boundariesEnabled) return;
+    const wLayer = wardLayerRef.current;
+    if (!wLayer) return;
+
+    if (selectedMunicipalityName) {
+      // Load wards if not already loaded
+      loadWardsIfNeeded();
+      // Hide other layers
+      constituencyLayerRef.current?.setMap(null);
+      municipalityLayerRef.current?.setMap(null);
+      // Re-apply style to filter by selected municipality
+      wLayer.setStyle((feature) => {
+        const muni = feature.getProperty("MUNICIPALITY") as string;
+        const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
+        if (muni !== selectedMunicipalityName) {
+          return { visible: false };
+        }
+        return {
+          clickable: false,
+          strokeColor: "#6b7280",
+          strokeWeight: 1.5,
+          strokeOpacity: 0.8,
+          fillColor: color,
+          fillOpacity: 0.1,
+        };
+      });
+      if (wardsLoadedRef.current) {
+        wLayer.setMap(map);
+      }
+      setActiveLayer("wards");
+    } else {
+      // No municipality selected — revert to zoom-based visibility
+      wLayer.setStyle((feature) => {
+        const muni = feature.getProperty("MUNICIPALITY") as string;
+        const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
+        return {
+          clickable: false,
+          strokeColor: "#6b7280",
+          strokeWeight: 1,
+          strokeOpacity: 0.7,
+          fillColor: color,
+          fillOpacity: 0,
+        };
+      });
+      const zoom = map.getZoom();
+      if (zoom != null) updateVisibility(zoom);
+    }
+  }, [map, selectedMunicipalityName, boundariesEnabled, loadWardsIfNeeded, updateVisibility]);
 
   return { isLoading, activeLayer, boundariesEnabled, setBoundariesEnabled };
 }

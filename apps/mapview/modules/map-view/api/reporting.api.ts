@@ -122,6 +122,7 @@ export const REPORTING_API = {
   // Ward political affiliations
   getWardPoliticalAffiliations: async (params?: {
     ward?: number;
+    municipality?: number;
   }) => {
     return moduleApiCall.getRecords({
       endpoint: "/api/reporting/ward-political-affiliations/",

@@ -17,6 +17,7 @@ import { Carousel } from "@mantine/carousel";
 import { BuildingsIcon, ArrowLeftIcon } from "@phosphor-icons/react";
 import { TopPollingStations } from "./TopPollingStations";
 import { DistrictTopPollingStations } from "./DistrictTopPollingStations";
+import { WardMap } from "./WardMap";
 
 type ReportLevel = "dashboard" | "district" | "municipality" | "ward" | "booth";
 
@@ -47,6 +48,10 @@ interface ExpandedSheetContentProps {
   reportData: any;
   loadingReport: boolean;
   reportError: any;
+
+  // Selected municipality/ward IDs (for ward map SVG)
+  selectedMunicipality: string | null;
+  selectedWard: string | null;
 
   // Municipalities
   municipalities: GeoUnit[] | undefined;
@@ -87,6 +92,8 @@ export function ExpandedSheetContent({
   reportData,
   loadingReport,
   reportError,
+  selectedMunicipality,
+  selectedWard,
   municipalities,
   wards,
   loadingWards,
@@ -234,6 +241,24 @@ export function ExpandedSheetContent({
               />
               <Divider my="lg" />
 
+              {/* Ward map SVG */}
+              {selectedMunicipality && wards && wards.length > 0 && (
+                <>
+                  <Text fw={700} size="md" mb="xs">
+                    Ward Map
+                  </Text>
+                  <Text size="xs" c="dimmed" mb="sm">
+                    Tap a ward to view its report
+                  </Text>
+                  <WardMap
+                    municipalityId={Number(selectedMunicipality)}
+                    wards={wards}
+                    onSelectWard={onSelectWard}
+                  />
+                  <Divider my="lg" />
+                </>
+              )}
+
               {/* Ward carousel */}
               <Text fw={700} size="md" mb="xs">
                 Wards
@@ -279,6 +304,30 @@ export function ExpandedSheetContent({
               <Divider my="lg" />
             </>
           )}
+
+          {/* ── Ward/Booth level: Ward map with selection ── */}
+          {(reportLevel === "ward" || reportLevel === "booth") &&
+            selectedMunicipality &&
+            wards &&
+            wards.length > 0 && (
+              <>
+                <Text fw={700} size="md" mb="xs">
+                  Ward Map
+                </Text>
+                <WardMap
+                  municipalityId={Number(selectedMunicipality)}
+                  wards={wards}
+                  selectedWardNo={
+                    selectedWard
+                      ? wards.find((w) => String(w.id) === selectedWard)
+                          ?.ward_no ?? null
+                      : null
+                  }
+                  onSelectWard={onSelectWard}
+                />
+                <Divider my="lg" />
+              </>
+            )}
 
           {/* ── Ward level: Booth selector ── */}
           {reportLevel === "ward" && (
@@ -354,72 +403,92 @@ export function ExpandedSheetContent({
             </>
           )}
 
-          {/* ── Ward/Booth level: Political Affiliations ── */}
-          {(reportLevel === "ward" || reportLevel === "booth") && (
+          {/* ── Municipality/Ward level: Political Affiliations ── */}
+          {(reportLevel === "municipality" || reportLevel === "ward") && (
             <>
               <Text fw={700} size="md" mb="xs">
                 Past Political Affiliations
               </Text>
               <Text size="xs" c="dimmed" mb="sm">
-                Historical party affiliations for this ward
+                {reportLevel === "ward"
+                  ? "Historical party affiliations for this ward"
+                  : "Historical party affiliations by ward"}
               </Text>
               {loadingPoliticalAffiliations ? (
                 <Center py="md">
                   <Loader size="sm" />
                 </Center>
-              ) : (wardPoliticalAffiliationsData?.results?.[0] || wardPoliticalAffiliationsData?.top_party_1_name) ? (
-                (() => {
-                  const d = wardPoliticalAffiliationsData.results?.[0] ?? wardPoliticalAffiliationsData;
-                  return (
-                    <Paper p="sm" radius="md" withBorder>
-                      <Text size="xs" fw={600} mb="xs">
-                        {d.election_label}
-                      </Text>
-                      <Stack gap={8}>
-                        {d.top_party_1_name && (
-                          <Group gap="xs" justify="space-between">
-                            <Badge size="lg" variant="light" color="blue">
-                              {d.top_party_1_name}
-                            </Badge>
-                            <Text size="sm" fw={600}>
-                              {d.top_party_1_votes?.toLocaleString()}
-                            </Text>
-                          </Group>
-                        )}
-                        {d.top_party_2_name && (
-                          <Group gap="xs" justify="space-between">
-                            <Badge size="lg" variant="light" color="red">
-                              {d.top_party_2_name}
-                            </Badge>
-                            <Text size="sm" fw={600}>
-                              {d.top_party_2_votes?.toLocaleString()}
-                            </Text>
-                          </Group>
-                        )}
-                        {d.top_party_3_name && (
-                          <Group gap="xs" justify="space-between">
-                            <Badge size="lg" variant="light" color="orange">
-                              {d.top_party_3_name}
-                            </Badge>
-                            <Text size="sm" fw={600}>
-                              {d.top_party_3_votes?.toLocaleString()}
-                            </Text>
-                          </Group>
-                        )}
-                      </Stack>
-                      {d.notes && (
-                        <Text size="xs" c="dimmed" mt="xs">
-                          {d.notes}
-                        </Text>
-                      )}
-                    </Paper>
+              ) : (() => {
+                  const items = wardPoliticalAffiliationsData?.results
+                    ? wardPoliticalAffiliationsData.results
+                    : wardPoliticalAffiliationsData?.top_party_1_name
+                      ? [wardPoliticalAffiliationsData]
+                      : [];
+                  return items.length > 0 ? (
+                    <Carousel
+                      slideSize="75%"
+                      slideGap="sm"
+                      withControls={false}
+                      styles={{ viewport: { overflow: "visible" } }}
+                    >
+                      {items.map((d: any) => (
+                        <Carousel.Slide key={d.id}>
+                          <Paper p="sm" radius="md" withBorder>
+                            <Group gap="xs" mb={6}>
+                              <Text size="sm" fw={600}>
+                                {d.ward_name_ne || `वडा नं ${d.ward_no}`}
+                              </Text>
+                              <Badge size="xs" variant="outline" color="gray">
+                                {d.election_label}
+                              </Badge>
+                            </Group>
+                            <Stack gap={6}>
+                              {d.top_party_1_name && (
+                                <Group gap="xs" justify="space-between">
+                                  <Badge size="md" variant="light" color="blue">
+                                    {d.top_party_1_name}
+                                  </Badge>
+                                  <Text size="sm" fw={600}>
+                                    {d.top_party_1_votes?.toLocaleString()}
+                                  </Text>
+                                </Group>
+                              )}
+                              {d.top_party_2_name && (
+                                <Group gap="xs" justify="space-between">
+                                  <Badge size="md" variant="light" color="red">
+                                    {d.top_party_2_name}
+                                  </Badge>
+                                  <Text size="sm" fw={600}>
+                                    {d.top_party_2_votes?.toLocaleString()}
+                                  </Text>
+                                </Group>
+                              )}
+                              {d.top_party_3_name && (
+                                <Group gap="xs" justify="space-between">
+                                  <Badge size="md" variant="light" color="orange">
+                                    {d.top_party_3_name}
+                                  </Badge>
+                                  <Text size="sm" fw={600}>
+                                    {d.top_party_3_votes?.toLocaleString()}
+                                  </Text>
+                                </Group>
+                              )}
+                            </Stack>
+                            {d.notes && (
+                              <Text size="xs" c="dimmed" mt="xs">
+                                {d.notes}
+                              </Text>
+                            )}
+                          </Paper>
+                        </Carousel.Slide>
+                      ))}
+                    </Carousel>
+                  ) : (
+                    <Text c="dimmed" size="sm" ta="center" py="md">
+                      No political affiliation data available
+                    </Text>
                   );
-                })()
-              ) : (
-                <Text c="dimmed" size="sm" ta="center" py="md">
-                  No political affiliation data available
-                </Text>
-              )}
+                })()}
               <Divider my="lg" />
             </>
           )}

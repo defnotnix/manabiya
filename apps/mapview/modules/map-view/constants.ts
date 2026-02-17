@@ -23,6 +23,17 @@ export const MUNICIPALITY_NAME_TO_ID: Record<string, number> = {
   "Sahid Lakhan": 170,
 };
 
+// API municipality ID → GeoJSON name (uses first/canonical name per ID)
+export const MUNICIPALITY_ID_TO_NAME: Record<number, string> = {
+  110: "Aarughat",
+  121: "Gandaki",
+  130: "Gorkha",
+  145: "Chumnuwri",
+  153: "Dharche",
+  161: "Bhimsen",
+  170: "Sahid Lakhan",
+};
+
 export const MAP_STYLES_NO_LABELS: google.maps.MapTypeStyle[] = [
   {
     elementType: "labels",
