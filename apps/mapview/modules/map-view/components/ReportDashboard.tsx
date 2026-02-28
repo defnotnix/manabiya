@@ -11,9 +11,11 @@ import {
   Badge,
   ColorSwatch,
   useMantineTheme,
+  ThemeIcon,
 } from "@mantine/core";
 import { PieChart, DonutChart } from "@mantine/charts";
 import { StatCard } from "./StatCard";
+import { DistrictAnalyticsReport } from "./DistrictAnalyticsReport";
 import {
   UsersIcon,
   GenderMaleIcon,
@@ -23,7 +25,6 @@ import {
   ChurchIcon,
   CaretRightIcon,
 } from "@phosphor-icons/react";
-import { ThemeIcon } from "@mantine/core";
 
 function resolveColor(color: string, theme: any): string {
   // Handle Mantine color tokens like "cyan.6", "blue.5"
@@ -74,11 +75,20 @@ type ReportLevel =
   | "booth"
   | "religion-levels";
 
+interface GeoUnit {
+  id: number;
+  unit_type: string;
+  display_name: string;
+  display_name_ne?: string;
+  display_name_en?: string;
+}
+
 interface ReportDashboardProps {
   data: any;
   reportType: ReportLevel;
   showMunicipalitySelection?: boolean;
   onMunicipalityClick?: (name: string) => void;
+  municipalities?: GeoUnit[];
 }
 
 export function ReportDashboard({
@@ -86,6 +96,7 @@ export function ReportDashboard({
   reportType,
   showMunicipalitySelection,
   onMunicipalityClick,
+  municipalities,
 }: ReportDashboardProps) {
   if (!data) {
     return (
@@ -102,6 +113,7 @@ export function ReportDashboard({
         data={data}
         showSelection={showMunicipalitySelection}
         onSelect={onMunicipalityClick}
+        municipalities={municipalities}
       />
     );
   }
@@ -417,10 +429,12 @@ function DashboardSummaryView({
   data,
   showSelection,
   onSelect,
+  municipalities,
 }: {
   data: any;
   showSelection?: boolean;
   onSelect?: (name: string) => void;
+  municipalities?: GeoUnit[];
 }) {
   console.log("Dashboard Summary data received:", data);
 
@@ -480,6 +494,11 @@ function DashboardSummaryView({
         </SimpleGrid>
       </Stack>
     );
+  }
+
+  // If we have proper district analytics data structure, show the full analytics report
+  if (data.success && district_summary.length > 0 && municipality_summary.length > 0) {
+    return <DistrictAnalyticsReport data={data} municipalities={municipalities} />;
   }
 
   return (

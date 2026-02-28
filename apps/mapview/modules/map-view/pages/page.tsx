@@ -108,6 +108,40 @@ export default function MapViewPage() {
 
   const mapRef = useRef<google.maps.Map | null>(null);
 
+  // Smooth zoom helper - animates zoom transitions
+  const smoothZoomTo = useCallback((
+    target: google.maps.LatLngLiteral,
+    targetZoom: number,
+    duration: number = 800
+  ) => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+    const startZoom = map.getZoom() || DEFAULT_ZOOM;
+    const startTime = performance.now();
+
+    // First pan to the location
+    map.panTo(target);
+
+    // Then animate the zoom
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+
+      // Ease out cubic for smooth deceleration
+      const easeOut = 1 - Math.pow(1 - progress, 3);
+      const currentZoom = startZoom + (targetZoom - startZoom) * easeOut;
+
+      map.setZoom(currentZoom);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, []);
+
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
@@ -312,7 +346,11 @@ export default function MapViewPage() {
       const response = await POLLING_STATIONS_API.getPollingStations({
         ward: Number(selectedWard),
       });
-      return (response?.results as PollingStation[]) || [];
+      // API may return a direct array or a paginated { results: [...] } object
+      const stations = Array.isArray(response)
+        ? response
+        : (response?.results as PollingStation[]) || [];
+      return stations;
     },
     enabled: !!selectedWard,
     staleTime: Infinity,
@@ -360,7 +398,7 @@ export default function MapViewPage() {
   const boothOptions = useMemo(
     () =>
       (booths || []).map((s) => {
-        const nepali = s.place_name;
+        const nepali = s.place_name_ne;
         const english = s.place_name_en;
         let label = `Booth ${s.id}`;
         if (nepali && english) label = `${nepali} (${english})`;
@@ -494,31 +532,6 @@ export default function MapViewPage() {
     },
     enabled:
       !!selectedMunicipality && drawerOpen && reportLevel === "municipality",
-    staleTime: 30_000,
-  });
-
-  // Fetch ward political affiliations (municipality list or ward detail)
-  const {
-    data: wardPoliticalAffiliationsData,
-    isLoading: loadingPoliticalAffiliations,
-  } = useQuery({
-    queryKey: ["ward-political-affiliations", reportLevel, selectedMunicipality, selectedWard],
-    queryFn: async () => {
-      if (reportLevel === "ward" && selectedWard) {
-        return REPORTING_API.getWardPoliticalAffiliationsByWard(
-          Number(selectedWard),
-        );
-      }
-      if (reportLevel === "municipality" && selectedMunicipality) {
-        return REPORTING_API.getWardPoliticalAffiliations({
-          municipality: Number(selectedMunicipality),
-        });
-      }
-      return null;
-    },
-    enabled:
-      (reportLevel === "ward" && !!selectedWard) ||
-      (reportLevel === "municipality" && !!selectedMunicipality),
     staleTime: 30_000,
   });
 
@@ -660,13 +673,12 @@ export default function MapViewPage() {
                 icon={{
                   url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`
                     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
-                      <circle cx="16" cy="16" r="14" fill="${
-                        problem.status === "OPEN"
-                          ? "#fa5252"
-                          : problem.status === "IN_PROGRESS"
-                            ? "#fab005"
-                            : "#51cf66"
-                      }" stroke="#fff" stroke-width="2"/>
+                      <circle cx="16" cy="16" r="14" fill="${problem.status === "OPEN"
+                      ? "#fa5252"
+                      : problem.status === "IN_PROGRESS"
+                        ? "#fab005"
+                        : "#51cf66"
+                    }" stroke="#fff" stroke-width="2"/>
                       <text x="16" y="23" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#fff" text-anchor="middle">!</text>
                     </svg>
                   `)}`,
@@ -787,7 +799,16 @@ export default function MapViewPage() {
           loadingWards={loadingWards}
           boothOptions={boothOptions}
           selectedBooth={selectedBooth}
-          onBoothChange={setSelectedBooth}
+          onBoothChange={(id) => {
+            setSelectedBooth(id);
+            // Smooth zoom to booth location if coordinates available
+            if (id) {
+              const booth = booths?.find((b) => String(b.id) === id);
+              if (booth?.latitude && booth?.longitude) {
+                smoothZoomTo({ lat: booth.latitude, lng: booth.longitude }, 17);
+              }
+            }
+          }}
           loadingBooths={loadingBooths}
         />
       )}
@@ -827,11 +848,15 @@ export default function MapViewPage() {
         loadingDistrictTopStations={loadingDistrictTopStations}
         municipalityTopStationsData={municipalityTopStationsData}
         loadingMunicipalityTopStations={loadingMunicipalityTopStations}
-        wardPoliticalAffiliationsData={wardPoliticalAffiliationsData}
-        loadingPoliticalAffiliations={loadingPoliticalAffiliations}
         onSelectMunicipality={(id) => setSelectedMunicipality(id)}
         onSelectWard={(id) => setSelectedWard(id)}
-        onSelectBooth={(id) => setSelectedBooth(id)}
+        onSelectBooth={(id: string, booth: PollingStation) => {
+          setSelectedBooth(id);
+          // Smooth zoom to booth location if coordinates available
+          if (booth?.latitude && booth?.longitude) {
+            smoothZoomTo({ lat: booth.latitude, lng: booth.longitude }, 17);
+          }
+        }}
         onBack={() => {
           if (reportLevel === "booth") {
             if (booths && booths.length <= 1) {
@@ -847,6 +872,10 @@ export default function MapViewPage() {
           }
         }}
         onDistrictStationClick={(station) => {
+          // Smooth zoom to station location if coordinates available
+          if (station.latitude && station.longitude) {
+            smoothZoomTo({ lat: station.latitude, lng: station.longitude }, 17);
+          }
           if (station.ward_no && wards) {
             const ward = wards.find((w) => w.ward_no === station.ward_no);
             if (ward) {
@@ -857,6 +886,10 @@ export default function MapViewPage() {
           }
         }}
         onMunicipalityStationClick={(station) => {
+          // Smooth zoom to station location if coordinates available
+          if (station.latitude && station.longitude) {
+            smoothZoomTo({ lat: station.latitude, lng: station.longitude }, 17);
+          }
           if (station.ward_no && wards) {
             const ward = wards.find((w) => w.ward_no === station.ward_no);
             if (ward) {

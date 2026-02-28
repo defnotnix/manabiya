@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Box,
   Text,
@@ -10,38 +11,17 @@ import {
   Badge,
   Group,
   UnstyledButton,
-  ActionIcon,
   Stack,
+  Button,
 } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
-import { BuildingsIcon, ArrowLeftIcon } from "@phosphor-icons/react";
+import { BuildingsIcon, UsersIcon } from "@phosphor-icons/react";
 import { TopPollingStations } from "./TopPollingStations";
 import { DistrictTopPollingStations } from "./DistrictTopPollingStations";
-import { WardMap } from "./WardMap";
+import type { ReportLevel, GeoUnit, PollingStation } from "../types";
+import { formatDisplayName } from "../types";
 
-type ReportLevel = "dashboard" | "district" | "municipality" | "ward" | "booth";
-
-interface GeoUnit {
-  id: number;
-  unit_type: string;
-  display_name: string;
-  display_name_ne?: string;
-  display_name_en?: string;
-  ward_no?: number | null;
-}
-
-interface PollingStation {
-  id: number;
-  place_name: string;
-  place_name_en?: string;
-}
-
-function formatDisplayName(unit: GeoUnit): string {
-  const nepali = unit.display_name || unit.display_name_ne;
-  const english = unit.display_name_en;
-  if (nepali && english) return `${nepali} (${english})`;
-  return nepali || english || `${unit.id}`;
-}
+const BOOTH_INITIAL_LIMIT = 5;
 
 interface ExpandedSheetContentProps {
   reportLevel: ReportLevel | null;
@@ -49,40 +29,28 @@ interface ExpandedSheetContentProps {
   loadingReport: boolean;
   reportError: any;
 
-  // Selected municipality/ward IDs (for ward map SVG)
   selectedMunicipality: string | null;
   selectedWard: string | null;
 
-  // Municipalities
   municipalities: GeoUnit[] | undefined;
 
-  // Wards
   wards: GeoUnit[] | undefined;
   loadingWards: boolean;
 
-  // Booths
   booths: PollingStation[] | undefined;
   loadingBooths: boolean;
 
-  // Top polling stations (district level)
   districtTopStationsData: any;
   loadingDistrictTopStations: boolean;
 
-  // Top polling stations (municipality level)
   municipalityTopStationsData: any;
   loadingMunicipalityTopStations: boolean;
 
-  // Political affiliations
-  wardPoliticalAffiliationsData: any;
-  loadingPoliticalAffiliations: boolean;
-
-  // Selection callbacks
   onSelectMunicipality: (id: string) => void;
   onSelectWard: (id: string) => void;
-  onSelectBooth: (id: string) => void;
+  onSelectBooth: (id: string, booth: PollingStation) => void;
   onBack: () => void;
 
-  // For station click (navigate to booth directly)
   onDistrictStationClick: (station: any) => void;
   onMunicipalityStationClick: (station: any) => void;
 }
@@ -103,8 +71,6 @@ export function ExpandedSheetContent({
   loadingDistrictTopStations,
   municipalityTopStationsData,
   loadingMunicipalityTopStations,
-  wardPoliticalAffiliationsData,
-  loadingPoliticalAffiliations,
   onSelectMunicipality,
   onSelectWard,
   onSelectBooth,
@@ -112,31 +78,23 @@ export function ExpandedSheetContent({
   onDistrictStationClick,
   onMunicipalityStationClick,
 }: ExpandedSheetContentProps) {
+  const [showAllBooths, setShowAllBooths] = useState(false);
+
+  const visibleBooths = showAllBooths
+    ? booths || []
+    : (booths || []).slice(0, BOOTH_INITIAL_LIMIT);
+  const hasMoreBooths = (booths?.length ?? 0) > BOOTH_INITIAL_LIMIT;
+
   return (
     <Box
       style={{
         backgroundColor: "#fff",
         borderRadius: 12,
-        width: "`100%",
+        width: "100%",
         overflow: "hidden",
         color: "#000",
       }}
     >
-      {/* Back button — visible when deeper than dashboard */}
-      {reportLevel && reportLevel !== "dashboard" && (
-        <Group gap="xs" mb="md">
-          <ActionIcon
-            variant="light"
-            color="gray"
-            radius="xl"
-            size={32}
-            onClick={onBack}
-          >
-            <ArrowLeftIcon size={16} />
-          </ActionIcon>
-        </Group>
-      )}
-
       {loadingReport && (
         <Center py="xl">
           <Loader size="md" />
@@ -151,7 +109,7 @@ export function ExpandedSheetContent({
       )}
       {!loadingReport && !reportError && reportData && (
         <>
-          {/* ── Dashboard level: Municipality selector ── */}
+          {/* ── Dashboard / District level: Municipality selector ── */}
           {(reportLevel === "dashboard" || reportLevel === "district") &&
             municipalities &&
             municipalities.length > 0 && (
@@ -204,26 +162,25 @@ export function ExpandedSheetContent({
               </>
             )}
 
-          {/* ── Dashboard level: District Top Stations ── */}
-          {(reportLevel === "dashboard" || reportLevel === "district") &&
-            wards &&
-            wards.length > 0 && (
-              <>
-                <Text fw={700} size="md" mb="xs">
-                  Recommended / Important Stations
-                </Text>
-                <Text size="xs" c="dimmed" mb="sm">
-                  Top polling stations by voter count
-                </Text>
-                <DistrictTopPollingStations
-                  data={districtTopStationsData}
-                  wards={wards as any}
-                  isLoading={loadingDistrictTopStations}
-                  onStationClick={onDistrictStationClick}
-                />
-                <Divider my="lg" />
-              </>
-            )}
+          {/* ── District level (not dashboard): Top Stations ── */}
+          {reportLevel === "district" && (
+            <>
+              <Text fw={700} size="md" mb="xs">
+                Recommended / Important Stations
+              </Text>
+              <Text size="xs" c="dimmed" mb="sm">
+                Top polling stations by voter count
+              </Text>
+              <DistrictTopPollingStations
+                data={districtTopStationsData}
+                wards={(wards as any) || []}
+                isLoading={loadingDistrictTopStations}
+                onStationClick={onDistrictStationClick}
+                onViewDetails={onDistrictStationClick}
+              />
+              <Divider my="lg" />
+            </>
+          )}
 
           {/* ── Municipality level: Top Stations + Ward selector ── */}
           {reportLevel === "municipality" && (
@@ -238,28 +195,10 @@ export function ExpandedSheetContent({
                 data={municipalityTopStationsData}
                 isLoading={loadingMunicipalityTopStations}
                 onStationClick={onMunicipalityStationClick}
+                onViewDetails={onMunicipalityStationClick}
               />
               <Divider my="lg" />
 
-              {/* Ward map SVG */}
-              {selectedMunicipality && wards && wards.length > 0 && (
-                <>
-                  <Text fw={700} size="md" mb="xs">
-                    Ward Map
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="sm">
-                    Tap a ward to view its report
-                  </Text>
-                  <WardMap
-                    municipalityId={Number(selectedMunicipality)}
-                    wards={wards}
-                    onSelectWard={onSelectWard}
-                  />
-                  <Divider my="lg" />
-                </>
-              )}
-
-              {/* Ward carousel */}
               <Text fw={700} size="md" mb="xs">
                 Wards
               </Text>
@@ -279,9 +218,7 @@ export function ExpandedSheetContent({
                 >
                   {wards.map((ward) => (
                     <Carousel.Slide key={ward.id} style={{ width: "auto" }}>
-                      <UnstyledButton
-                        onClick={() => onSelectWard(String(ward.id))}
-                      >
+                      <UnstyledButton onClick={() => onSelectWard(String(ward.id))}>
                         <Badge
                           size="xl"
                           variant="light"
@@ -305,31 +242,7 @@ export function ExpandedSheetContent({
             </>
           )}
 
-          {/* ── Ward/Booth level: Ward map with selection ── */}
-          {(reportLevel === "ward" || reportLevel === "booth") &&
-            selectedMunicipality &&
-            wards &&
-            wards.length > 0 && (
-              <>
-                <Text fw={700} size="md" mb="xs">
-                  Ward Map
-                </Text>
-                <WardMap
-                  municipalityId={Number(selectedMunicipality)}
-                  wards={wards}
-                  selectedWardNo={
-                    selectedWard
-                      ? wards.find((w) => String(w.id) === selectedWard)
-                          ?.ward_no ?? null
-                      : null
-                  }
-                  onSelectWard={onSelectWard}
-                />
-                <Divider my="lg" />
-              </>
-            )}
-
-          {/* ── Ward level: Booth selector ── */}
+          {/* ── Ward level: Booth list ── */}
           {reportLevel === "ward" && (
             <>
               <Text fw={700} size="md" mb="xs">
@@ -343,152 +256,87 @@ export function ExpandedSheetContent({
                   <Loader size="sm" />
                 </Center>
               ) : booths && booths.length > 0 ? (
-                <Carousel
-                  slideSize="70%"
-                  slideGap="sm"
-                  withControls={false}
-                  styles={{ viewport: { overflow: "visible" } }}
-                >
-                  {booths.map((booth, idx) => {
-                    const name =
-                      booth.place_name && booth.place_name_en
-                        ? `${booth.place_name} (${booth.place_name_en})`
-                        : booth.place_name ||
+                <Stack gap="xs">
+                  <Stack gap={0}>
+                    {visibleBooths.map((booth, idx) => {
+                      const name =
+                        booth.place_name_ne && booth.place_name_en
+                          ? `${booth.place_name_ne} (${booth.place_name_en})`
+                          : booth.place_name_ne ||
                           booth.place_name_en ||
                           `Booth ${booth.id}`;
-                    return (
-                      <Carousel.Slide key={booth.id}>
+                      return (
                         <UnstyledButton
-                          onClick={() => onSelectBooth(String(booth.id))}
+                          key={booth.id}
+                          onClick={() => onSelectBooth(String(booth.id), booth)}
                           style={{ width: "100%" }}
                         >
-                          <Paper
-                            p="sm"
-                            radius="md"
-                            withBorder
+                          <Box
                             style={{
+                              borderBottom: "1px solid rgba(0,0,0,0.08)",
+                              borderTop: idx === 0 ? "1px solid rgba(0,0,0,0.08)" : undefined,
+                              padding: "10px 12px",
                               cursor: "pointer",
-                              height: 60,
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 10,
+                              transition: "background 0.15s",
                             }}
                           >
-                            <Badge
-                              size="lg"
-                              variant="filled"
-                              color="violet"
-                              circle
-                              styles={{
-                                root: { minWidth: 28, height: 28 },
-                              }}
-                            >
-                              {idx + 1}
-                            </Badge>
-                            <Text size="sm" fw={500} lineClamp={2} lh={1.3}>
-                              {name}
-                            </Text>
-                          </Paper>
+                            <Group justify="space-between" wrap="nowrap" gap="sm">
+                              <Group gap={8} wrap="nowrap" style={{ flex: 1, minWidth: 0 }}>
+                                <Badge
+                                  size="md"
+                                  variant="filled"
+                                  color="violet"
+                                  circle
+                                  styles={{ root: { minWidth: 24, height: 24, flexShrink: 0 } }}
+                                >
+                                  {idx + 1}
+                                </Badge>
+                                <Text
+                                  size="sm"
+                                  fw={600}
+                                  lineClamp={1}
+                                  lh={1.4}
+                                  style={{ flex: 1, minWidth: 0 }}
+                                >
+                                  {name}
+                                </Text>
+                              </Group>
+
+                              {booth.voter_population != null && (
+                                <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
+                                  <UsersIcon size={13} color="#228be6" />
+                                  <Text size="xs" fw={600}>
+                                    {booth.voter_population.toLocaleString()}
+                                  </Text>
+                                </Group>
+                              )}
+                            </Group>
+                          </Box>
                         </UnstyledButton>
-                      </Carousel.Slide>
-                    );
-                  })}
-                </Carousel>
+                      );
+                    })}
+                  </Stack>
+
+                  {hasMoreBooths && (
+                    <Button
+                      variant="subtle"
+                      color="gray"
+                      size="xs"
+                      fullWidth
+                      mt={2}
+                      onClick={() => setShowAllBooths((v) => !v)}
+                    >
+                      {showAllBooths
+                        ? "Show less"
+                        : `Show all ${booths.length} stations`}
+                    </Button>
+                  )}
+                </Stack>
               ) : (
                 <Text size="sm" c="dimmed" ta="center" py="md">
                   No polling stations available
                 </Text>
               )}
-              <Divider my="lg" />
-            </>
-          )}
-
-          {/* ── Municipality/Ward level: Political Affiliations ── */}
-          {(reportLevel === "municipality" || reportLevel === "ward") && (
-            <>
-              <Text fw={700} size="md" mb="xs">
-                Past Political Affiliations
-              </Text>
-              <Text size="xs" c="dimmed" mb="sm">
-                {reportLevel === "ward"
-                  ? "Historical party affiliations for this ward"
-                  : "Historical party affiliations by ward"}
-              </Text>
-              {loadingPoliticalAffiliations ? (
-                <Center py="md">
-                  <Loader size="sm" />
-                </Center>
-              ) : (() => {
-                  const items = wardPoliticalAffiliationsData?.results
-                    ? wardPoliticalAffiliationsData.results
-                    : wardPoliticalAffiliationsData?.top_party_1_name
-                      ? [wardPoliticalAffiliationsData]
-                      : [];
-                  return items.length > 0 ? (
-                    <Carousel
-                      slideSize="75%"
-                      slideGap="sm"
-                      withControls={false}
-                      styles={{ viewport: { overflow: "visible" } }}
-                    >
-                      {items.map((d: any) => (
-                        <Carousel.Slide key={d.id}>
-                          <Paper p="sm" radius="md" withBorder>
-                            <Group gap="xs" mb={6}>
-                              <Text size="sm" fw={600}>
-                                {d.ward_name_ne || `वडा नं ${d.ward_no}`}
-                              </Text>
-                              <Badge size="xs" variant="outline" color="gray">
-                                {d.election_label}
-                              </Badge>
-                            </Group>
-                            <Stack gap={6}>
-                              {d.top_party_1_name && (
-                                <Group gap="xs" justify="space-between">
-                                  <Badge size="md" variant="light" color="blue">
-                                    {d.top_party_1_name}
-                                  </Badge>
-                                  <Text size="sm" fw={600}>
-                                    {d.top_party_1_votes?.toLocaleString()}
-                                  </Text>
-                                </Group>
-                              )}
-                              {d.top_party_2_name && (
-                                <Group gap="xs" justify="space-between">
-                                  <Badge size="md" variant="light" color="red">
-                                    {d.top_party_2_name}
-                                  </Badge>
-                                  <Text size="sm" fw={600}>
-                                    {d.top_party_2_votes?.toLocaleString()}
-                                  </Text>
-                                </Group>
-                              )}
-                              {d.top_party_3_name && (
-                                <Group gap="xs" justify="space-between">
-                                  <Badge size="md" variant="light" color="orange">
-                                    {d.top_party_3_name}
-                                  </Badge>
-                                  <Text size="sm" fw={600}>
-                                    {d.top_party_3_votes?.toLocaleString()}
-                                  </Text>
-                                </Group>
-                              )}
-                            </Stack>
-                            {d.notes && (
-                              <Text size="xs" c="dimmed" mt="xs">
-                                {d.notes}
-                              </Text>
-                            )}
-                          </Paper>
-                        </Carousel.Slide>
-                      ))}
-                    </Carousel>
-                  ) : (
-                    <Text c="dimmed" size="sm" ta="center" py="md">
-                      No political affiliation data available
-                    </Text>
-                  );
-                })()}
               <Divider my="lg" />
             </>
           )}

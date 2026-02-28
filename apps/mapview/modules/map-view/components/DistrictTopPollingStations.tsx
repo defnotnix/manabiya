@@ -4,22 +4,31 @@ import { useState } from "react";
 import {
   Stack,
   Text,
-  Paper,
   Group,
   Badge,
   Center,
   Loader,
   Box,
   UnstyledButton,
+  Button,
+  Collapse,
+  SimpleGrid,
+  Paper,
+  Divider,
+  ActionIcon,
 } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
 import {
   UsersIcon,
-  GenderMaleIcon,
-  GenderFemaleIcon,
   CrownIcon,
   TrophyIcon,
   MedalIcon,
+  GenderMaleIcon,
+  GenderFemaleIcon,
+  CaretDownIcon,
+  CaretUpIcon,
+  ChurchIcon,
+  IdentificationCardIcon,
 } from "@phosphor-icons/react";
 
 interface Ward {
@@ -32,48 +41,42 @@ interface DistrictTopPollingStationsProps {
   wards: { id: number; ward_no?: number; display_name?: string }[];
   isLoading: boolean;
   onStationClick?: (station: any) => void;
+  onViewDetails?: (station: any) => void;
 }
 
 const RANK_COLORS: Record<
   number,
-  { bg: string; border: string; badge: string; icon: string }
+  { bg: string; border: string; badge: string }
 > = {
-  0: {
-    bg: "rgba(250,204,21,0.12)",
-    border: "rgba(250,204,21,0.3)",
-    badge: "yellow",
-    icon: "#facc15",
-  },
-  1: {
-    bg: "rgba(192,192,192,0.12)",
-    border: "rgba(192,192,192,0.3)",
-    badge: "gray",
-    icon: "#c0c0c0",
-  },
-  2: {
-    bg: "rgba(205,127,50,0.12)",
-    border: "rgba(205,127,50,0.3)",
-    badge: "orange",
-    icon: "#cd7f32",
-  },
+  0: { bg: "rgba(250,204,21,0.08)", border: "rgba(250,204,21,0.25)", badge: "yellow" },
+  1: { bg: "rgba(192,192,192,0.08)", border: "rgba(192,192,192,0.25)", badge: "gray" },
+  2: { bg: "rgba(205,127,50,0.08)", border: "rgba(205,127,50,0.25)", badge: "orange" },
 };
 
 function RankIcon({ idx }: { idx: number }) {
-  if (idx === 0) return <CrownIcon size={16} weight="fill" color="#facc15" />;
-  if (idx === 1) return <TrophyIcon size={16} weight="fill" color="#c0c0c0" />;
-  if (idx === 2) return <MedalIcon size={16} weight="fill" color="#cd7f32" />;
+  if (idx === 0) return <CrownIcon size={14} weight="fill" color="#facc15" />;
+  if (idx === 1) return <TrophyIcon size={14} weight="fill" color="#c0c0c0" />;
+  if (idx === 2) return <MedalIcon size={14} weight="fill" color="#cd7f32" />;
   return null;
 }
+
+const INITIAL_LIMIT = 5;
 
 export function DistrictTopPollingStations({
   data,
   wards,
   isLoading,
   onStationClick,
+  onViewDetails,
 }: DistrictTopPollingStationsProps) {
-  const [selectedWardFilter, setSelectedWardFilter] = useState<number | "all">(
-    "all",
-  );
+  const [selectedWardFilter, setSelectedWardFilter] = useState<number | "all">("all");
+  const [showAll, setShowAll] = useState(false);
+  const [expandedStation, setExpandedStation] = useState<number | null>(null);
+
+  const handleWardFilter = (id: number | "all") => {
+    setSelectedWardFilter(id);
+    setShowAll(false);
+  };
 
   if (isLoading) {
     return (
@@ -83,7 +86,6 @@ export function DistrictTopPollingStations({
     );
   }
 
-  // API format: { results: [{ top_polling_stations: [...], ward_breakdown: {...}, ... }] }
   const result = data?.results?.[0];
 
   if (!result) {
@@ -96,7 +98,6 @@ export function DistrictTopPollingStations({
 
   const { top_polling_stations = [], ward_breakdown = {} } = result;
 
-  // Get stations for selected ward
   const getStationsForWard = () => {
     if (selectedWardFilter === "all") {
       return top_polling_stations;
@@ -105,8 +106,9 @@ export function DistrictTopPollingStations({
   };
 
   const displayStations = getStationsForWard();
+  const visibleStations = showAll ? displayStations : displayStations.slice(0, INITIAL_LIMIT);
+  const hasMore = displayStations.length > INITIAL_LIMIT;
 
-  // Create ward options including "All Wards"
   const wardOptions = [
     { id: "all" as const, label: "All Wards" },
     ...wards.map((ward) => ({
@@ -139,7 +141,7 @@ export function DistrictTopPollingStations({
                 variant={selectedWardFilter === ward.id ? "filled" : "light"}
                 color={selectedWardFilter === ward.id ? "blue" : "gray"}
                 style={{ cursor: "pointer" }}
-                onClick={() => setSelectedWardFilter(ward.id)}
+                onClick={() => handleWardFilter(ward.id)}
               >
                 {ward.label}
               </Badge>
@@ -148,94 +150,169 @@ export function DistrictTopPollingStations({
         </Carousel>
       </Box>
 
-      {/* Station carousel */}
+      {/* Station list */}
       {displayStations.length === 0 ? (
         <Text c="dimmed" size="sm" ta="center" py="md">
           No polling stations found for this ward
         </Text>
       ) : (
-        <Carousel
-          slideSize="70%"
-          slideGap="sm"
-          withControls={false}
-          styles={{
-            viewport: { overflow: "visible" },
-          }}
-        >
-          {displayStations.map((station: any, idx: number) => {
-            const rankStyle = RANK_COLORS[idx] || {
-              bg: "rgba(255,255,255,0.04)",
-              border: "rgba(255,255,255,0.08)",
-              badge: "teal",
-              icon: "#2dd4bf",
-            };
+        <>
+          <Stack gap={0}>
+            {visibleStations.map((station: any, idx: number) => {
+              const rankStyle = RANK_COLORS[idx] || {
+                bg: "transparent",
+                border: "rgba(0,0,0,0.08)",
+                badge: "teal",
+              };
 
-            return (
-              <Carousel.Slide key={station.polling_station_id || idx}>
-                <UnstyledButton
-                  onClick={() => onStationClick?.(station)}
-                  style={{ width: "100%" }}
-                >
-                  <Paper
-                    p="sm"
-                    radius="md"
+              const name =
+                station.booth_name_ne ||
+                station.booth_name_en ||
+                `Station #${idx + 1}`;
+
+              const isExpanded = expandedStation === (station.polling_station_id || idx);
+              const stationId = station.polling_station_id || idx;
+
+              return (
+                <Box key={stationId}>
+                  <Box
                     style={{
                       backgroundColor: rankStyle.bg,
-                      border: `1px solid ${rankStyle.border}`,
-                      height: 140,
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "space-between",
-                      cursor: "pointer",
+                      borderBottom: `1px solid ${rankStyle.border}`,
+                      borderTop: idx === 0 ? `1px solid ${rankStyle.border}` : undefined,
+                      padding: "10px 12px",
+                      transition: "background 0.15s",
                     }}
                   >
-                    {/* Rank + name */}
-                    <Box>
-                      <Group gap={6} mb={6} wrap="nowrap">
-                        <Badge
-                          size="lg"
-                          variant="filled"
-                          color={rankStyle.badge}
-                          circle
-                          styles={{ root: { minWidth: 28, height: 28 } }}
-                        >
-                          {idx + 1}
-                        </Badge>
-                        <RankIcon idx={idx} />
-                        <Text
-                          size="sm"
-                          fw={600}
-                          lineClamp={2}
-                          lh={1.3}
-                          style={{ flex: 1 }}
-                        >
-                          {station.booth_name_ne ||
-                            station.booth_name_en ||
-                            `Station #${idx + 1}`}
-                        </Text>
-                      </Group>
-                      {station.ward_no && (
-                        <Text size="xs" c="dimmed">
-                          Ward {station.ward_no}
-                        </Text>
-                      )}
-                    </Box>
+                    <Group justify="space-between" wrap="nowrap" gap="sm">
+                      {/* Left: rank + name */}
+                      <UnstyledButton
+                        onClick={() => onStationClick?.(station)}
+                        style={{ flex: 1, minWidth: 0 }}
+                      >
+                        <Group gap={8} wrap="nowrap">
+                          <Badge
+                            size="md"
+                            variant="filled"
+                            color={rankStyle.badge}
+                            circle
+                            styles={{ root: { minWidth: 24, height: 24, flexShrink: 0 } }}
+                          >
+                            {idx + 1}
+                          </Badge>
+                          <RankIcon idx={idx} />
+                          <Box style={{ minWidth: 0 }}>
+                            <Text size="sm" fw={600} lineClamp={1} lh={1.4}>
+                              {name}
+                            </Text>
+                            {station.ward_no && (
+                              <Text size="xs" c="dimmed" lh={1.3}>
+                                Ward {station.ward_no}
+                              </Text>
+                            )}
+                          </Box>
+                        </Group>
+                      </UnstyledButton>
 
-                    {/* Voter stats */}
-                    <Group gap="md" mt={6}>
-                      <Group gap={4}>
-                        <UsersIcon size={14} color="#228be6" />
-                        <Text size="xs" fw={600}>
-                          {(station.total_voters_count || 0).toLocaleString()}
-                        </Text>
+                      {/* Right: voter count + expand button */}
+                      <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
+                        <Group gap={4} wrap="nowrap">
+                          <UsersIcon size={13} color="#228be6" />
+                          <Text size="xs" fw={600}>
+                            {(station.total_voters_count || 0).toLocaleString()}
+                          </Text>
+                        </Group>
+                        <ActionIcon
+                          variant="subtle"
+                          size="sm"
+                          color="gray"
+                          onClick={() => setExpandedStation(isExpanded ? null : stationId)}
+                        >
+                          {isExpanded ? <CaretUpIcon size={14} /> : <CaretDownIcon size={14} />}
+                        </ActionIcon>
                       </Group>
                     </Group>
-                  </Paper>
-                </UnstyledButton>
-              </Carousel.Slide>
-            );
-          })}
-        </Carousel>
+                  </Box>
+
+                  {/* Expanded Details */}
+                  <Collapse in={isExpanded}>
+                    <Paper p="sm" bg="gray.0" style={{ borderBottom: `1px solid ${rankStyle.border}` }}>
+                      <SimpleGrid cols={2} spacing="xs">
+                        <Stack gap={2}>
+                          <Text size="xs" c="dimmed">Total Voters</Text>
+                          <Group gap={4}>
+                            <UsersIcon size={14} color="#228be6" />
+                            <Text size="sm" fw={600}>{(station.total_voters_count || 0).toLocaleString()}</Text>
+                          </Group>
+                        </Stack>
+                        <Stack gap={2}>
+                          <Text size="xs" c="dimmed">Male Voters</Text>
+                          <Group gap={4}>
+                            <GenderMaleIcon size={14} color="#228be6" />
+                            <Text size="sm" fw={600}>{(station.total_voters_male_count || 0).toLocaleString()}</Text>
+                          </Group>
+                        </Stack>
+                        <Stack gap={2}>
+                          <Text size="xs" c="dimmed">Female Voters</Text>
+                          <Group gap={4}>
+                            <GenderFemaleIcon size={14} color="#e64980" />
+                            <Text size="sm" fw={600}>{(station.total_voters_female_count || 0).toLocaleString()}</Text>
+                          </Group>
+                        </Stack>
+                        {station.unique_castes_count != null && (
+                          <Stack gap={2}>
+                            <Text size="xs" c="dimmed">Unique Castes</Text>
+                            <Group gap={4}>
+                              <IdentificationCardIcon size={14} color="#7c3aed" />
+                              <Text size="sm" fw={600}>{station.unique_castes_count}</Text>
+                            </Group>
+                          </Stack>
+                        )}
+                        {station.dominant_religion && (
+                          <Stack gap={2}>
+                            <Text size="xs" c="dimmed">Dominant Religion</Text>
+                            <Group gap={4}>
+                              <ChurchIcon size={14} color="#f97316" />
+                              <Text size="sm" fw={600}>{station.dominant_religion}</Text>
+                            </Group>
+                          </Stack>
+                        )}
+                        {station.married_ratio != null && (
+                          <Stack gap={2}>
+                            <Text size="xs" c="dimmed">Married Ratio</Text>
+                            <Text size="sm" fw={600}>{(station.married_ratio * 100).toFixed(1)}%</Text>
+                          </Stack>
+                        )}
+                      </SimpleGrid>
+                      <Divider my="xs" />
+                      <Button
+                        variant="light"
+                        size="xs"
+                        fullWidth
+                        onClick={() => onViewDetails?.(station)}
+                      >
+                        View Full Report
+                      </Button>
+                    </Paper>
+                  </Collapse>
+                </Box>
+              );
+            })}
+          </Stack>
+
+          {hasMore && (
+            <Button
+              variant="subtle"
+              color="gray"
+              size="xs"
+              fullWidth
+              mt={2}
+              onClick={() => setShowAll((v) => !v)}
+            >
+              {showAll ? "Show less" : `Show all ${displayStations.length} stations`}
+            </Button>
+          )}
+        </>
       )}
     </Stack>
   );

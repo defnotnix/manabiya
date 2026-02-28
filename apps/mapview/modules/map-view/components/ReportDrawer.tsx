@@ -51,14 +51,10 @@ interface ReportDrawerProps {
   municipalityTopStationsData: any;
   loadingMunicipalityTopStations: boolean;
 
-  // Political affiliations
-  wardPoliticalAffiliationsData: any;
-  loadingPoliticalAffiliations: boolean;
-
   // Selection callbacks
   onSelectMunicipality: (id: string) => void;
   onSelectWard: (id: string) => void;
-  onSelectBooth: (id: string) => void;
+  onSelectBooth: (id: string, booth: PollingStation) => void;
   onBack: () => void;
   onDistrictStationClick: (station: any) => void;
   onMunicipalityStationClick: (station: any) => void;
@@ -84,8 +80,6 @@ export function ReportDrawer({
   loadingDistrictTopStations,
   municipalityTopStationsData,
   loadingMunicipalityTopStations,
-  wardPoliticalAffiliationsData,
-  loadingPoliticalAffiliations,
   onSelectMunicipality,
   onSelectWard,
   onSelectBooth,
@@ -130,40 +124,10 @@ export function ReportDrawer({
       }}
     >
       <ScrollArea h="calc(100vh - 100px)" offsetScrollbars scrollbarSize={6}>
-        {/* Navigation */}
-        <ExpandedSheetContent
-          reportLevel={reportLevel}
-          reportData={reportData}
-          loadingReport={loadingReport}
-          reportError={reportError}
-          selectedMunicipality={selectedMunicipality}
-          selectedWard={selectedWard}
-          municipalities={municipalities}
-          wards={wards}
-          loadingWards={loadingWards}
-          booths={booths}
-          loadingBooths={loadingBooths}
-          districtTopStationsData={districtTopStationsData}
-          loadingDistrictTopStations={loadingDistrictTopStations}
-          municipalityTopStationsData={municipalityTopStationsData}
-          loadingMunicipalityTopStations={loadingMunicipalityTopStations}
-          wardPoliticalAffiliationsData={wardPoliticalAffiliationsData}
-          loadingPoliticalAffiliations={loadingPoliticalAffiliations}
-          onSelectMunicipality={onSelectMunicipality}
-          onSelectWard={onSelectWard}
-          onSelectBooth={onSelectBooth}
-          onBack={onBack}
-          onDistrictStationClick={onDistrictStationClick}
-          onMunicipalityStationClick={onMunicipalityStationClick}
-        />
-
-        {/* Divider between navigation and report */}
-        {reportData && <Divider my="lg" />}
-
-        {/* Full Report */}
+        {/* While loading, show only a centered loader — no stale content */}
         {loadingReport ? (
-          <Center py="xl">
-            <Loader size="md" />
+          <Center h="60vh">
+            <Loader size="lg" />
           </Center>
         ) : reportError ? (
           <Center py="xl">
@@ -171,62 +135,96 @@ export function ReportDrawer({
               {(reportError as Error).message || "Failed to load report"}
             </Text>
           </Center>
-        ) : reportData ? (
+        ) : (
           <>
-            {reportSummary && (
-              <>
-                <Group gap="xl" mb="md">
-                  <Stack gap={4}>
-                    <Group gap={8}>
-                      <UsersIcon size={18} color="#228be6" weight="duotone" />
-                      <Text size="lg" fw={600}>
-                        {reportSummary.total.toLocaleString()}
-                      </Text>
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      Total Voters
-                    </Text>
-                  </Stack>
-                  <Stack gap={4}>
-                    <Group gap={8}>
-                      <GenderMaleIcon
-                        size={18}
-                        color="#228be6"
-                        weight="duotone"
-                      />
-                      <Text size="lg" fw={600}>
-                        {reportSummary.male.toLocaleString()}
-                      </Text>
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      Male
-                    </Text>
-                  </Stack>
-                  <Stack gap={4}>
-                    <Group gap={8}>
-                      <GenderFemaleIcon
-                        size={18}
-                        color="#e64980"
-                        weight="duotone"
-                      />
-                      <Text size="lg" fw={600}>
-                        {reportSummary.female.toLocaleString()}
-                      </Text>
-                    </Group>
-                    <Text size="xs" c="dimmed">
-                      Female
-                    </Text>
-                  </Stack>
-                </Group>
-                <Divider mb="md" />
-              </>
-            )}
-            <ReportDashboard
-              data={reportData}
-              reportType={reportLevel || "dashboard"}
+            {/* Navigation */}
+            <ExpandedSheetContent
+              reportLevel={reportLevel}
+              reportData={reportData}
+              loadingReport={loadingReport}
+              reportError={reportError}
+              selectedMunicipality={selectedMunicipality}
+              selectedWard={selectedWard}
+              municipalities={municipalities}
+              wards={wards}
+              loadingWards={loadingWards}
+              booths={booths}
+              loadingBooths={loadingBooths}
+              districtTopStationsData={districtTopStationsData}
+              loadingDistrictTopStations={loadingDistrictTopStations}
+              municipalityTopStationsData={municipalityTopStationsData}
+              loadingMunicipalityTopStations={loadingMunicipalityTopStations}
+              onSelectMunicipality={onSelectMunicipality}
+              onSelectWard={onSelectWard}
+              onSelectBooth={onSelectBooth}
+              onBack={onBack}
+              onDistrictStationClick={onDistrictStationClick}
+              onMunicipalityStationClick={onMunicipalityStationClick}
             />
+
+            {/* Divider between navigation and report */}
+            {reportData && <Divider my="lg" />}
+
+            {/* Full Report */}
+            {reportData ? (
+              <>
+                {reportSummary && (
+                  <>
+                    <Group gap="xl" mb="md">
+                      <Stack gap={4}>
+                        <Group gap={8}>
+                          <UsersIcon size={18} color="#228be6" weight="duotone" />
+                          <Text size="lg" fw={600}>
+                            {reportSummary.total.toLocaleString()}
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          Total Voters
+                        </Text>
+                      </Stack>
+                      <Stack gap={4}>
+                        <Group gap={8}>
+                          <GenderMaleIcon
+                            size={18}
+                            color="#228be6"
+                            weight="duotone"
+                          />
+                          <Text size="lg" fw={600}>
+                            {reportSummary.male.toLocaleString()}
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          Male
+                        </Text>
+                      </Stack>
+                      <Stack gap={4}>
+                        <Group gap={8}>
+                          <GenderFemaleIcon
+                            size={18}
+                            color="#e64980"
+                            weight="duotone"
+                          />
+                          <Text size="lg" fw={600}>
+                            {reportSummary.female.toLocaleString()}
+                          </Text>
+                        </Group>
+                        <Text size="xs" c="dimmed">
+                          Female
+                        </Text>
+                      </Stack>
+                    </Group>
+                    <Divider mb="md" />
+                  </>
+                )}
+                <ReportDashboard
+                  data={reportData}
+                  reportType={reportLevel || "dashboard"}
+                  municipalities={municipalities}
+                />
+              </>
+            ) : null}
           </>
-        ) : null}
+        )}
       </ScrollArea>
     </Drawer>
   );

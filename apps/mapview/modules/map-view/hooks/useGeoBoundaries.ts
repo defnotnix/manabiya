@@ -51,9 +51,12 @@ export function useGeoBoundaries({
   const zoomListenerRef = useRef<google.maps.MapsEventListener | null>(null);
   const dataLoadedRef = useRef(false);
 
-  // Use a ref for selectedMunicipalityName to avoid dependency cycles
+  // Use refs for callbacks to avoid dependency cycles
   const selectedMuniRef = useRef(selectedMunicipalityName);
   selectedMuniRef.current = selectedMunicipalityName;
+
+  const onMunicipalityClickRef = useRef(onMunicipalityClick);
+  onMunicipalityClickRef.current = onMunicipalityClick;
 
   const loadWardsIfNeeded = useCallback(() => {
     const wLayer = wardLayerRef.current;
@@ -198,32 +201,31 @@ export function useGeoBoundaries({
       mLayer.revertStyle();
     });
 
-    // Click handler for municipalities
-    if (onMunicipalityClick) {
-      mLayer.addListener(
-        "click",
-        (event: google.maps.Data.MouseEvent) => {
-          const name = event.feature.getProperty("NAME") as string;
-          if (name) {
-            onMunicipalityClick(name);
-          }
-        },
-      );
-      // Make municipalities clickable
-      mLayer.setStyle((feature) => {
-        const name = feature.getProperty("NAME") as string;
-        const color = MUNICIPALITY_COLORS[name] || "#3b82f6";
-        return {
-          clickable: true,
-          strokeColor: "#1e40af",
-          strokeWeight: 2,
-          strokeOpacity: 0.8,
-          fillColor: color,
-          fillOpacity: 0,
-          cursor: "pointer",
-        };
-      });
-    }
+    // Click handler for municipalities (always add, use ref for callback)
+    mLayer.addListener(
+      "click",
+      (event: google.maps.Data.MouseEvent) => {
+        const name = event.feature.getProperty("NAME") as string;
+        console.log("Municipality clicked:", name);
+        if (name && onMunicipalityClickRef.current) {
+          onMunicipalityClickRef.current(name);
+        }
+      },
+    );
+    // Make municipalities clickable
+    mLayer.setStyle((feature) => {
+      const name = feature.getProperty("NAME") as string;
+      const color = MUNICIPALITY_COLORS[name] || "#3b82f6";
+      return {
+        clickable: true,
+        strokeColor: "#1e40af",
+        strokeWeight: 2,
+        strokeOpacity: 0.8,
+        fillColor: color,
+        fillOpacity: 0,
+        cursor: "pointer",
+      };
+    });
 
     // Hover interactions for wards
     wLayer.addListener(

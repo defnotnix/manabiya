@@ -1,7 +1,7 @@
 "use client";
 
-import { MapViewPage } from "@/modules/map-view";
+import { MapViewPage, NewPage } from "@/modules/map-view";
 
 export default function AdminHomePage() {
-  return <MapViewPage />;
+  return <NewPage />;
 }

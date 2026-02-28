@@ -9,7 +9,7 @@ export const LIBRARIES: ("places" | "geometry" | "visualization")[] = [
 export const GORKHA_1_CENTER = { lat: 28.0, lng: 84.63 };
 export const DEFAULT_ZOOM = 12;
 
-// GeoJSON municipality name → API municipality ID
+// GeoJSON municipality name → API municipality ID (legacy - may be outdated)
 export const MUNICIPALITY_NAME_TO_ID: Record<string, number> = {
   Aarughat: 110,
   Arughat: 110,
@@ -23,7 +23,7 @@ export const MUNICIPALITY_NAME_TO_ID: Record<string, number> = {
   "Sahid Lakhan": 170,
 };
 
-// API municipality ID → GeoJSON name (uses first/canonical name per ID)
+// API municipality ID → GeoJSON name (legacy - may be outdated)
 export const MUNICIPALITY_ID_TO_NAME: Record<number, string> = {
   110: "Aarughat",
   121: "Gandaki",
@@ -32,6 +32,31 @@ export const MUNICIPALITY_ID_TO_NAME: Record<number, string> = {
   153: "Dharche",
   161: "Bhimsen",
   170: "Sahid Lakhan",
+};
+
+// Nepali display name → GeoJSON English name
+export const NEPALI_TO_GEOJSON_NAME: Record<string, string> = {
+  "आरूघाट गाउँपालिका": "Aarughat",
+  "गण्डकी गाउँपालिका": "Gandaki",
+  "गोरखा नगरपालिका": "Gorkha",
+  "चुमनुव्री गाउँपालिका": "Chumnuwri",
+  "धार्चे गाउँपालिका": "Dharche",
+  "भिमसेनथापा गाउँपालिका": "Bhimsen",
+  "शहिद लखन गाउँपालिका": "Sahid Lakhan",
+};
+
+// GeoJSON English name → Nepali display name (reverse lookup)
+export const GEOJSON_TO_NEPALI_NAME: Record<string, string> = {
+  "Aarughat": "आरूघाट गाउँपालिका",
+  "Arughat": "आरूघाट गाउँपालिका",
+  "Gandaki": "गण्डकी गाउँपालिका",
+  "Gorkha": "गोरखा नगरपालिका",
+  "Chumnuwri": "चुमनुव्री गाउँपालिका",
+  "Chumanuvri": "चुमनुव्री गाउँपालिका",
+  "Dharche": "धार्चे गाउँपालिका",
+  "Bhimsen": "भिमसेनथापा गाउँपालिका",
+  "Bhimasenathapa": "भिमसेनथापा गाउँपालिका",
+  "Sahid Lakhan": "शहिद लखन गाउँपालिका",
 };
 
 export const MAP_STYLES_NO_LABELS: google.maps.MapTypeStyle[] = [
