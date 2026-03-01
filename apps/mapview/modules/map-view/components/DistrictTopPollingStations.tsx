@@ -166,6 +166,8 @@ export function DistrictTopPollingStations({
               };
 
               const name =
+                station.place_name_ne ||
+                station.place_name_en ||
                 station.booth_name_ne ||
                 station.booth_name_en ||
                 `Station #${idx + 1}`;

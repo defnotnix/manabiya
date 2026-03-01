@@ -21,6 +21,13 @@ const TOP_10_COLORS = [
     "#D84315", // 10 - Deep orange
 ];
 
+// Security priority colors
+const SECURITY_COLORS: Record<string, string> = {
+    RED: "#dc2626",
+    YELLOW: "#eab308",
+    GREEN: "#16a34a",
+};
+
 interface Municipality {
     id: number;
     display_name?: string;
@@ -45,12 +52,15 @@ interface MapCanvasProps {
     onMapClick?: (latLng: google.maps.LatLngLiteral) => void;
     selectedMunicipality?: string | null;
     municipalities?: Municipality[];
-    onMunicipalityClick?: (municipalityName: string) => void;
     onResetRef?: React.MutableRefObject<(() => void) | null>;
+    mapRefCallback?: React.MutableRefObject<google.maps.Map | null>;
+    onPollingStationClick?: (station: PollingStation) => void;
     ashrabMode?: boolean;
     ashrabLocations?: AshrabLocation[];
     pollingStations?: PollingStation[];
     heatmapMode?: boolean;
+    securityMode?: boolean;
+    rankingMode?: boolean;
 }
 
 export function MapCanvas({
@@ -60,12 +70,15 @@ export function MapCanvas({
     onMapClick,
     selectedMunicipality,
     municipalities = [],
-    onMunicipalityClick,
     onResetRef,
+    mapRefCallback,
+    onPollingStationClick,
     ashrabMode = false,
     ashrabLocations = [],
     pollingStations = [],
     heatmapMode = false,
+    securityMode = false,
+    rankingMode = false,
 }: MapCanvasProps) {
     const initialCenter = useRef(GORKHA_1_CENTER);
     const mapRef = useRef<google.maps.Map | null>(null);
@@ -91,16 +104,28 @@ export function MapCanvas({
         return new Map(top10.map((s, idx) => [s.id, idx]));
     }, [pollingStations]);
 
-    // Debug: log polling stations
+    // Sync selectedPollingStation with latest data from pollingStations
     useEffect(() => {
-        console.log("MapCanvas received pollingStations:", pollingStations);
-        console.log("Stations with coords:", pollingStations.filter(ps => ps.latitude && ps.longitude).length);
-    }, [pollingStations]);
+        if (selectedPollingStation) {
+            const updated = pollingStations.find(ps => ps.id === selectedPollingStation.id);
+            if (updated) {
+                // Update if the reports data changed (candidates, etc.)
+                const oldReports = JSON.stringify(selectedPollingStation.reports || []);
+                const newReports = JSON.stringify(updated.reports || []);
+                if (oldReports !== newReports) {
+                    setSelectedPollingStation(updated);
+                }
+            }
+        }
+    }, [pollingStations]); // Only depend on pollingStations to avoid loops
 
     const onMapLoad = useCallback((map: google.maps.Map) => {
         mapRef.current = map;
+        if (mapRefCallback) {
+            mapRefCallback.current = map;
+        }
         setMapLoaded(true);
-    }, []);
+    }, [mapRefCallback]);
 
     // Smooth zoom helper - animates zoom transitions
     const smoothZoomTo = useCallback((
@@ -165,7 +190,6 @@ export function MapCanvas({
     useGeoBoundaries({
         map: mapLoaded ? mapRef.current : null,
         selectedMunicipalityName,
-        onMunicipalityClick,
     });
 
     const handleMapClick = useCallback(
@@ -259,9 +283,9 @@ export function MapCanvas({
             )}
 
             {/* Ashrab mode markers */}
-            {ashrabMode && ashrabMarkersData.map((location) => (
+            {ashrabMode && ashrabMarkersData.map((location, idx) => (
                 <Marker
-                    key={location.id}
+                    key={`${location.id}-${idx}`}
                     position={{ lat: location.geo.lat!, lng: location.geo.lng! }}
                     onClick={() => {
                         setSelectedAshrabLocation(location);
@@ -349,8 +373,58 @@ export function MapCanvas({
             {pollingStations.filter(ps => ps.latitude && ps.longitude).map((station) => {
                 const rank = top10Map.get(station.id);
                 const isTop10 = rank !== undefined;
-                const color = isTop10 ? TOP_10_COLORS[rank] : "#1e40af";
-                const size = isTop10 ? 36 : 28;
+
+                // Get security priority from reports (use latest report)
+                const latestReport = station.reports?.[0];
+                const priority = latestReport?.priority;
+                const hasSecurityData = securityMode && priority;
+                const showRanking = rankingMode && isTop10;
+
+                // Determine color based on mode
+                let color: string;
+                let size: number;
+                let zIndex: number;
+
+                if (hasSecurityData) {
+                    // Security colors always take priority when there's security data
+                    color = SECURITY_COLORS[priority] || "#6b7280";
+                    size = priority === "RED" ? 36 : priority === "YELLOW" ? 32 : 28;
+                    zIndex = priority === "RED" ? 1000 : priority === "YELLOW" ? 500 : 1;
+                } else if (showRanking) {
+                    // Top 10 ranking colors (only when rankingMode is on)
+                    color = TOP_10_COLORS[rank];
+                    size = 36;
+                    zIndex = 1000 - rank;
+                } else {
+                    // Default color
+                    color = "#1e40af";
+                    size = 28;
+                    zIndex = 1;
+                }
+
+                // Security mode marker with shield icon
+                const securityMarkerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 36 36">
+                    <path fill="${color}" stroke="#fff" stroke-width="2" d="M18 3C12.48 3 8 7.48 8 13c0 7.88 10 20 10 20s10-12.12 10-20c0-5.52-4.48-10-10-10z"/>
+                    <circle cx="18" cy="13" r="8" fill="#fff"/>
+                    <path fill="${color}" d="M18 7c-3.3 0-6 2.7-6 6 0 3.3 6 9 6 9s6-5.7 6-9c0-3.3-2.7-6-6-6zm0 8.5c-1.4 0-2.5-1.1-2.5-2.5s1.1-2.5 2.5-2.5 2.5 1.1 2.5 2.5-1.1 2.5-2.5 2.5z"/>
+                </svg>`;
+
+                const top10MarkerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 36 36">
+                    <path fill="${color}" stroke="#fff" stroke-width="2" d="M18 3C12.48 3 8 7.48 8 13c0 7.88 10 20 10 20s10-12.12 10-20c0-5.52-4.48-10-10-10z"/>
+                    <circle cx="18" cy="13" r="8" fill="#fff"/>
+                    <text x="18" y="17" text-anchor="middle" font-size="11" font-weight="bold" fill="${color}">#${(rank ?? 0) + 1}</text>
+                </svg>`;
+
+                const defaultMarkerSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
+                    <path fill="${color}" stroke="#fff" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
+                    <circle cx="12" cy="9" r="3" fill="#fff"/>
+                </svg>`;
+
+                const markerSvg = hasSecurityData
+                    ? securityMarkerSvg
+                    : showRanking
+                        ? top10MarkerSvg
+                        : defaultMarkerSvg;
 
                 return (
                     <Marker
@@ -360,22 +434,13 @@ export function MapCanvas({
                             setSelectedPollingStation(station);
                             // Smooth zoom to the station location
                             smoothZoomTo({ lat: station.latitude, lng: station.longitude }, 17);
+                            // Notify parent to update side panel selection
+                            onPollingStationClick?.(station);
                         }}
                         title={station.place_name_ne}
-                        zIndex={isTop10 ? 1000 - rank : 1}
+                        zIndex={zIndex}
                         icon={{
-                            url: "data:image/svg+xml," + encodeURIComponent(
-                                isTop10
-                                    ? `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 36 36">
-                                        <path fill="${color}" stroke="#fff" stroke-width="2" d="M18 3C12.48 3 8 7.48 8 13c0 7.88 10 20 10 20s10-12.12 10-20c0-5.52-4.48-10-10-10z"/>
-                                        <circle cx="18" cy="13" r="8" fill="#fff"/>
-                                        <text x="18" y="17" text-anchor="middle" font-size="11" font-weight="bold" fill="${color}">#${rank + 1}</text>
-                                    </svg>`
-                                    : `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24">
-                                        <path fill="${color}" stroke="#fff" stroke-width="1.5" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/>
-                                        <circle cx="12" cy="9" r="3" fill="#fff"/>
-                                    </svg>`
-                            ),
+                            url: "data:image/svg+xml," + encodeURIComponent(markerSvg),
                             scaledSize: new google.maps.Size(size, size),
                             anchor: new google.maps.Point(size / 2, size),
                         }}
@@ -387,13 +452,34 @@ export function MapCanvas({
             {selectedPollingStation && selectedPollingStation.latitude && selectedPollingStation.longitude && (() => {
                 const selectedRank = top10Map.get(selectedPollingStation.id);
                 const isSelectedTop10 = selectedRank !== undefined;
+                const selectedReport = selectedPollingStation.reports?.[0];
+                const selectedPriority = selectedReport?.priority;
+                const priorityColor = selectedPriority ? SECURITY_COLORS[selectedPriority] : null;
+
                 return (
                     <InfoWindow
                         position={{ lat: selectedPollingStation.latitude, lng: selectedPollingStation.longitude }}
                         onCloseClick={() => setSelectedPollingStation(null)}
                     >
                         <div style={{ maxWidth: 300, fontSize: 12, lineHeight: 1.5 }}>
-                            {isSelectedTop10 && (
+                            {/* Security Priority Badge */}
+                            {securityMode && selectedPriority && (
+                                <div style={{
+                                    display: "inline-block",
+                                    padding: "4px 12px",
+                                    backgroundColor: priorityColor || "#6b7280",
+                                    color: "#fff",
+                                    borderRadius: 4,
+                                    fontWeight: "bold",
+                                    fontSize: 12,
+                                    marginBottom: 8
+                                }}>
+                                    {selectedPriority} Priority
+                                </div>
+                            )}
+
+                            {/* Top 10 Badge (only when ranking mode is on and no security data) */}
+                            {rankingMode && isSelectedTop10 && !selectedPriority && (
                                 <div style={{
                                     display: "inline-block",
                                     padding: "2px 8px",
@@ -407,13 +493,58 @@ export function MapCanvas({
                                     #{selectedRank + 1} Top Station
                                 </div>
                             )}
-                            <h4 style={{ margin: "0 0 8px", fontSize: 14, color: isSelectedTop10 ? TOP_10_COLORS[selectedRank] : "#1e40af" }}>
+
+                            <h4 style={{
+                                margin: "0 0 8px",
+                                fontSize: 14,
+                                color: priorityColor
+                                    ? priorityColor
+                                    : (rankingMode && isSelectedTop10)
+                                        ? TOP_10_COLORS[selectedRank]
+                                        : "#1e40af"
+                            }}>
                                 {selectedPollingStation.place_name_ne}
                             </h4>
                             {selectedPollingStation.place_name_en && (
                                 <p style={{ margin: "0 0 8px", color: "#666", fontStyle: "italic" }}>
                                     {selectedPollingStation.place_name_en}
                                 </p>
+                            )}
+
+                            {/* Security Report Details */}
+                            {securityMode && selectedReport && (
+                                <div style={{
+                                    borderTop: "1px solid #e5e7eb",
+                                    paddingTop: 8,
+                                    marginTop: 8,
+                                    backgroundColor: `${priorityColor}10`,
+                                    padding: 8,
+                                    borderRadius: 4,
+                                    marginBottom: 8
+                                }}>
+                                    <p style={{ margin: "0 0 4px", fontWeight: "bold", color: priorityColor || "#333" }}>
+                                        Security Report ({selectedReport.year})
+                                    </p>
+                                    {selectedReport.remarks && (
+                                        <p style={{ margin: "4px 0", color: "#666" }}>
+                                            {selectedReport.remarks}
+                                        </p>
+                                    )}
+                                    {selectedReport.booth_money > 0 && (
+                                        <p style={{ margin: "4px 0" }}>
+                                            <strong>Booth Money:</strong> Rs. {selectedReport.booth_money.toLocaleString()}
+                                        </p>
+                                    )}
+                                    {/* Candidates Summary */}
+                                    <p style={{ margin: "4px 0" }}>
+                                        <strong>Candidates:</strong> {selectedReport.candidates?.length || 0}
+                                        {selectedReport.candidates && selectedReport.candidates.length > 0 && (
+                                            <span style={{ color: "#666", marginLeft: 4 }}>
+                                                ({selectedReport.candidates.filter(c => c.accepted).length} accepted)
+                                            </span>
+                                        )}
+                                    </p>
+                                </div>
                             )}
 
                             {selectedPollingStation.voter_population && (

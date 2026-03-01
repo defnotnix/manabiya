@@ -4,7 +4,6 @@ interface UseGeoBoundariesOptions {
   map: google.maps.Map | null;
   enabled?: boolean;
   selectedMunicipalityName?: string | null;
-  onMunicipalityClick?: (municipalityName: string) => void;
 }
 
 interface UseGeoBoundariesReturn {
@@ -35,7 +34,6 @@ export function useGeoBoundaries({
   map,
   enabled = true,
   selectedMunicipalityName,
-  onMunicipalityClick,
 }: UseGeoBoundariesOptions): UseGeoBoundariesReturn {
   const [isLoading, setIsLoading] = useState(false);
   const [activeLayer, setActiveLayer] = useState<
@@ -54,9 +52,6 @@ export function useGeoBoundaries({
   // Use refs for callbacks to avoid dependency cycles
   const selectedMuniRef = useRef(selectedMunicipalityName);
   selectedMuniRef.current = selectedMunicipalityName;
-
-  const onMunicipalityClickRef = useRef(onMunicipalityClick);
-  onMunicipalityClickRef.current = onMunicipalityClick;
 
   const loadWardsIfNeeded = useCallback(() => {
     const wLayer = wardLayerRef.current;
@@ -87,35 +82,34 @@ export function useGeoBoundaries({
     (zoom: number) => {
       if (!map || !boundariesEnabled) return;
 
+      const cLayer = constituencyLayerRef.current;
+      const mLayer = municipalityLayerRef.current;
+      const wLayer = wardLayerRef.current;
+
+      // Always keep constituency outline visible
+      cLayer?.setMap(map);
+
       // When a municipality is selected, force ward layer visible
       // (read from ref to avoid dependency cycle)
       if (selectedMuniRef.current) {
-        constituencyLayerRef.current?.setMap(null);
-        municipalityLayerRef.current?.setMap(null);
+        mLayer?.setMap(null);
         loadWardsIfNeeded();
         if (wardsLoadedRef.current) {
-          wardLayerRef.current?.setMap(map);
+          wLayer?.setMap(map);
         }
         setActiveLayer("wards");
         return;
       }
 
-      const cLayer = constituencyLayerRef.current;
-      const mLayer = municipalityLayerRef.current;
-      const wLayer = wardLayerRef.current;
-
       if (zoom <= ZOOM_THRESHOLDS.CONSTITUENCY_MAX) {
-        cLayer?.setMap(map);
         mLayer?.setMap(null);
         wLayer?.setMap(null);
         setActiveLayer("constituency");
       } else if (zoom <= ZOOM_THRESHOLDS.MUNICIPALITY_MAX) {
-        cLayer?.setMap(null);
         mLayer?.setMap(map);
         wLayer?.setMap(null);
         setActiveLayer("municipalities");
       } else {
-        cLayer?.setMap(null);
         mLayer?.setMap(null);
         setActiveLayer("wards");
         loadWardsIfNeeded();
@@ -149,85 +143,62 @@ export function useGeoBoundaries({
     municipalityLayerRef.current = mLayer;
     wardLayerRef.current = wLayer;
 
-    // Style: constituency outline
+    // Style: constituency outline (clickable to capture and block clicks)
     cLayer.setStyle({
-      clickable: false,
+      clickable: true,
+      cursor: "default",
       strokeColor: "#1e40af",
       strokeWeight: 3,
       strokeOpacity: 0.9,
       fillColor: "#3b82f6",
       fillOpacity: 0,
+      zIndex: 1,
     });
 
-    // Style: municipalities with per-feature colors
-    mLayer.setStyle((feature) => {
-      const name = feature.getProperty("NAME") as string;
-      const color = MUNICIPALITY_COLORS[name] || "#3b82f6";
-      return {
-        clickable: false,
-        strokeColor: "#1e40af",
-        strokeWeight: 2,
-        strokeOpacity: 0.8,
-        fillColor: color,
-        fillOpacity: 0,
-      };
-    });
-
-    // Style: wards (default — no municipality filter)
-    wLayer.setStyle((feature) => {
-      const muni = feature.getProperty("MUNICIPALITY") as string;
-      const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
-      return {
-        clickable: false,
-        strokeColor: "#6b7280",
-        strokeWeight: 1,
-        strokeOpacity: 0.7,
-        fillColor: color,
-        fillOpacity: 0,
-      };
-    });
-
-    // Hover interactions for municipalities
-    mLayer.addListener(
-      "mouseover",
-      (event: google.maps.Data.MouseEvent) => {
-        mLayer.overrideStyle(event.feature, {
-          strokeWeight: 4,
-          fillOpacity: 0.2,
-        });
-      },
-    );
-    mLayer.addListener("mouseout", () => {
-      mLayer.revertStyle();
-    });
-
-    // Click handler for municipalities (always add, use ref for callback)
-    mLayer.addListener(
-      "click",
-      (event: google.maps.Data.MouseEvent) => {
-        const name = event.feature.getProperty("NAME") as string;
-        console.log("Municipality clicked:", name);
-        if (name && onMunicipalityClickRef.current) {
-          onMunicipalityClickRef.current(name);
-        }
-      },
-    );
-    // Make municipalities clickable
+    // Style: municipalities with per-feature colors (clickable to capture and block clicks)
     mLayer.setStyle((feature) => {
       const name = feature.getProperty("NAME") as string;
       const color = MUNICIPALITY_COLORS[name] || "#3b82f6";
       return {
         clickable: true,
+        cursor: "default",
         strokeColor: "#1e40af",
         strokeWeight: 2,
         strokeOpacity: 0.8,
         fillColor: color,
         fillOpacity: 0,
-        cursor: "pointer",
+        zIndex: 2,
       };
     });
 
-    // Hover interactions for wards
+    // Style: wards (clickable to capture and block clicks)
+    wLayer.setStyle((feature) => {
+      const muni = feature.getProperty("MUNICIPALITY") as string;
+      const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
+      return {
+        clickable: true,
+        cursor: "default",
+        strokeColor: "#6b7280",
+        strokeWeight: 1,
+        strokeOpacity: 0.7,
+        fillColor: color,
+        fillOpacity: 0,
+        zIndex: 3,
+      };
+    });
+
+    // Explicitly block all click events on all layers - do nothing, no selection
+    cLayer.addListener("click", (e: google.maps.Data.MouseEvent) => {
+      e.stop();
+    });
+    mLayer.addListener("click", (e: google.maps.Data.MouseEvent) => {
+      e.stop();
+    });
+    wLayer.addListener("click", (e: google.maps.Data.MouseEvent) => {
+      e.stop();
+    });
+
+    // Hover interactions for wards (visual only)
     wLayer.addListener(
       "mouseover",
       (event: google.maps.Data.MouseEvent) => {
@@ -292,11 +263,13 @@ export function useGeoBoundaries({
     const wLayer = wardLayerRef.current;
     if (!wLayer) return;
 
+    // Always keep constituency outline visible
+    constituencyLayerRef.current?.setMap(map);
+
     if (selectedMunicipalityName) {
       // Load wards if not already loaded
       loadWardsIfNeeded();
-      // Hide other layers
-      constituencyLayerRef.current?.setMap(null);
+      // Hide municipality layer but keep constituency
       municipalityLayerRef.current?.setMap(null);
       // Re-apply style to filter by selected municipality
       wLayer.setStyle((feature) => {
@@ -306,12 +279,14 @@ export function useGeoBoundaries({
           return { visible: false };
         }
         return {
-          clickable: false,
+          clickable: true,
+          cursor: "default",
           strokeColor: "#6b7280",
           strokeWeight: 1.5,
           strokeOpacity: 0.8,
           fillColor: color,
           fillOpacity: 0.1,
+          zIndex: 3,
         };
       });
       if (wardsLoadedRef.current) {
@@ -324,12 +299,14 @@ export function useGeoBoundaries({
         const muni = feature.getProperty("MUNICIPALITY") as string;
         const color = MUNICIPALITY_COLORS[muni] || "#6b7280";
         return {
-          clickable: false,
+          clickable: true,
+          cursor: "default",
           strokeColor: "#6b7280",
           strokeWeight: 1,
           strokeOpacity: 0.7,
           fillColor: color,
           fillOpacity: 0,
+          zIndex: 3,
         };
       });
       const zoom = map.getZoom();

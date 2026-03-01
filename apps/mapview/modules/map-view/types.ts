@@ -9,6 +9,31 @@ export interface GeoUnit {
   ward_no?: number | null;
 }
 
+export type SecurityPriority = "RED" | "YELLOW" | "GREEN";
+
+export interface BoothReportCandidate {
+  id?: number;
+  report?: number;
+  name: string;
+  phone?: string;
+  accepted: boolean;
+  remarks?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface BoothReport {
+  id: number;
+  polling_station_id: number;
+  year: number;
+  priority: SecurityPriority;
+  remarks: string;
+  booth_money: number;
+  candidates: BoothReportCandidate[];
+  created_at: string;
+  updated_at: string;
+}
+
 export interface PollingStation {
   id: number;
   station_code: string | null;
@@ -32,6 +57,7 @@ export interface PollingStation {
   latitude: number;
   longitude: number;
   voter_population?: number;
+  reports?: BoothReport[];
 }
 
 export function formatDisplayName(unit: GeoUnit): string {

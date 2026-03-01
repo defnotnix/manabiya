@@ -15,7 +15,8 @@ import {
   Button,
 } from "@mantine/core";
 import { Carousel } from "@mantine/carousel";
-import { BuildingsIcon, UsersIcon } from "@phosphor-icons/react";
+import { BuildingsIcon, UsersIcon, ShieldWarningIcon, UserPlusIcon } from "@phosphor-icons/react";
+import { ActionIcon } from "@mantine/core";
 import { TopPollingStations } from "./TopPollingStations";
 import { DistrictTopPollingStations } from "./DistrictTopPollingStations";
 import type { ReportLevel, GeoUnit, PollingStation } from "../types";
@@ -31,6 +32,7 @@ interface ExpandedSheetContentProps {
 
   selectedMunicipality: string | null;
   selectedWard: string | null;
+  selectedBooth: string | null;
 
   municipalities: GeoUnit[] | undefined;
 
@@ -53,6 +55,7 @@ interface ExpandedSheetContentProps {
 
   onDistrictStationClick: (station: any) => void;
   onMunicipalityStationClick: (station: any) => void;
+  onManageCandidates?: (station: PollingStation) => void;
 }
 
 export function ExpandedSheetContent({
@@ -62,6 +65,7 @@ export function ExpandedSheetContent({
   reportError,
   selectedMunicipality,
   selectedWard,
+  selectedBooth,
   municipalities,
   wards,
   loadingWards,
@@ -77,6 +81,7 @@ export function ExpandedSheetContent({
   onBack,
   onDistrictStationClick,
   onMunicipalityStationClick,
+  onManageCandidates,
 }: ExpandedSheetContentProps) {
   const [showAllBooths, setShowAllBooths] = useState(false);
 
@@ -109,60 +114,7 @@ export function ExpandedSheetContent({
       )}
       {!loadingReport && !reportError && reportData && (
         <>
-          {/* ── Dashboard / District level: Municipality selector ── */}
-          {(reportLevel === "dashboard" || reportLevel === "district") &&
-            municipalities &&
-            municipalities.length > 0 && (
-              <>
-                <Text fw={700} size="md" mb="xs">
-                  Select Municipality
-                </Text>
-                <Text size="xs" c="dimmed" mb="sm">
-                  Tap a municipality to view its report
-                </Text>
-                <Carousel
-                  slideSize="45%"
-                  slideGap="sm"
-                  withControls={false}
-                  styles={{ viewport: { overflow: "visible" } }}
-                >
-                  {municipalities.map((muni) => (
-                    <Carousel.Slide key={muni.id}>
-                      <UnstyledButton
-                        onClick={() => onSelectMunicipality(String(muni.id))}
-                        style={{ width: "100%" }}
-                      >
-                        <Paper
-                          p="sm"
-                          radius="md"
-                          withBorder
-                          style={{
-                            height: 80,
-                            display: "flex",
-                            flexDirection: "column",
-                            justifyContent: "center",
-                            cursor: "pointer",
-                          }}
-                        >
-                          <BuildingsIcon
-                            size={22}
-                            color="#2f9e44"
-                            weight="duotone"
-                            style={{ marginBottom: 6 }}
-                          />
-                          <Text size="xs" fw={500} lineClamp={2} lh={1.3}>
-                            {formatDisplayName(muni)}
-                          </Text>
-                        </Paper>
-                      </UnstyledButton>
-                    </Carousel.Slide>
-                  ))}
-                </Carousel>
-                <Divider my="lg" />
-              </>
-            )}
-
-          {/* ── District level (not dashboard): Top Stations ── */}
+          {/* ── District level: Top Stations ── */}
           {reportLevel === "district" && (
             <>
               <Text fw={700} size="md" mb="xs">
@@ -265,6 +217,13 @@ export function ExpandedSheetContent({
                           : booth.place_name_ne ||
                           booth.place_name_en ||
                           `Booth ${booth.id}`;
+
+                      // Get security priority from reports
+                      const latestReport = booth.reports?.[0];
+                      const priority = latestReport?.priority;
+                      const priorityColor = priority === "RED" ? "red" : priority === "YELLOW" ? "yellow" : priority === "GREEN" ? "green" : undefined;
+                      const isSelected = selectedBooth === String(booth.id);
+
                       return (
                         <UnstyledButton
                           key={booth.id}
@@ -278,6 +237,14 @@ export function ExpandedSheetContent({
                               padding: "10px 12px",
                               cursor: "pointer",
                               transition: "background 0.15s",
+                              backgroundColor: isSelected
+                                ? "rgba(124, 58, 237, 0.1)"
+                                : priority === "RED"
+                                  ? "rgba(220, 38, 38, 0.05)"
+                                  : priority === "YELLOW"
+                                    ? "rgba(234, 179, 8, 0.05)"
+                                    : undefined,
+                              borderLeft: isSelected ? "3px solid #7c3aed" : "3px solid transparent",
                             }}
                           >
                             <Group justify="space-between" wrap="nowrap" gap="sm">
@@ -285,31 +252,56 @@ export function ExpandedSheetContent({
                                 <Badge
                                   size="md"
                                   variant="filled"
-                                  color="violet"
+                                  color={priorityColor || "violet"}
                                   circle
                                   styles={{ root: { minWidth: 24, height: 24, flexShrink: 0 } }}
                                 >
                                   {idx + 1}
                                 </Badge>
-                                <Text
-                                  size="sm"
-                                  fw={600}
-                                  lineClamp={1}
-                                  lh={1.4}
-                                  style={{ flex: 1, minWidth: 0 }}
-                                >
-                                  {name}
-                                </Text>
+                                <Stack gap={0} style={{ flex: 1, minWidth: 0 }}>
+                                  <Text
+                                    size="sm"
+                                    fw={600}
+                                    lineClamp={1}
+                                    lh={1.4}
+                                  >
+                                    {name}
+                                  </Text>
+                                  {priority && (
+                                    <Group gap={4}>
+                                      <ShieldWarningIcon size={12} color={priorityColor === "red" ? "#dc2626" : priorityColor === "yellow" ? "#eab308" : "#16a34a"} weight="fill" />
+                                      <Text size="xs" c={priorityColor} fw={500}>
+                                        {priority} Priority
+                                      </Text>
+                                    </Group>
+                                  )}
+                                </Stack>
                               </Group>
 
-                              {booth.voter_population != null && (
-                                <Group gap={4} wrap="nowrap" style={{ flexShrink: 0 }}>
-                                  <UsersIcon size={13} color="#228be6" />
-                                  <Text size="xs" fw={600}>
-                                    {booth.voter_population.toLocaleString()}
-                                  </Text>
-                                </Group>
-                              )}
+                              <Group gap={8} wrap="nowrap" style={{ flexShrink: 0 }}>
+                                {booth.voter_population != null && (
+                                  <Group gap={4} wrap="nowrap">
+                                    <UsersIcon size={13} color="#228be6" />
+                                    <Text size="xs" fw={600}>
+                                      {booth.voter_population.toLocaleString()}
+                                    </Text>
+                                  </Group>
+                                )}
+                                {latestReport && onManageCandidates && (
+                                  <ActionIcon
+                                    size="sm"
+                                    variant="light"
+                                    color="violet"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onManageCandidates(booth);
+                                    }}
+                                    title="Manage Candidates"
+                                  >
+                                    <UserPlusIcon size={14} />
+                                  </ActionIcon>
+                                )}
+                              </Group>
                             </Group>
                           </Box>
                         </UnstyledButton>

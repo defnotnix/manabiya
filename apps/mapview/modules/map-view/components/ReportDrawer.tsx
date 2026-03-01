@@ -39,6 +39,7 @@ interface ReportDrawerProps {
   // Location data
   selectedMunicipality: string | null;
   selectedWard: string | null;
+  selectedBooth: string | null;
   municipalities: GeoUnit[] | undefined;
   wards: GeoUnit[] | undefined;
   loadingWards: boolean;
@@ -71,6 +72,7 @@ export function ReportDrawer({
   reportSummary,
   selectedMunicipality,
   selectedWard,
+  selectedBooth,
   municipalities,
   wards,
   loadingWards,
@@ -145,6 +147,7 @@ export function ReportDrawer({
               reportError={reportError}
               selectedMunicipality={selectedMunicipality}
               selectedWard={selectedWard}
+              selectedBooth={selectedBooth}
               municipalities={municipalities}
               wards={wards}
               loadingWards={loadingWards}

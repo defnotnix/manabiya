@@ -24,7 +24,7 @@ export const GEO_UNIT_API = {
 };
 
 export const POLLING_STATIONS_API = {
-  getPollingStations: async (params?: { ward?: number; place?: number; search?: string }) => {
+  getPollingStations: async (params?: { ward?: number; place?: number; municipality?: number; search?: string }) => {
     return moduleApiCall.getRecords({ endpoint: POLLING_STATIONS_ENDPOINT, params });
   },
 };

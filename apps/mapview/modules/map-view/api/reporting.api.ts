@@ -151,4 +151,51 @@ export const REPORTING_API = {
       params,
     });
   },
+
+  // Polling Station Report management (includes candidates)
+  createPollingStationReport: async (data: {
+    polling_station_id: number;
+    year?: number;
+    priority?: string;
+    remarks?: string;
+    booth_money?: number;
+    candidates?: Array<{
+      name: string;
+      phone?: string;
+      accepted: boolean;
+      remarks?: string;
+    }>;
+  }) => {
+    return moduleApiCall.createRecord({
+      endpoint: "/api/elections/polling-station-reports/",
+      body: {
+        ...data,
+        year: data.year || new Date().getFullYear(),
+        priority: data.priority || "GREEN",
+        booth_money: data.booth_money || 0,
+      },
+    });
+  },
+
+  updatePollingStationReport: async (
+    reportId: number,
+    data: {
+      priority?: string;
+      remarks?: string;
+      booth_money?: string;
+      candidates?: Array<{
+        id?: number;
+        name: string;
+        phone?: string;
+        accepted: boolean;
+        remarks?: string;
+      }>;
+    }
+  ) => {
+    return moduleApiCall.editRecord({
+      endpoint: "/api/elections/polling-station-reports/",
+      id: reportId,
+      body: data,
+    });
+  },
 };
