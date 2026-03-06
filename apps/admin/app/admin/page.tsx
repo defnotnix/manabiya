@@ -1,7 +1,2 @@
-"use client";
-
-import { MapViewPage } from "@/modules/admin/map-view";
-
-export default function AdminHomePage() {
-  return <MapViewPage />;
-}
+import { ModuleAdminHome } from "@/modules/admin/home";
+export default ModuleAdminHome;
