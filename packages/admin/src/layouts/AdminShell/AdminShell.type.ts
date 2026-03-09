@@ -1,6 +1,10 @@
 import { JSX, ReactNode } from "react";
 import { Icon } from "@phosphor-icons/react";
-import { MantineColor, TreeNodeData } from "@mantine/core";
+import {
+  AppShellAsideConfiguration,
+  MantineColor,
+  TreeNodeData,
+} from "@mantine/core";
 import { NavConfig } from "./AdminShell.nav.types";
 
 type PropAdminNavItemLink = {
@@ -64,11 +68,14 @@ type PropAdminNavStyles = {
 type PropAdminNavGeneral = {
   classNames?: any;
   children: ReactNode;
+  aside?: ReactNode;
+  asideProps?: AppShellAsideConfiguration;
 };
 
 export type PropAdminNavLayout = PropAdminNavStyles &
   PropAdminNavGeneral &
   PropAdminNavSideNav;
+
 export type {
   PropAdminNavItems,
   PropAdminNavItemLink,

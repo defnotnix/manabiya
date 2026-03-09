@@ -1,0 +1,226 @@
+"use client";
+
+import { useContext } from "react";
+//mantine
+import {
+  Grid,
+  Group,
+  Paper,
+  SimpleGrid,
+  Space,
+  Stack,
+  Text,
+} from "@mantine/core";
+//pageprops
+import { configPageProps } from "../../../templateprops";
+//context
+import { ContextEditor } from "@/components/layout/editor/editor.context";
+//style
+import classesTemplate from "../template.module.css";
+import classes from "./certificate.module.css";
+import dayjs from "dayjs";
+import { FormHandler } from "@/components/framework/FormHandler";
+import { WodaMissingBanner } from "../../../woda/WodaMissingBanner";
+//templateprops
+
+export function TemplateKarnaliCertificate() {
+  // * DEFINITION
+  const form = FormHandler.useForm();
+
+  // * PRE STATES
+
+  // * STATES
+
+  // * CONTEXT
+
+  const { state, dispatch } = useContext(ContextEditor.Context);
+  const { details } = state;
+
+  // * PRELOAD
+
+  // * FUNCTIONS
+
+  // * COMPONENTS
+
+  // * MISC
+
+  const _defaultTextProps = {
+    size: "15px",
+    lh: ".17in",
+  };
+
+  const applicantDetails: any[] = [
+    {
+      label: "Account Number",
+      value: form.values?.statement_account_no,
+    },
+    {
+      label: "Account Type",
+      value: form.values?.statement_account_type,
+    },
+    {
+      label: "Interest Rate",
+      value: `${form.values?.statement_interest}%`,
+    },
+    {
+      label: "Tax Rate",
+      value: `${form.values?.statement_tax}%`,
+    },
+
+    {
+      label: "Account Holder's Name",
+      value: form.values?.statement_account_holder,
+    },
+    {
+      label: "Account Holder's Address",
+      value: form.values?.statement_account_address,
+    },
+
+    {
+      label: "Available Balance",
+      value: form.values?.statement_total_balance,
+    },
+    {
+      label: "Amount in Words",
+      value: form.values?.statement_total_balance_words,
+    },
+    {
+      label: "Equivalent to",
+      value:
+        "US$ " +
+        (
+          form.values?.statement_balance_total_number /
+          form.values?.statement_usdrate
+        ).toLocaleString(undefined, {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }),
+    },
+    {
+      label: "Exchange Rate",
+      value: `1 US$ = NPR. ${form.values?.statement_usdrate?.toFixed(
+        2
+      )} (Source: www.nrb.org.np)`,
+    },
+  ];
+
+  return (
+    <>
+            <WodaMissingBanner
+        fields={[
+          { key: "statement_ref_no", label: "Reference Number" },
+          { key: "statement_end_date", label: "End Date" },
+          { key: "statement_account_holder", label: "Account Holder Name" },
+          { key: "statement_account_address", label: "Account Address" },
+          { key: "statement_account_no", label: "Account Number" },
+          { key: "statement_account_type", label: "Account Type" },
+          { key: "statement_total_balance", label: "Total Balance" },
+          { key: "statement_total_balance_words", label: "Balance in Words" },
+          { key: "statement_usdrate", label: "USD Exchange Rate" },
+          { key: "statement_spokesperson", label: "Spokesperson Name" },
+          { key: "statement_spokesperson_post", label: "Spokesperson Post" },
+        ]}
+      />
+      <Paper p="1in" className={classesTemplate.root} {...configPageProps}>
+        <Space h={state?.headerProps?.height + "in" || "1in"} />
+
+        <Group justify="space-between">
+          <Text {..._defaultTextProps}>
+            <b>Ref. No.</b> : {form.values?.statement_ref_no}
+          </Text>
+
+          <Text {..._defaultTextProps}>
+            <b>Date</b> :{" "}
+            {dayjs(form.values?.statement_end_date, "DD/MM/YYYY")
+              .add(1, "day")
+              .format("YYYY/MM/DD")}
+          </Text>
+        </Group>
+
+        <Space h=".5in" />
+
+        <Text
+          {..._defaultTextProps}
+          size="20px"
+          lh=".3in"
+          ta="center"
+          tt="uppercase"
+          fw={700}
+        >
+          BALANCE CERTIFICATE
+          <br /> To Whom it May Concern
+        </Text>
+
+        <Space h=".3in" />
+
+        <Text {..._defaultTextProps} lh=".2in" ta="justify">
+          This is to certify that following person has been operating bank
+          account in our Co-operative.
+          <br />
+          Detail information about the account is as follows:
+        </Text>
+
+        <Space h=".3in" />
+
+        <table className={classes.table}>
+          {applicantDetails?.map((data: any, index: number) => (
+            <tr
+              key={index}
+              style={{
+                height: 20,
+              }}
+            >
+              <td>
+                <Text ta="left" {..._defaultTextProps} w={200}>
+                  {data.label}
+                </Text>
+              </td>
+              <td>
+                <Text ta="left" {..._defaultTextProps} w={40}>
+                  :
+                </Text>
+              </td>
+              <td>
+                <Text {..._defaultTextProps}>{data.value}</Text>
+              </td>
+            </tr>
+          ))}
+        </table>
+
+        <Space h=".5in" />
+
+        <Text {..._defaultTextProps} lh=".2in" ta="justify">
+          This certificate has been issued in reply to the written application
+          of account holder.
+          <br />
+          Conversion of Nepalese Rupees to any foreign currency are regulated
+          through prevailing rules and regulations by Nepal Rastra Bank.
+        </Text>
+
+        <Space h="2in" />
+
+        <Group justify="flex-end">
+          <div>
+            <Group justify="flex-end">
+              <div
+                style={{
+                  display: "block",
+                  width: "200px",
+                  borderBottom: "2px dotted black",
+                  marginBottom: ".01in",
+                }}
+              />
+            </Group>
+
+            <Text {..._defaultTextProps} ta="right" mt=".1in">
+              {form.values?.statement_spokesperson}
+            </Text>
+            <Text {..._defaultTextProps} ta="right">
+              {form.values?.statement_spokesperson_post}
+            </Text>
+          </div>
+        </Group>
+      </Paper>
+    </>
+  );
+}

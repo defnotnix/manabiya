@@ -22,6 +22,8 @@ export function AdminShell({
   softwareInfo,
   onLogout,
   singleNavLayout = false,
+  aside,
+  asideProps
 }: PropAdminNavLayout) {
   // * STATES
 
@@ -43,16 +45,22 @@ export function AdminShell({
       <AppShell
         navbar={{
           width: navbarWidth,
-          breakpoint: "xs",
+          breakpoint: "sm",
           collapsed: { mobile: !opened },
         }}
+        aside={aside ? {
+          breakpoint: "sm",
+          width: 300,
+          ...asideProps
+        } : undefined}
       >
-
         <AppShell.Header hiddenFrom="md">
           <Group h={50} justify="space-between" px="md">
-            <ActionIcon onClick={() => {
-              toggle()
-            }}>
+            <ActionIcon
+              onClick={() => {
+                toggle();
+              }}
+            >
               <ArrowRightIcon />
             </ActionIcon>
           </Group>
@@ -78,8 +86,13 @@ export function AdminShell({
           pt={{
             base: opened ? 0 : 50,
             md: 0,
-          }}>{children}</AppShell.Main>
-      </AppShell>
+          }}
+        >
+          {children}
+        </AppShell.Main>
+
+        {aside}
+      </AppShell >
     </>
   );
 }

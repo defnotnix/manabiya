@@ -12,157 +12,47 @@ import {
   ShieldCheckIcon,
   FlagIcon,
   CheckSquareIcon,
+  UsersIcon,
+  CalendarIcon,
+  KeyIcon,
+  HouseSimpleIcon,
 } from "@phosphor-icons/react";
 import { PropAdminNavItems } from "@settle/admin";
 
 export const navItems: PropAdminNavItems[] = [
   // General Group
   {
-    label: "Map View",
-    icon: MapTrifoldIcon,
+    label: "Quick Access",
+    icon: HouseSimpleIcon,
     value: "/admin",
     description: "Overview",
   },
   {
-    label: "General",
-    icon: HouseIcon,
+    divider: true,
+  },
+  {
+    label: "Students",
+    icon: UsersIcon,
     description: "Overview",
-    children: [
-      {
-        label: "Reporting",
-        icon: GraphIcon,
-        value: "/admin/stat",
-      },
-      {
-        divider: true,
-        dividerLabel: "Voting Analysis",
-      },
-      {
-        label: "Entries",
-        icon: UsersThree,
-        value: "/admin/elections/voter-roll-entries",
-      },
-      {
-        label: "Accounts",
-        icon: User,
-        value: "/admin/elections/data-entry-accounts",
-      },
-    ],
-  },
 
+  },
+  {
+    label: "Intakes",
+    icon: CalendarIcon,
+    description: "Overview",
+
+  },
   {
     divider: true,
   },
-
-  // Contact Directory Group
   {
-    label: "Contact Directory",
-    icon: AddressBookIcon,
-    description: "Manage Contacts",
-    children: [
-      {
-        label: "Assignments",
-        icon: ListBulletsIcon,
-        value: "/admin/contacts/assignments",
-      },
-      {
-        divider: true,
-        dividerLabel: "Masters",
-      },
-      {
-        label: "People",
-        icon: User,
-        value: "/admin/contacts/people",
-      },
-      {
-        label: "Organizations",
-        icon: BuildingsIcon,
-        value: "/admin/contacts/organizations",
-      },
-      {
-        label: "Roles",
-        icon: ShieldCheckIcon,
-        value: "/admin/contacts/roles",
-      },
-    ],
+    label: "Admin Accounts",
+    icon: KeyIcon,
+    description: "Overview",
+
   },
 
-  {
-    divider: true,
-  },
 
-  // Elections Group
-  {
-    label: "Elections",
-    icon: CheckSquareIcon,
-    description: "Election Management",
-    children: [
-      {
-        label: "Political Parties",
-        icon: FlagIcon,
-        value: "/admin/elections/parties",
-      },
-    ],
-  },
 
-  {
-    divider: true,
-  },
 
-  // Configuration Group
-  {
-    label: "Configuration",
-    icon: GearIcon,
-    description: "System Configuration",
-    color: "blue",
-    children: [
-      // Location - Geo Section
-      {
-        divider: true,
-        dividerLabel: "Location / Geo",
-      },
-      {
-        label: "Geo Unit Types",
-        icon: MapTrifoldIcon,
-        value: "/admin/config/location/geo-unit-types",
-      },
-      {
-        label: "Geo Units",
-        icon: MapPinIcon,
-        value: "/admin/config/location/geo-units",
-      },
-
-      // Location - Places Section
-      {
-        divider: true,
-        dividerLabel: "Location / Places",
-      },
-      {
-        label: "Place Types",
-        icon: MapPinIcon,
-        value: "/admin/config/location/place-types",
-      },
-      {
-        label: "Places",
-        icon: MapPinIcon,
-        value: "/admin/config/location/places",
-      },
-
-      // Auth Section
-      {
-        divider: true,
-        dividerLabel: "Auth / Access Control",
-      },
-      {
-        label: "Users",
-        icon: User,
-        value: "/admin/config/auth/users",
-      },
-      {
-        label: "Roles",
-        icon: UsersThree,
-        value: "/admin/config/auth/roles",
-      },
-    ],
-  },
 ];

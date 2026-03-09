@@ -1,0 +1,19 @@
+.root {
+  font-family: "Times New Roman" !important;
+}
+
+.table,
+.table th,
+.table td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
+.table td,
+.table th {
+  padding: 0 0.1in;
+}
+
+.table th {
+  text-align: left;
+}
