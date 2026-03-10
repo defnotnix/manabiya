@@ -4,39 +4,31 @@ import {
   AppShell,
   Box,
   Button,
-  Divider,
   Group,
-  Menu,
   Stack,
   Text,
   UnstyledButton,
 } from "@mantine/core";
-import {
-  CaretDownIcon,
-  PencilIcon,
-  PlusIcon,
-  XIcon,
-} from "@phosphor-icons/react";
-import { useDocContext, BANK_KEY_LABELS, WODA_SUB_LABELS, BANK_SUB_LABELS, STUDENT_CERT_SUB_LABELS } from "../context";
+import { useDisclosure } from "@mantine/hooks";
+import { PlusIcon, XIcon } from "@phosphor-icons/react";
+import { useDocContext, WODA_SUB_LABELS, BANK_SUB_LABELS, STUDENT_CERT_SUB_LABELS } from "../context";
+import { NewDocModal } from "./NewDocModal";
 
 export function ModuleAdminDocAside() {
   const {
     documents,
     activeDocumentId,
-    activeDocument,
-    addDocument,
     removeDocument,
     setActiveDocumentId,
     setActiveWodaKey,
   } = useDocContext();
 
-  // Derive which single-instance types are already in the list
-  const hasType = (type: string) => documents.some((d) => d.type === type);
-  const hasBankStatement = hasType("bank-statement");
-  const activeBankKey = documents.find((d) => d.type === "bank-statement")?.meta?.bankKey;
+  const [modalOpened, { open: openModal, close: closeModal }] = useDisclosure(false);
 
   return (
     <>
+      <NewDocModal opened={modalOpened} onClose={closeModal} />
+
       <AppShell.Aside>
         <Stack gap={0}>
 
@@ -47,57 +39,9 @@ export function ModuleAdminDocAside() {
                 Active Documents
               </Text>
 
-              <Menu>
-                <Menu.Target>
-                  <Button size="xs" rightSection={<CaretDownIcon />}>
-                    New
-                  </Button>
-                </Menu.Target>
-                <Menu.Dropdown>
-                  {/* Student documents — disabled once created */}
-                  <Menu.Item
-                    leftSection={<PlusIcon />}
-                    disabled={hasType("student-certificate")}
-                    onClick={() => addDocument("student-certificate")}
-                  >
-                    <Text size="xs">Student Certificate</Text>
-                  </Menu.Item>
-                  <Menu.Item
-                    leftSection={<PlusIcon />}
-                    disabled={hasType("student-cv")}
-                    onClick={() => addDocument("student-cv")}
-                  >
-                    <Text size="xs">Student CV</Text>
-                  </Menu.Item>
-
-                  <Menu.Divider />
-
-                  {/* Woda — disabled once created */}
-                  <Menu.Item
-                    leftSection={<PlusIcon />}
-                    disabled={hasType("woda-documents")}
-                    onClick={() => addDocument("woda-documents")}
-                  >
-                    <Text size="xs">Woda Documents</Text>
-                  </Menu.Item>
-
-                  <Menu.Divider />
-
-                  {/* Bank — replaces existing; active bank shown with checkmark */}
-                  <Menu.Label>
-                    Bank Statement{hasBankStatement ? " (1 active)" : ""}
-                  </Menu.Label>
-                  {Object.entries(BANK_KEY_LABELS).map(([key, label]) => (
-                    <Menu.Item
-                      key={key}
-                      leftSection={activeBankKey === key ? <PlusIcon weight="fill" /> : <PlusIcon />}
-                      onClick={() => addDocument("bank-statement", { bankKey: key })}
-                    >
-                      <Text size="xs" fw={activeBankKey === key ? 700 : 400}>{label}</Text>
-                    </Menu.Item>
-                  ))}
-                </Menu.Dropdown>
-              </Menu>
+              <Button size="xs" leftSection={<PlusIcon />} onClick={openModal}>
+                New
+              </Button>
             </Group>
 
             <Stack mt="xs" gap={4}>
@@ -164,16 +108,10 @@ export function ModuleAdminDocAside() {
                     )}
 
                   </UnstyledButton>
-
-                  {/* Sub-document list */}
-
                 </Box>
               ))}
             </Stack>
           </Box>
-
-
-
 
         </Stack>
       </AppShell.Aside>
