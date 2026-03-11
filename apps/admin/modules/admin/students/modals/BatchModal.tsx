@@ -123,7 +123,7 @@ export function BatchModal({
           const batchData = res?.data || res;
           onSuccess?.(batchData);
         }}
-        triggerNotification={triggerNotification.form}
+        triggerNotification={triggerNotification}
       >
         <BatchForm onClose={onClose} isEdit={isEdit} />
       </FormHandler>

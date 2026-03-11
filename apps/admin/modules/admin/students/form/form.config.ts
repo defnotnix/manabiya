@@ -7,7 +7,8 @@ import { zodResolver } from "mantine-form-zod-resolver";
 export const STUDENT_FORM_STEPS = [
   "Basic Info",
   "Contact Info",
-  "Enrollment",
+  "Background Info",
+  "Enrollment & Academic",
   "Review",
 ];
 
@@ -32,14 +33,30 @@ const step2Schema = z.object({
   emergency_contact_phone: z.string().optional(),
 });
 
-// Step 3: Enrollment validation
+// Step 3: Background Info validation (Arrays)
 const step3Schema = z.object({
-  batch: z.any().optional(),
-  date_of_admission: z.any().optional(),
+  experiences: z.array(z.any()).optional(),
+  educations: z.array(z.any()).optional(),
+  family_members: z.array(z.any()).optional(),
 });
 
-// Step 4: Review (no validation needed)
-const step4Schema = z.object({});
+// Step 4: Enrollment validation (Fields + Arrays)
+const step4Schema = z.object({
+  batch: z.any().optional(),
+  date_of_admission: z.any().optional(),
+  date_of_completion: z.any().optional(),
+  grading_grammar: z.string().optional(),
+  grading_conversation: z.string().optional(),
+  grading_composition: z.string().optional(),
+  grading_listening: z.string().optional(),
+  grading_reading: z.string().optional(),
+  grading_remarks: z.string().optional(),
+  marking_start_date: z.any().optional(),
+  markings: z.array(z.any()).optional(),
+});
+
+// Step 5: Review (no validation needed)
+const step5Schema = z.object({});
 
 export const studentFormConfig = {
   initial: {
@@ -61,16 +78,30 @@ export const studentFormConfig = {
     emergency_contact_relation: "",
     emergency_contact_phone: "",
 
-    // Enrollment (Step 3)
+    // Background Info (Step 3)
+    experiences: [],
+    educations: [],
+    family_members: [],
+
+    // Enrollment (Step 4)
     batch: null,
     date_of_admission: null,
     date_of_completion: null,
+    grading_grammar: "",
+    grading_conversation: "",
+    grading_composition: "",
+    grading_listening: "",
+    grading_reading: "",
+    grading_remarks: "",
+    marking_start_date: null,
+    markings: [],
   },
-  steps: 4,
+  steps: 5,
   validation: [
     zodResolver(step1Schema),
     zodResolver(step2Schema),
     zodResolver(step3Schema),
+    zodResolver(step4Schema),
     {}, // No validation for review step
   ],
   disabledSteps: [],

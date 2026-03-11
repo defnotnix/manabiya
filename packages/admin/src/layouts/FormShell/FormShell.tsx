@@ -36,7 +36,7 @@ export function FormShell({
 }: PropFormShell) {
   const contextValue = {
     selectedRecords: [],
-    setSelectedRecords: () => {},
+    setSelectedRecords: () => { },
   };
 
   const formProps = FormWrapper.useFormProps();
@@ -62,7 +62,7 @@ export function FormShell({
           />
         )}
 
-        <Container size="sm" py={100}>
+        <Container size="sm" py={32}>
           <Box component="div" flex={1}>
             {children}
           </Box>

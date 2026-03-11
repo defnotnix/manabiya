@@ -327,9 +327,9 @@ export function TemplateSumnimaStatement() {
                       >
                         {item.debit !== 0
                           ? item.debit.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
                           : ""}
                       </td>
                       <td
@@ -339,9 +339,9 @@ export function TemplateSumnimaStatement() {
                       >
                         {item.credit !== 0
                           ? item.credit.toLocaleString(undefined, {
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            })
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                          })
                           : ""}
                       </td>
                       <td
@@ -425,7 +425,7 @@ export function TemplateSumnimaStatement() {
                   </Grid.Col>
                   <Grid.Col span={3.25} ta="center">
                     <Text ta="center" {..._defaultTextProps} fw={600}>
-                      {dayjs(form.values?.statement_end_date).add("1","day").format(
+                      {dayjs(form.values?.statement_end_date).add(1, "day").format(
                         "DD/MM/YYYY"
                       )}
                     </Text>
@@ -524,7 +524,7 @@ export function TemplateSumnimaStatement() {
               </Grid.Col>
               <Grid.Col span={3.25} ta="center">
                 <Text ta="center" {..._defaultTextProps} fw={600}>
-                  {dayjs(form.values?.statement_end_date).add("1","day").format("DD/MM/YYYY")}
+                  {dayjs(form.values?.statement_end_date).add(1, "day").format("DD/MM/YYYY")}
                 </Text>
               </Grid.Col>
             </Grid>

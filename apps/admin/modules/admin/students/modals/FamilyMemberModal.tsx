@@ -19,8 +19,9 @@ interface FamilyMemberModalProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: (member: any) => void;
-  studentId: string | number;
+  studentId?: string | number; // Make studentId optional for local mode
   editRecord?: any;
+  localMode?: boolean; // When true, skip API calls and just return data
 }
 
 function FamilyMemberForm({ onClose, isEdit }: { onClose: () => void; isEdit: boolean }) {
@@ -84,6 +85,7 @@ export function FamilyMemberModal({
   onSuccess,
   studentId,
   editRecord,
+  localMode = false,
 }: FamilyMemberModalProps) {
   const isEdit = !!editRecord;
 
@@ -99,6 +101,14 @@ export function FamilyMemberModal({
         formType={isEdit ? "edit" : "new"}
         validation={[{}]}
         apiSubmit={async (data, id) => {
+          if (localMode) {
+            return {
+              data: {
+                ...data,
+                ...(isEdit && editRecord?.localId ? { localId: editRecord.localId } : { localId: Math.random().toString(36).substr(2, 9) }),
+              },
+            };
+          }
           if (isEdit && id) {
             return FAMILY_MEMBER_API.updateFamilyMember(String(id), data);
           }
@@ -107,7 +117,7 @@ export function FamilyMemberModal({
         onSubmitSuccess={(res) => {
           onSuccess?.(res.data || res);
         }}
-        triggerNotification={triggerNotification.form}
+        triggerNotification={triggerNotification}
       >
         <FamilyMemberForm onClose={onClose} isEdit={isEdit} />
       </FormHandler>

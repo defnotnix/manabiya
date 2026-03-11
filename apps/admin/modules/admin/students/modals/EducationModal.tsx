@@ -18,8 +18,9 @@ interface EducationModalProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: (education: any) => void;
-  studentId: string | number;
+  studentId?: string | number; // Make studentId optional for local mode
   editRecord?: any;
+  localMode?: boolean; // When true, skip API calls and just return data
 }
 
 function EducationForm({ onClose, isEdit }: { onClose: () => void; isEdit: boolean }) {
@@ -81,6 +82,7 @@ export function EducationModal({
   onSuccess,
   studentId,
   editRecord,
+  localMode = false,
 }: EducationModalProps) {
   const isEdit = !!editRecord;
 
@@ -96,6 +98,14 @@ export function EducationModal({
         formType={isEdit ? "edit" : "new"}
         validation={[{}]}
         apiSubmit={async (data, id) => {
+          if (localMode) {
+            return {
+              data: {
+                ...data,
+                ...(isEdit && editRecord?.localId ? { localId: editRecord.localId } : { localId: Math.random().toString(36).substr(2, 9) }),
+              },
+            };
+          }
           if (isEdit && id) {
             return EDUCATION_API.updateEducation(String(id), data);
           }
@@ -104,7 +114,7 @@ export function EducationModal({
         onSubmitSuccess={(res) => {
           onSuccess?.(res.data || res);
         }}
-        triggerNotification={triggerNotification.form}
+        triggerNotification={triggerNotification}
       >
         <EducationForm onClose={onClose} isEdit={isEdit} />
       </FormHandler>

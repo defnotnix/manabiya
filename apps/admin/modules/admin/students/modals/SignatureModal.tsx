@@ -89,7 +89,7 @@ export function SignatureModal({
         onSubmitSuccess={(res) => {
           onSuccess?.(res.data || res);
         }}
-        triggerNotification={triggerNotification.form}
+        triggerNotification={triggerNotification}
       >
         <SignatureForm onClose={onClose} isEdit={isEdit} />
       </FormHandler>

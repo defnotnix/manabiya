@@ -18,8 +18,9 @@ interface ExperienceModalProps {
   opened: boolean;
   onClose: () => void;
   onSuccess?: (experience: any) => void;
-  studentId: string | number;
+  studentId?: string | number; // Make studentId optional for local mode
   editRecord?: any;
+  localMode?: boolean; // When true, skip API calls and just return data
 }
 
 function ExperienceForm({ onClose, isEdit }: { onClose: () => void; isEdit: boolean }) {
@@ -80,6 +81,7 @@ export function ExperienceModal({
   onSuccess,
   studentId,
   editRecord,
+  localMode = false,
 }: ExperienceModalProps) {
   const isEdit = !!editRecord;
 
@@ -95,6 +97,14 @@ export function ExperienceModal({
         formType={isEdit ? "edit" : "new"}
         validation={[{}]}
         apiSubmit={async (data, id) => {
+          if (localMode) {
+            return {
+              data: {
+                ...data, // Include any existing fields like a temporary local ID if editRecord had it
+                ...(isEdit && editRecord?.localId ? { localId: editRecord.localId } : { localId: Math.random().toString(36).substr(2, 9) }),
+              },
+            };
+          }
           if (isEdit && id) {
             return EXPERIENCE_API.updateExperience(String(id), data);
           }
@@ -103,7 +113,7 @@ export function ExperienceModal({
         onSubmitSuccess={(res) => {
           onSuccess?.(res.data || res);
         }}
-        triggerNotification={triggerNotification.form}
+        triggerNotification={triggerNotification}
       >
         <ExperienceForm onClose={onClose} isEdit={isEdit} />
       </FormHandler>

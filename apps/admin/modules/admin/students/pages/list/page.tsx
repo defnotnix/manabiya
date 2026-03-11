@@ -14,13 +14,14 @@ export function ListPage() {
       queryKey="students.list"
       enableServerQuery={true}
       queryGetFn={async (params) => {
-        const response = await STUDENT_API.getStudents(params);
-        return response?.data || [];
+        return await STUDENT_API.getStudents(params);
       }}
       dataKey="results"
       paginationDataKey="pagination"
+
     >
       <DataTableShell
+
         moduleInfo={STUDENT_MODULE_CONFIG}
         columns={columns}
         idAccessor="id"

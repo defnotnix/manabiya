@@ -5,7 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { FormWrapper } from "@settle/core";
 import { FormShell, triggerNotification } from "@settle/admin";
 import { Loader, Center, Alert } from "@mantine/core";
-import { STUDENT_MODULE_CONFIG, STUDENT_API } from "../../module.config";
+import {
+  STUDENT_MODULE_CONFIG,
+  STUDENT_API,
+  CONTACT_API,
+  EXPERIENCE_API,
+  EDUCATION_API,
+  FAMILY_MEMBER_API,
+  GRADING_API,
+  MARKING_API
+} from "../../module.config";
 import { StudentsForm, STUDENT_FORM_STEPS } from "../../form/StudentsForm";
 import { studentFormConfig } from "../../form/form.config";
 import { LockedStudentBanner } from "../../components/LockedStudentBanner";
@@ -84,14 +93,134 @@ export function EditPage() {
     <FormWrapper
       queryKey={`students.edit.${id}`}
       formName="student-form"
-      initial={student}
+      initial={{
+        ...student,
+        email: student?.contact_detail?.email || "",
+        contact: student?.contact_detail?.contact || "",
+        phone_number: student?.contact_detail?.phone_number || "",
+        emergency_contact_name: student?.contact_detail?.emergency_contact_name || "",
+        emergency_contact_relation: student?.contact_detail?.emergency_contact_relation || "",
+        emergency_contact_phone: student?.contact_detail?.emergency_contact_phone || "",
+        grading_grammar: student?.gradings?.[0]?.grammar || "",
+        grading_conversation: student?.gradings?.[0]?.conversation || "",
+        grading_composition: student?.gradings?.[0]?.composition || "",
+        grading_listening: student?.gradings?.[0]?.listening || "",
+        grading_reading: student?.gradings?.[0]?.reading || "",
+        grading_remarks: student?.gradings?.[0]?.remarks || "",
+      }}
       primaryKey="id"
       steps={studentFormConfig.steps}
       validation={studentFormConfig.validation}
       disabledSteps={studentFormConfig.disabledSteps}
       notifications={triggerNotification.form}
       apiSubmitFn={async (data) => {
-        return STUDENT_API.updateStudent(id, data);
+        // 1. Update the Student Core Information
+        const studentPayload = {
+          student_code: data.student_code,
+          first_name: data.first_name,
+          middle_name: data.middle_name,
+          last_name: data.last_name,
+          date_of_birth: data.date_of_birth,
+          gender: data.gender,
+          current_address: data.current_address,
+          permanent_address: data.permanent_address,
+          batch: data.batch,
+          date_of_admission: data.date_of_admission,
+          date_of_completion: data.date_of_completion,
+          email: data.email,
+          contact: data.contact,
+        };
+        const studentRes = await STUDENT_API.updateStudent(id, studentPayload);
+
+        // 2. Update Contact Information
+        if (student?.contact_detail?.id) {
+          const contactPayload = {
+            email: data.email,
+            contact: data.contact,
+            phone_number: data.phone_number,
+            emergency_contact_name: data.emergency_contact_name,
+            emergency_contact_relation: data.emergency_contact_relation,
+            emergency_contact_phone: data.emergency_contact_phone,
+          };
+          await CONTACT_API.updateContact(String(student.contact_detail.id), contactPayload);
+        } else {
+          // If no existing contact, create it
+          const contactPayload = {
+            student: id,
+            email: data.email,
+            contact: data.contact,
+            phone_number: data.phone_number,
+            emergency_contact_name: data.emergency_contact_name,
+            emergency_contact_relation: data.emergency_contact_relation,
+            emergency_contact_phone: data.emergency_contact_phone,
+          };
+          await CONTACT_API.createContact(contactPayload);
+        }
+
+        // Helper function to sync array entities
+        const syncSubEntities = async (
+          initialItems: any[],
+          currentItems: any[],
+          createApi: (body: any) => Promise<any>,
+          updateApi: (id: string, body: any) => Promise<any>,
+          deleteApi: (id: string) => Promise<any>
+        ) => {
+          const initialIds = initialItems?.map(item => item.id) || [];
+          const currentIds = currentItems?.filter(item => item.id).map(item => item.id) || [];
+
+          const itemsToCreate = currentItems?.filter(item => !item.id) || [];
+          const itemsToUpdate = currentItems?.filter(item => item.id) || [];
+          const itemsToDelete = initialIds.filter(id => !currentIds.includes(id));
+
+          const promises: Promise<any>[] = [];
+
+          itemsToCreate.forEach(item => promises.push(createApi({ ...item, student: id })));
+          itemsToUpdate.forEach(item => promises.push(updateApi(String(item.id), item)));
+          itemsToDelete.forEach(itemId => promises.push(deleteApi(String(itemId))));
+
+          await Promise.all(promises);
+        };
+
+        // 3. Sync Nested Arrays
+        await Promise.all([
+          syncSubEntities(
+            student?.experiences || [], data.experiences || [],
+            EXPERIENCE_API.createExperience, EXPERIENCE_API.updateExperience, EXPERIENCE_API.deleteExperience
+          ),
+          syncSubEntities(
+            student?.educations || [], data.educations || [],
+            EDUCATION_API.createEducation, EDUCATION_API.updateEducation, EDUCATION_API.deleteEducation
+          ),
+          syncSubEntities(
+            student?.family_members || [], data.family_members || [],
+            FAMILY_MEMBER_API.createFamilyMember, FAMILY_MEMBER_API.updateFamilyMember, FAMILY_MEMBER_API.deleteFamilyMember
+          ),
+          (async () => {
+            const gradingPayload = {
+              grammar: data.grading_grammar,
+              conversation: data.grading_conversation,
+              composition: data.grading_composition,
+              listening: data.grading_listening,
+              reading: data.grading_reading,
+              remarks: data.grading_remarks,
+            };
+            const hasGradingData = Object.values(gradingPayload).some(val => !!val);
+            const existingGrading = student?.gradings?.[0];
+
+            if (existingGrading) {
+              return GRADING_API.updateGrading(String(existingGrading.id), gradingPayload);
+            } else if (hasGradingData) {
+              return GRADING_API.createGrading({ ...gradingPayload, student: id });
+            }
+          })(),
+          syncSubEntities(
+            student?.markings || [],
+            (data.markings || []).filter((m: any) => m.total_days !== null || m.class_hours || m.present !== null || m.absent !== null || m.attendance_percent),
+            MARKING_API.createMarking, MARKING_API.updateMarking, MARKING_API.deleteMarking
+          ),
+        ]);
+
+        return studentRes;
       }}
       submitSuccessFn={() => {
         router.push("/admin/students");

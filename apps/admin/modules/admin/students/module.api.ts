@@ -19,11 +19,10 @@ const ENDPOINTS = {
 // Main Student API
 export const STUDENT_API = {
   getStudents: async (params?: any) => {
-    const data = await moduleApiCall.getRecords({
+    return await moduleApiCall.getRecords({
       endpoint: ENDPOINTS.STUDENTS,
       paginationProps: params,
     });
-    return { data: Array.isArray(data) ? data : data?.results || [] };
   },
 
   getStudent: async (id: string) => {

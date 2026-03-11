@@ -108,7 +108,7 @@ export function TemplateMataBageshworiCertificate() {
 
   return (
     <>
-            <WodaMissingBanner
+      <WodaMissingBanner
         fields={[
           { key: "statement_ref_no", label: "Reference Number" },
           { key: "statement_end_date", label: "End Date" },
@@ -202,7 +202,7 @@ export function TemplateMataBageshworiCertificate() {
         <Text ta="justify" fw={600} {..._defaultTextProps}>
           Exchange rate as of{" "}
           {dayjs(form.values?.statement_end_date)
-            .add("1", "day")
+            .add(1, "day")
             .format("YYYY/MM/DD")}{" "}
           is USD 1 = NPR{" "}
           {form.values?.statement_usdrate?.toFixed(2).toLocaleString("en-US")}
