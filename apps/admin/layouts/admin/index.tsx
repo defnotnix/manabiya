@@ -22,7 +22,7 @@ export function LayoutAdmin({ children }: PropsWithChildren) {
           }
         }
       >
-        <AutoBreadcrumb hidden={["/admin", "/admin/docs"]} />
+        {/* <AutoBreadcrumb hidden={["/admin", "/admin/docs"]} /> */}
         {children}
       </AdminShell>
     </DocContextProvider>

@@ -38,6 +38,8 @@ export function FormShellFooter({
   const handleSubmit = () => {
     if (onSubmit) {
       onSubmit();
+    } else if (formProps?.handleSubmit) {
+      formProps.handleSubmit();
     }
   };
 

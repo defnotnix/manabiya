@@ -12,12 +12,16 @@ import {
 } from "@mantine/core";
 import { PropFormShellHeader } from "../../FormShell.type";
 import { ArrowLeftIcon, HouseIcon } from "@phosphor-icons/react";
+import { modals } from "@mantine/modals";
+import { useRouter } from "next/navigation";
 
 export function FormShellHeader({
   bread,
   moduleInfo,
   title,
 }: PropFormShellHeader) {
+  const Router = useRouter();
+
   return (
     <>
       <Box
@@ -34,8 +38,28 @@ export function FormShellHeader({
               variant="light"
               size="xs"
               leftSection={<ArrowLeftIcon />}
+              onClick={() => {
+                modals.openConfirmModal({
+                  title: <Text size="sm">Continue back?</Text>,
+                  withCloseButton: false,
+                  children: (
+                    <Text size="sm" >
+                      All the filled data will be lost. Are you sure you want to continue?
+                    </Text>
+                  ),
+                  confirmProps: { color: 'red', size: "xs" },
+                  cancelProps: { size: "xs" },
+                  onConfirm: () => Router.back(),
+                  labels: { confirm: 'Continue', cancel: "Cancel" },
+                  styles: {
+                    body: {
+                      padding: "var(--mantine-spacing-md)"
+                    }
+                  }
+                })
+              }}
             >
-              Back to Applicants
+              Back
             </Button>
             <Text fw={800} size="xs">
               {title}

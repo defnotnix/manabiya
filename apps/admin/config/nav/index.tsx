@@ -33,8 +33,8 @@ export const navItems: PropAdminNavItems[] = [
   {
     label: "Students",
     icon: UsersIcon,
-    description: "Overview",
-
+    value: "/admin/students",
+    description: "Student Management",
   },
   {
     label: "Intakes",
