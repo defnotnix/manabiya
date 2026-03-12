@@ -12,6 +12,7 @@ import {
   EDUCATION_API,
   MARKING_API,
   AUDIT_LOG_API,
+  PRINT_LOG_API,
 } from "./module.api";
 
 export const STUDENT_MODULE_CONFIG = {
@@ -37,6 +38,7 @@ export {
   EDUCATION_API,
   MARKING_API,
   AUDIT_LOG_API,
+  PRINT_LOG_API,
 };
 
 // Gender options

@@ -12,6 +12,7 @@ import {
 } from "@mantine/core";
 import {
   DotsThreeVerticalIcon,
+  FilesIcon,
   LockIcon,
   LockOpenIcon,
   PencilIcon,
@@ -106,6 +107,13 @@ export function ProfileHeader({ student }: ProfileHeaderProps) {
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<FilesIcon size={14} />}
+              onClick={() => router.push(`/admin/docs?student_id=${student.id}`)}
+            >
+              View Docs
+            </Menu.Item>
+            <Menu.Divider />
             <Menu.Item
               leftSection={<PencilIcon size={14} />}
               onClick={() => router.push(`/admin/students/${student.id}/edit`)}

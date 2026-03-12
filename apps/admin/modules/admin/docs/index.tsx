@@ -9,6 +9,7 @@ import { useDocContext } from "./context";
 import { TemplateStudentCertificate } from "./templates/student-certificate";
 import { WodaTemplates } from "./templates/woda";
 import { BankTemplates } from "./templates/bank";
+import { PRINT_LOG_API } from "@/modules/admin/students/module.config";
 
 /** Wraps old templates in the stub providers they expect */
 function TemplateShell({ children }: { children: React.ReactNode }) {
@@ -92,7 +93,31 @@ function DocTemplate() {
 }
 
 export function ModuleAdminDocs() {
-  const { activeDocument } = useDocContext();
+  const { activeDocument, studentId } = useDocContext();
+
+  async function logPrint(scope: "all" | "current") {
+    if (!studentId) return;
+    await PRINT_LOG_API.createRecord({
+      student: studentId,
+      content: {
+        template: scope === "all" ? "all" : (activeDocument?.type ?? "unknown"),
+        printed_for: scope,
+        snapshot: {
+          document_label: scope === "all" ? "All Documents" : (activeDocument?.label ?? "Unknown"),
+        },
+      },
+    });
+  }
+
+  function handlePrintAll() {
+    window.print();
+    logPrint("all");
+  }
+
+  function handlePrintCurrent() {
+    window.print();
+    logPrint("current");
+  }
 
   return (
     <div
@@ -116,7 +141,7 @@ export function ModuleAdminDocs() {
           </Group>
 
           <Group gap={1}>
-            <Button size="xs" leftSection={<PrinterIcon weight="fill" />}>
+            <Button size="xs" leftSection={<PrinterIcon weight="fill" />} onClick={handlePrintAll}>
               Print All
             </Button>
 
@@ -127,7 +152,7 @@ export function ModuleAdminDocs() {
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                <Menu.Item leftSection={<PrinterIcon weight="fill" />}>
+                <Menu.Item leftSection={<PrinterIcon weight="fill" />} onClick={handlePrintCurrent}>
                   <Text size="xs">Print Current Document Only</Text>
                 </Menu.Item>
                 <Menu.Divider />
