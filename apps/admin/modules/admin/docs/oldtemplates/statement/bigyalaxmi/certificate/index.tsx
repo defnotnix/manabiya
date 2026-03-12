@@ -144,33 +144,35 @@ export function TemplateBigyalaxmiCertificate() {
         <Space h=".3in" />
 
         <table className={classes.table}>
-          {applicantDetails?.map((data: any, index: number) => (
-            <tr key={index}>
-              <td>
-                <Text ta="left" {..._defaultTextProps} w={200}>
-                  {data.label}
-                </Text>
-              </td>
-              <td>
-                <Text ta="left" {..._defaultTextProps} w={40}>
-                  :
-                </Text>
-              </td>
-              <td
-                style={{
-                  paddingBottom: ".25in",
-                }}
-              >
-                <Text
-                  w={300}
-                  fw={data.enableBold && 600}
-                  {..._defaultTextProps}
+          <tbody>
+            {applicantDetails?.map((data: any, index: number) => (
+              <tr key={index}>
+                <td>
+                  <Text ta="left" {..._defaultTextProps} w={200}>
+                    {data.label}
+                  </Text>
+                </td>
+                <td>
+                  <Text ta="left" {..._defaultTextProps} w={40}>
+                    :
+                  </Text>
+                </td>
+                <td
+                  style={{
+                    paddingBottom: ".25in",
+                  }}
                 >
-                  {data.value}
-                </Text>
-              </td>
-            </tr>
-          ))}
+                  <Text
+                    w={300}
+                    fw={data.enableBold && 600}
+                    {..._defaultTextProps}
+                  >
+                    {data.value}
+                  </Text>
+                </td>
+              </tr>
+            ))}
+          </tbody>
         </table>
 
         <Space h=".1in" />

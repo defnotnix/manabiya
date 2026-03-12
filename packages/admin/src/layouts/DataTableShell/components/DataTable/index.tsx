@@ -73,7 +73,7 @@ export function DataTableShellDataTable({
   const transformedColumns = useMemo(
     () =>
       visibleColumns.map((col: any) => ({
-        accessor: col.accessor,
+        accessor: col.accessorKey || col.accessor,
         title: col.header || col.label, // Support both 'header' and 'label'
         width: col.size,
         render: col.render, // Custom render function if provided

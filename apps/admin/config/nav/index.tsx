@@ -16,6 +16,8 @@ import {
   CalendarIcon,
   KeyIcon,
   HouseSimpleIcon,
+  FolderPlusIcon,
+  FileTextIcon,
 } from "@phosphor-icons/react";
 import { PropAdminNavItems } from "@settle/admin";
 
@@ -35,6 +37,18 @@ export const navItems: PropAdminNavItems[] = [
     icon: UsersIcon,
     value: "/admin/students",
     description: "Student Management",
+  },
+  {
+    label: "Documents",
+    icon: FileTextIcon,
+    value: "/admin/docs",
+    description: "Document Management",
+  },
+  {
+    label: "Custom Documents",
+    icon: FolderPlusIcon,
+    value: "/admin/customs",
+    description: "Custom Documents",
   },
   {
     label: "Intakes",

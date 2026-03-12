@@ -30,6 +30,7 @@ import {
 interface NewDocModalProps {
   opened: boolean;
   onClose: () => void;
+  onRequestCreate?: (type: DocType, meta?: { bankKey?: string }) => void;
 }
 
 interface DocTypeCardProps {
@@ -81,7 +82,7 @@ function DocTypeCard({ icon, label, description, disabled, active, onClick }: Do
             <Box p="md" c={active ? "blue" : disabled ? "dimmed" : "dark"}>{icon}</Box>
           </Paper>
 
-          <Text px="md" pb="xs" size="xs" fw={900} c={active ? "blue" : disabled ? "dimmed" : "dark"}>
+          <Text h={49} px="md" pb="xs" size="xs" fw={900} c={active ? "blue" : disabled ? "dimmed" : "dark"}>
             {label}
           </Text>
 
@@ -91,14 +92,21 @@ function DocTypeCard({ icon, label, description, disabled, active, onClick }: Do
   );
 }
 
-export function NewDocModal({ opened, onClose }: NewDocModalProps) {
-  const { documents, addDocument } = useDocContext();
+export function NewDocModal({ opened, onClose, onRequestCreate }: NewDocModalProps) {
+  const { documents, addDocument, customGroupId, studentId } = useDocContext();
 
   const hasType = (type: DocType) => documents.some((d) => d.type === type);
   const activeBankKey = documents.find((d) => d.type === "bank-statement")?.meta?.bankKey;
+  const isInContextMode = !!customGroupId || !!studentId; // Has custom group or student context
 
   function handleAdd(type: DocType, meta?: { bankKey?: string }) {
-    addDocument(type, meta);
+    // In context mode (student or custom group), open creation modals immediately
+    if (isInContextMode && onRequestCreate) {
+      onRequestCreate(type, meta);
+    } else {
+      // Standalone mode: just add to local list (only for bank-statement and woda-documents)
+      addDocument(type, meta);
+    }
     onClose();
   }
 
@@ -116,39 +124,51 @@ export function NewDocModal({ opened, onClose }: NewDocModalProps) {
     >
       <Stack gap="lg" p="md">
 
-        {/* Student Documents */}
-        <Box>
-          <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs">
-            Student Documents
-          </Text>
-          <SimpleGrid cols={3} spacing="sm">
-            <DocTypeCard
-              icon={<CertificateIcon size={28} />}
-              label="Student Certificate"
-              description="Official course completion certificate"
-              disabled={hasType("student-certificate")}
-              active={false}
-              onClick={() => handleAdd("student-certificate")}
-            />
-            <DocTypeCard
-              icon={<IdentificationCardIcon size={28} />}
-              label="Student CV"
-              description="Student curriculum vitae"
-              disabled={hasType("student-cv")}
-              active={false}
-              onClick={() => handleAdd("student-cv")}
-            />
-            <DocTypeCard
-              icon={<FileTextIcon size={28} />}
-              label="Woda Documents"
-              description="Relationship, occupation, DoB, income, tax, fiscal, migration, surname & address verifications"
-              disabled={hasType("woda-documents")}
-              active={false}
-              onClick={() => handleAdd("woda-documents")}
-            />
+        {/* Student Documents - only show in student mode (not in custom group or standalone) */}
+        {studentId && (
+          <Box>
+            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs">
+              Student Documents
+            </Text>
+            <SimpleGrid cols={3} spacing="sm">
+              <DocTypeCard
+                icon={<CertificateIcon size={28} />}
+                label="Student Certificate"
+                description="Official course completion certificate"
+                disabled={hasType("student-certificate")}
+                active={hasType("student-certificate")}
+                onClick={() => handleAdd("student-certificate")}
+              />
+              <DocTypeCard
+                icon={<IdentificationCardIcon size={28} />}
+                label="Student CV"
+                description="Student curriculum vitae"
+                disabled={hasType("student-cv")}
+                active={hasType("student-cv")}
+                onClick={() => handleAdd("student-cv")}
+              />
+            </SimpleGrid>
+          </Box>
+        )}
 
-          </SimpleGrid>
-        </Box>
+        {/* Verification Documents - show in both student and custom group modes */}
+        {(studentId || customGroupId) && (
+          <Box>
+            <Text size="xs" fw={700} tt="uppercase" c="dimmed" mb="xs">
+              {studentId ? "Verification Documents" : "Documents"}
+            </Text>
+            <SimpleGrid cols={3} spacing="sm">
+              <DocTypeCard
+                icon={<FileTextIcon size={28} />}
+                label="Woda Documents"
+                description="Relationship, occupation, DoB, income, tax, fiscal, migration, surname & address verifications"
+                disabled={hasType("woda-documents")}
+                active={hasType("woda-documents")}
+                onClick={() => handleAdd("woda-documents")}
+              />
+            </SimpleGrid>
+          </Box>
+        )}
 
 
 

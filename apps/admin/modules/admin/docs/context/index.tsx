@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useContext, useState, useMemo, ReactNode } from "react";
+import { createContext, useContext, useState, useMemo, ReactNode, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 // --- Document types ---
 
@@ -61,7 +62,7 @@ export type DocEntry = {
   type: DocType;
   label: string;
   /** Extra metadata — e.g. bankKey for bank-statement entries */
-  meta?: { bankKey?: string };
+  meta?: { bankKey?: string; statementId?: number; wodaDocId?: number };
 };
 
 // --- Certificate data types ---
@@ -123,6 +124,10 @@ export type DocContextType = {
   // Student data payload
   documentData: StudentCertificateData | null;
   setDocumentData: (data: StudentCertificateData | null) => void;
+  // Custom group context
+  customGroupId: number | null;
+  // Student context
+  studentId: number | null;
 };
 
 // --- Context ---
@@ -136,6 +141,20 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
   const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
   const [activeWodaKey, setActiveWodaKey] = useState<string | null>(null);
   const [documentData, setDocumentData] = useState<StudentCertificateData | null>(null);
+  const [customGroupId, setCustomGroupId] = useState<number | null>(null);
+  const [studentId, setStudentId] = useState<number | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const customParam = searchParams?.get("custom");
+    const studentParam = searchParams?.get("student_id");
+    if (customParam) {
+      setCustomGroupId(parseInt(customParam, 10));
+    }
+    if (studentParam) {
+      setStudentId(parseInt(studentParam, 10));
+    }
+  }, [searchParams]);
 
   const activeDocument = useMemo(
     () => documents.find((d) => d.id === activeDocumentId) ?? null,
@@ -190,6 +209,8 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
         setActiveWodaKey,
         documentData,
         setDocumentData,
+        customGroupId,
+        studentId,
       }}
     >
       {children}

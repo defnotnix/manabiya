@@ -1,9 +1,12 @@
 "use client";
 
-import { Stack, TextInput, Select, Group, Textarea } from "@mantine/core";
+import { Stack, TextInput, Select, Group, Image, Button, Text, Box, Center } from "@mantine/core";
+import { Dropzone } from "@mantine/dropzone";
 import { DateInput } from "@mantine/dates";
 import { FormWrapper } from "@settle/core";
 import { GENDER_OPTIONS } from "../../module.config";
+import { useState } from "react";
+import { UserFocusIcon } from "@phosphor-icons/react";
 
 interface Step1BasicInfoProps {
   disabled?: boolean;
@@ -11,9 +14,97 @@ interface Step1BasicInfoProps {
 
 export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
   const form = FormWrapper.useForm();
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+  const handleDrop = (files: File[]) => {
+    if (files.length > 0) {
+      const file = files[0];
+
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        form.setFieldError("image", "Please upload an image file");
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        form.setFieldError("image", "File size must be less than 5MB");
+        return;
+      }
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      // Set form value
+      form.setFieldValue("image", file);
+      form.clearFieldError("image");
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImagePreview(null);
+    form.setFieldValue("image", null);
+  };
 
   return (
     <Stack gap="md">
+
+      <Box >
+        <Text size="xs" fw={900} mb="xs">Student Picture</Text>
+        <Dropzone
+          bg="brand.1"
+          onDrop={handleDrop}
+          onReject={(files) => console.log("rejected files", files)}
+          maxSize={5 * 1024 * 1024}
+          accept={["image/png", "image/jpeg", "image/jpg", "image/gif", "image/webp"]}
+          disabled={disabled}
+        >
+          {imagePreview ? (
+            <Group justify="center" gap="xl" mih={200} style={{ pointerEvents: "none" }}>
+              <Stack gap="md" align="center" justify="center" style={{ width: "100%" }}>
+                <Image
+                  src={imagePreview}
+                  alt="Student picture preview"
+                  h={150}
+                  w={150}
+                  fit="cover"
+                  style={{ borderRadius: "8px" }}
+                />
+                <Button
+                  variant="light"
+                  color="red"
+                  size="sm"
+                  onClick={handleRemoveImage}
+                  disabled={disabled}
+                >
+                  Remove
+                </Button>
+              </Stack>
+            </Group>
+          ) : (
+            <Group justify="center" gap="xl" mih={200} style={{ pointerEvents: "none" }}>
+              <Stack gap={0} align="center">
+                <Center>
+                  <UserFocusIcon size={32} />
+                </Center>
+                <Text size="sm" c="dimmed">Drag images here or click to select</Text>
+                <Text size="xs" c="dimmed">File should not exceed 5MB</Text>
+              </Stack>
+            </Group>
+          )}
+        </Dropzone>
+
+        {form.errors.image && (
+          <Text size="sm" c="red" mt="xs">
+            {form.errors.image}
+          </Text>
+        )}
+      </Box>
+
       <TextInput
         label="Student Code"
         placeholder="Auto-generated if left empty"
@@ -74,6 +165,8 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
         disabled={disabled}
         {...form.getInputProps("permanent_address")}
       />
+
+
     </Stack>
   );
 }
