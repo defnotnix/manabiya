@@ -14,6 +14,7 @@ const ENDPOINTS = {
   EDUCATIONS: "/api/students/educations/",
   MARKINGS: "/api/students/markings/",
   AUDIT_LOGS: "/api/students/audit-logs/",
+  PRINT_LOGS: "/api/students/print-logs/",
 };
 
 // Main Student API
@@ -434,6 +435,41 @@ export const MARKING_API = {
       endpoint: ENDPOINTS.MARKINGS,
       id,
     });
+  },
+};
+
+// Print Logs API (Student-specific document print logging)
+export const PRINT_LOG_API = {
+  getRecords: async (params?: any) => {
+    const data = await moduleApiCall.getRecords({
+      endpoint: ENDPOINTS.PRINT_LOGS,
+      params,
+    });
+    return { data: Array.isArray(data) ? data : data?.results || [] };
+  },
+
+  getSingleRecord: async (id: string) => {
+    const data = await moduleApiCall.getSingleRecord({
+      endpoint: ENDPOINTS.PRINT_LOGS,
+      id,
+    });
+    return { data };
+  },
+
+  createRecord: async (body: any) => {
+    const result = await moduleApiCall.createRecord({
+      endpoint: ENDPOINTS.PRINT_LOGS,
+      body,
+    });
+    return { data: result };
+  },
+
+  getRecordsByStudent: async (studentId: string, params?: any) => {
+    const data = await moduleApiCall.getRecords({
+      endpoint: ENDPOINTS.PRINT_LOGS,
+      params: { student: studentId, ...params },
+    });
+    return { data: Array.isArray(data) ? data : data?.results || [] };
   },
 };
 
