@@ -1,2 +1,9 @@
-// Re-export from canonical location in oldtemplates
-export { configPageProps } from "@/modules/admin/docs/oldtemplates/templateprops";
+// ─── Page Configuration Props ──────────────────────────────────────────────────
+// Props for A4-sized pages used in document templates (certificates, statements)
+
+export const configPageProps = {
+  style: {
+    backgroundColor: "white",
+    aspectRatio: "8.3 / 11.7",
+  },
+} as const;

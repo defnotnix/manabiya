@@ -1,2 +1,5 @@
-import { ModuleAdminDocs } from "@/modules/admin/docs";
-export default ModuleAdminDocs;
+import { ModuleAdminDocs } from "@/modules/docs";
+
+export default function DocsPage() {
+  return <ModuleAdminDocs />;
+}
