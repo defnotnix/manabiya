@@ -1,6 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { Button, Group } from "@mantine/core";
+import { BookOpenIcon } from "@phosphor-icons/react";
 import { DataTableWrapper } from "@settle/core";
 import { DataTableShell } from "@settle/admin";
 import { STUDENT_MODULE_CONFIG, STUDENT_API } from "../../module.config";
@@ -8,6 +10,28 @@ import { columns, filterList, tabs } from "./columns";
 
 export function ListPage() {
   const router = useRouter();
+
+  // Add cell renderer to actions column
+  const columnsWithActions = columns.map((col: any) => {
+    if (col.accessorKey === "actions") {
+      return {
+        ...col,
+        render: (row: any) => (
+          <Group gap="xs">
+            <Button
+              variant="subtle"
+              size="xs"
+              leftSection={<BookOpenIcon size={16} />}
+              onClick={() => router.push(`/admin/docs?student_id=${row.id}`)}
+            >
+              View Docs
+            </Button>
+          </Group>
+        ),
+      };
+    }
+    return col;
+  });
 
   return (
     <DataTableWrapper
@@ -23,7 +47,7 @@ export function ListPage() {
       <DataTableShell
 
         moduleInfo={STUDENT_MODULE_CONFIG}
-        columns={columns}
+        columns={columnsWithActions}
         idAccessor="id"
         tabs={tabs}
         filterList={filterList}

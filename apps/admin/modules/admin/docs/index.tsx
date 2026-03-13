@@ -8,7 +8,7 @@ import { FormHandler } from "@/components/framework/FormHandler";
 import { useDocContext } from "./context";
 import { TemplateStudentCertificate } from "./templates/student-certificate";
 import { WodaTemplates } from "./templates/woda";
-import { BankTemplates } from "./templates/bank";
+import { BankStatementForm } from "./modals/BankStatementForm";
 import { PRINT_LOG_API } from "@/modules/admin/students/module.config";
 
 /** Wraps old templates in the stub providers they expect */
@@ -41,19 +41,6 @@ function WodaDocumentView() {
   );
 }
 
-function BankStatementView({ bankKey }: { bankKey: string }) {
-  const bank = BankTemplates[bankKey as keyof typeof BankTemplates];
-  if (!bank) return null;
-  const Certificate = bank.certificate as ComponentType;
-  const Statement = bank.statement as ComponentType;
-  return (
-    <Stack gap={0}>
-      <TemplateShell><Certificate /></TemplateShell>
-      <TemplateShell><Statement /></TemplateShell>
-    </Stack>
-  );
-}
-
 function DocTemplate() {
   const { activeDocument } = useDocContext();
 
@@ -79,8 +66,8 @@ function DocTemplate() {
     return <WodaDocumentView />;
   }
 
-  if (activeDocument.type === "bank-statement" && activeDocument.meta?.bankKey) {
-    return <BankStatementView bankKey={activeDocument.meta.bankKey} />;
+  if (activeDocument.type === "bank-statement") {
+    return <BankStatementForm />;
   }
 
   return (
