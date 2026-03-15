@@ -163,6 +163,21 @@ export type WodaDocData = {
     address_name_change_date: Date | null;
     address_name_change_date_bs: string;
 
+    // Applicant Personal Details
+    applicant_gender: string;
+    applicant_honorific: string;
+    applicant_name: string;
+    applicant_permanent_address: string;
+    applicant_dob: Date | null;
+    applicant_dob_bs: string;
+    applicant_birth_address: string;
+    applicant_citizenship: string;
+    applicant_citizenship_issuer: string;
+    applicant_father_honorific: string;
+    applicant_father_name: string;
+    applicant_mother_honorific: string;
+    applicant_mother_name: string;
+
     // Metadata
     applicantName?: string;
     documentType?: string;
@@ -214,6 +229,20 @@ export type BankStatementData = {
     }>;
     intrestStartIndex: number;
     pastIntrestStartIndex: number[];
+
+    // Calculated fields for template rendering
+    workedStatements?: Array<{
+        date: string;
+        description: string;
+        debit: number;
+        credit: number;
+        code: string;
+        cheque: string;
+        key: string;
+        highlight?: boolean;
+    }>;
+    statement_debit_total?: number;
+    statement_credit_total?: number;
 
     // Legacy fields for compatibility
     bank?: string;
@@ -274,6 +303,7 @@ function transformWodaTemplate(template: any): WodaDocData {
     const migration = body.migration || {};
     const surname = body.surname || {};
     const address = body.address || {};
+    const applicant = body.applicant || {};
 
     return {
         wodadoc_refno: general.refNo || "",
@@ -322,6 +352,20 @@ function transformWodaTemplate(template: any): WodaDocData {
         initial_address_name: address.initialName || "",
         address_name_change_date: address.changeDate || null,
         address_name_change_date_bs: address.changeDateBs || "",
+
+        applicant_gender: applicant.gender || "",
+        applicant_honorific: applicant.honorific || "",
+        applicant_name: applicant.name || "",
+        applicant_permanent_address: applicant.permanentAddress || "",
+        applicant_dob: applicant.dob || null,
+        applicant_dob_bs: applicant.dobBs || "",
+        applicant_birth_address: applicant.birthAddress || "",
+        applicant_citizenship: applicant.citizenship || "",
+        applicant_citizenship_issuer: applicant.citizenshipIssuer || "",
+        applicant_father_honorific: applicant.father?.honorific || "",
+        applicant_father_name: applicant.father?.name || "",
+        applicant_mother_honorific: applicant.mother?.honorific || "",
+        applicant_mother_name: applicant.mother?.name || "",
     } as WodaDocData;
 }
 
@@ -330,6 +374,18 @@ function transformBankTemplate(template: any): BankStatementData {
     if (!template) return {} as BankStatementData;
 
     const body = template.body || {};
+    const statements = body.statements || [];
+
+    // Calculate totals if not already provided
+    let totalDebit = body.statement_debit_total || 0;
+    let totalCredit = body.statement_credit_total || 0;
+
+    if (!body.statement_debit_total || !body.statement_credit_total) {
+        statements.forEach((stmt: any) => {
+            totalDebit += stmt.debit || 0;
+            totalCredit += stmt.credit || 0;
+        });
+    }
 
     return {
         bank_template: body.bank_template || "",
@@ -359,9 +415,13 @@ function transformBankTemplate(template: any): BankStatementData {
         statements_opening_date: body.statements_opening_date || null,
         statements_has_code: body.statements_has_code || false,
         statements_has_cheque: body.statements_has_cheque || false,
-        statements: body.statements || [],
+        statements: statements,
         intrestStartIndex: body.intrestStartIndex || 0,
         pastIntrestStartIndex: body.pastIntrestStartIndex || [],
+        // Add calculated fields for template rendering
+        workedStatements: body.workedStatements || statements,
+        statement_debit_total: totalDebit,
+        statement_credit_total: totalCredit,
     } as BankStatementData;
 }
 
@@ -392,8 +452,10 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
         }
     }, [searchParams]);
 
-    // Sync customGroupId to URL when it changes programmatically
+    // Sync customGroupId to URL when it changes programmatically (only on docs page)
     useEffect(() => {
+        // Only sync params if we're on the docs page
+        if (!pathname.includes("/docs")) return;
         if (customGroupId === null) return;
         const customParam = searchParams?.get("custom");
         if (customParam === String(customGroupId)) return; // Already in URL
@@ -402,6 +464,21 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
         params.set("custom", String(customGroupId));
         router.replace(`${pathname}?${params.toString()}`);
     }, [customGroupId, searchParams, pathname, router]);
+
+    // Clear params when navigating away from docs page
+    useEffect(() => {
+        if (pathname.includes("/docs")) return; // Don't clear if on docs page
+
+        // Check if we have docs-related params and remove them
+        const currentParams = new URLSearchParams(searchParams?.toString() || "");
+        if (currentParams.has("student_id") || currentParams.has("custom")) {
+            currentParams.delete("student_id");
+            currentParams.delete("custom");
+            const newSearch = currentParams.toString();
+            const newUrl = newSearch ? `${pathname}?${newSearch}` : pathname;
+            router.replace(newUrl);
+        }
+    }, [pathname, searchParams, router]);
 
     const activeDocument = useMemo(
         () => documents.find((d) => d.id === activeDocumentId) ?? null,
@@ -459,10 +536,33 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
                     });
                 }
 
+                // If studentId is present, pre-add student certificate and CV templates
+                if (studentId) {
+                    // Add student certificate template
+                    newDocuments.unshift({
+                        id: `student-cert-${studentId}`,
+                        type: "student-certificate",
+                        label: DOC_TYPE_LABELS["student-certificate"],
+                    });
+
+                    // Add student CV template
+                    newDocuments.unshift({
+                        id: `student-cv-${studentId}`,
+                        type: "student-cv",
+                        label: DOC_TYPE_LABELS["student-cv"],
+                    });
+                }
+
                 // Only update if we found documents
                 if (newDocuments.length > 0) {
                     setDocuments(newDocuments);
-                    setActiveDocumentId(newDocuments[0].id);
+                    // Set student-certificate as active if studentId is present, otherwise first document
+                    const activeId = studentId
+                        ? newDocuments.find(d => d.type === "student-certificate")?.id
+                        : newDocuments[0].id;
+                    if (activeId) {
+                        setActiveDocumentId(activeId);
+                    }
                 }
             } catch (error) {
                 console.error("Error fetching context documents:", error);
@@ -474,11 +574,18 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
 
     // Fetch document data from API when activeDocument changes
     useEffect(() => {
-        if (!activeDocument) return;
+        if (!activeDocument) {
+            setWodaData(null);
+            setBankData(null);
+            return;
+        }
 
         const fetchDocumentData = async () => {
             try {
                 if (activeDocument.type === "woda-documents" && activeDocument.meta?.wodaDocId) {
+                    // Clear bank data when switching to woda
+                    setBankData(null);
+
                     // Fetch woda document data
                     const data = await moduleApiCall.getSingleRecord({
                         endpoint: "/api/documents/woda-docs/",
@@ -491,14 +598,30 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
                         setWodaData(flatData);
                     }
                 } else if (activeDocument.type === "bank-statement" && activeDocument.meta?.statementId) {
+                    // Clear woda data when switching to bank statement
+                    setWodaData(null);
+
                     // Fetch bank statement data
                     const data = await moduleApiCall.getSingleRecord({
                         endpoint: "/api/documents/statements/",
                         id: activeDocument.meta.statementId,
                     });
+                    console.log("Bank statement API response:", data);
+                    console.log("Bank statement template:", data?.template);
+
                     if (data?.template) {
                         const flatData = transformBankTemplate(data.template);
+                        console.log("Transformed bank data:", flatData);
                         setBankData(flatData);
+                    } else if (data?.body) {
+                        // Fallback: if data has body but no template wrapper
+                        console.warn("Bank statement data has body but no template wrapper, using body directly");
+                        const flatData = transformBankTemplate({ body: data.body });
+                        setBankData(flatData);
+                    } else if (data) {
+                        // Last resort: treat entire data object as if it were BankStatementData
+                        console.warn("Bank statement data structure unknown, attempting to use directly");
+                        setBankData(data as any);
                     }
                 }
             } catch (error) {

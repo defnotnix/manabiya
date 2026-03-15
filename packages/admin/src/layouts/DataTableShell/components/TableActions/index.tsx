@@ -3,8 +3,7 @@
 import { Button, Divider, Group, Paper, Text } from "@mantine/core";
 import { EyeIcon, PenIcon, TrashIcon, XIcon } from "@phosphor-icons/react";
 
-import { Router } from "next/dist/client/router";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { PropDataTableShellActions } from "../../DataTableShell.type";
 import { useContext } from "../../DataTableShell.context";
 
@@ -23,7 +22,6 @@ export function DataTableShellTableActions({
   const { selectedRecords, setSelectedRecords, deleting, setDeleting } =
     useContext();
 
-  const Router = useRouter();
   const Pathname = usePathname();
 
   const handleDelete = async () => {
@@ -45,7 +43,8 @@ export function DataTableShellTableActions({
         onReviewClick(selectedRecords[0]);
       } else {
         const id = selectedRecords[0][idAccessor];
-        Router.push(`${Pathname}/${id}`);
+        // Use window.location for clean navigation without preserving query params
+        window.location.href = `${Pathname}/${id}`;
       }
     }
   };
@@ -105,7 +104,8 @@ export function DataTableShellTableActions({
                           return e[idAccessor];
                         })
                         .join(",");
-                      Router.push(`${Pathname}/edit?ids=${ids}`);
+                      // Use window.location for clean navigation without preserving query params
+                      window.location.href = `${Pathname}/${ids}/edit`;
                     } else {
                       onEditClick?.(selectedRecords[0]);
                     }

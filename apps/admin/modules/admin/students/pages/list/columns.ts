@@ -20,23 +20,13 @@ export const columns = [
     size: 150,
   },
   {
-    accessorKey: "batch",
-    header: "Batch",
-    size: 150,
-  },
-  {
     accessorKey: "date_of_admission",
     header: "Admission Date",
     size: 130,
   },
   {
-    accessorKey: "locked",
-    header: "Status",
-    size: 100,
-  },
-  {
     accessorKey: "actions",
-    header: "Actions",
+    header: "Document",
     size: 100,
     
   },
@@ -61,6 +51,4 @@ export const filterList = [
 
 export const tabs = [
   { label: "All Students", filter: {} },
-  { label: "Active", filter: { locked: false } },
-  { label: "Locked", filter: { locked: true } },
 ];

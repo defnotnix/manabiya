@@ -59,7 +59,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
   const form = useForm({
     initialValues: {
       // Bank Template Selection
-      bank_template: bankData?.bank_template || "custom",
+      bank_template: bankData?.bank_template || Object.keys(BANK_KEY_LABELS)[0] || "",
 
       // Account Details
       statement_ref_no: bankData?.statement_ref_no || "",
@@ -100,8 +100,17 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
 
   useEffect(() => {
     if (opened && bankData) {
+      // Update interest indices
       setIntrestStartIndex(bankData.intrestStartIndex || 0);
       setPastIntrestStartIndex(bankData.pastIntrestStartIndex || []);
+
+      // Reset form to populate with existing bankData
+      console.log("Drawer opened with bankData, resetting form");
+      form.reset();
+    } else if (opened && !bankData) {
+      // New statement - reset form to initial values
+      console.log("Drawer opened for new statement, resetting form");
+      form.reset();
     }
   }, [opened, bankData]);
 
@@ -232,6 +241,18 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
   };
 
   const handleSubmit = async () => {
+    console.log("Form submitted with bank_template:", form.values.bank_template);
+
+    // Validate bank is selected
+    if (!form.values.bank_template) {
+      notifications.show({
+        title: "Validation Error",
+        message: "Please select a bank template",
+        color: "red",
+      });
+      return;
+    }
+
     // If custom group is needed but not set, open modal to collect details
     if (!studentId && !customGroupId) {
       setShowCustomGroupModal(true);
@@ -244,27 +265,72 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
   const saveBankStatement = async (customId: number | null) => {
     setIsLoading(true);
     try {
-      // Format data for API
+      console.log("Starting bank statement save with customId:", customId);
+      console.log("Form values:", form.values);
+
+      // Validate bank template is selected
+      if (!form.values.bank_template) {
+        throw new Error("Please select a bank template");
+      }
+
+      const bankLabel = BANK_KEY_LABELS[form.values.bank_template];
+      console.log("Selected bank template:", form.values.bank_template, "Label:", bankLabel);
+      if (!bankLabel) {
+        throw new Error("Invalid bank template selected");
+      }
+
+      // Calculate debit and credit totals
+      let totalDebit = 0;
+      let totalCredit = 0;
+      const statements = form.values.statements || [];
+      statements.forEach((stmt: any) => {
+        totalDebit += stmt.debit || 0;
+        totalCredit += stmt.credit || 0;
+      });
+
+      // Format data for API - match the structure expected by transformBankTemplate
       const templateData = {
-        header: `${BANK_KEY_LABELS[form.values.bank_template]} - Statement`,
+        header: `${bankLabel} - Statement`,
         body: {
-          accountDetails: {
-            refNo: form.values.statement_ref_no,
-            accountHolder: form.values.statement_account_holder,
-            accountNumber: form.values.statement_account_no,
-            accountType: form.values.statement_account_type,
-          },
-          statements: form.values.statements,
-          conversions: {
-            openingBalance: form.values.statement_opening_balance,
-            usdRate: form.values.statement_usdrate,
-            usdEquivalent: form.values.statement_usdrate_equiv,
-          },
+          bank_template: form.values.bank_template,
+          statement_ref_no: form.values.statement_ref_no,
+          statement_ref_no_statement: form.values.statement_ref_no_statement,
+          statement_account_no: form.values.statement_account_no,
+          statement_member_id: form.values.statement_member_id,
+          statement_account_holder: form.values.statement_account_holder,
+          statement_account_address: form.values.statement_account_address,
+          statement_account_type: form.values.statement_account_type,
+          statement_account_status: form.values.statement_account_status,
+          statement_start_date: form.values.statement_start_date,
+          statement_end_date: form.values.statement_end_date,
+          statement_interest_calculation: form.values.statement_interest_calculation,
+          statement_tax: form.values.statement_tax,
+          statement_interest: form.values.statement_interest,
+          statement_interest_method: form.values.statement_interest_method,
+          statement_interest_post: form.values.statement_interest_post,
+          statement_opening_balance: form.values.statement_opening_balance,
+          statements_opening_bal: form.values.statements_opening_bal,
+          statement_usdrate: form.values.statement_usdrate,
+          statement_usdrate_equiv: form.values.statement_usdrate_equiv,
+          statement_total_balance_words: form.values.statement_total_balance_words,
+          statement_total_balance_words_usd: form.values.statement_total_balance_words_usd,
+          statement_spokesperson: form.values.statement_spokesperson,
+          statement_spokesperson_post: form.values.statement_spokesperson_post,
+          statements_opening_date: form.values.statements_opening_date,
+          statements_has_code: form.values.statements_has_code,
+          statements_has_cheque: form.values.statements_has_cheque,
+          statements: statements,
+          intrestStartIndex: form.values.intrestStartIndex,
+          pastIntrestStartIndex: form.values.pastIntrestStartIndex,
+          // Add calculated totals
+          workedStatements: statements,
+          statement_debit_total: totalDebit,
+          statement_credit_total: totalCredit,
         },
       };
 
       const statementPayload = {
-        name: `${BANK_KEY_LABELS[form.values.bank_template]} Statement`,
+        name: `${bankLabel} Statement`,
         template: templateData,
         document_type: "bank_statement",
         bank: form.values.bank_template,
@@ -276,8 +342,11 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
       const existingStatementId = activeDocument?.type === "bank-statement" ? activeDocument.meta?.statementId : null;
 
       let savedStatement: any;
+      console.log("Statement payload to be saved:", statementPayload);
+
       if (existingStatementId) {
         // Update existing statement
+        console.log("Updating existing statement with ID:", existingStatementId);
         savedStatement = await moduleApiCall.editRecord({
           endpoint: "/api/documents/statements/",
           id: existingStatementId,
@@ -285,30 +354,43 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
         });
       } else {
         // Create new statement
+        console.log("Creating new statement...");
         savedStatement = await moduleApiCall.createRecord({
           endpoint: "/api/documents/statements/",
           body: statementPayload,
         });
       }
 
+      console.log("API response - savedStatement:", savedStatement);
+
       if (!savedStatement) {
         throw new Error("Failed to save statement");
       }
 
-      // Update local context
+      // Update local context with all required fields
       const bankDataForContext = {
         ...form.values,
         bank: form.values.bank_template,
         accountHolderName: form.values.statement_account_holder,
         accountNumber: form.values.statement_account_no,
         accountType: form.values.statement_account_type as "savings" | "current",
+        // Add calculated fields that templates expect
+        workedStatements: statements,
+        statement_debit_total: totalDebit,
+        statement_credit_total: totalCredit,
       };
 
+      console.log("Setting bank data in context:", bankDataForContext);
       setBankData(bankDataForContext as any);
 
       const hasBankDoc = documents.some((d) => d.type === "bank-statement");
+      console.log("Has existing bank doc:", hasBankDoc);
+
       if (!hasBankDoc) {
+        console.log("Adding new bank statement document with ID:", savedStatement.id);
         addDocument("bank-statement", { bankKey: form.values.bank_template, statementId: savedStatement.id });
+      } else {
+        console.log("Bank doc already exists, updating statementId if needed");
       }
 
       notifications.show({
@@ -896,21 +978,21 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
           setShowCustomGroupModal(false);
           customGroupForm.reset();
         }}
-        title="Create Custom Document Group"
+        title=<Text size="sm">Save Document</Text>
         centered
       >
         <Box p="md">
           <Stack gap="md">
             <TextInput
-              label="Group Name"
+              label="Document Name"
               placeholder="e.g. MySchool Documents"
               {...customGroupForm.getInputProps("name")}
               autoFocus
               required
             />
             <Textarea
-              label="Description"
-              placeholder="Enter a description for this group (optional)"
+              label="Remarks"
+              placeholder="Enter remarks for this document (optional)"
               {...customGroupForm.getInputProps("description")}
               rows={3}
             />
@@ -925,7 +1007,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
                 Cancel
               </Button>
               <Button onClick={handleCreateCustomGroup} loading={isLoading}>
-                Create Group
+                Save
               </Button>
             </Group>
           </Stack>

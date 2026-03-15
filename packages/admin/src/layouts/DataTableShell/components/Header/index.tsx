@@ -67,9 +67,7 @@ export function DataTableShellHeader({
                 {moduleInfo.label}
               </Text>
             </div>
-            <Badge variant="outline" color="gray" size="xs">
-              XXXX entries
-            </Badge>
+
           </Group>
           <Text size="xs" opacity={0.5}>
             {moduleInfo.description}

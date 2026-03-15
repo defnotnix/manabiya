@@ -58,6 +58,18 @@ const step4Schema = z.object({
 // Step 5: Review (no validation needed)
 const step5Schema = z.object({});
 
+// Batch validation schema - all fields required
+const batchSchema = z.object({
+  name: z.string().min(1, "Batch name is required"),
+  shift: z.string().min(1, "Shift is required"),
+  course: z.string().min(1, "Course is required"),
+  books: z.string().min(1, "Books is required"),
+  instructor: z.string().min(1, "Instructor is required"),
+  total_days: z.coerce.number().min(1, "Total days must be at least 1"),
+  per_class_hours: z.string().min(1, "Per class hours is required"),
+  is_active: z.boolean().default(true),
+});
+
 export const studentFormConfig = {
   initial: {
     // Basic Info (Step 1)
@@ -120,6 +132,7 @@ export const batchFormConfig = {
     per_class_hours: "",
     is_active: true,
   },
+  validation: zodResolver(batchSchema),
 };
 
 // Signature form configuration

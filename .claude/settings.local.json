@@ -25,7 +25,8 @@
       "Bash(git -C c:/Projects/manabiyav3 show HEAD:apps/admin/modules/admin/docs/modals/WodaDocModal.tsx)",
       "Bash(git -C c:/Projects/manabiyav3 show HEAD:apps/admin/modules/admin/docs/modals/StatementModal.tsx)",
       "Bash(git -C c:/Projects/manabiyav3 show HEAD:apps/admin/modules/admin/docs/modals/BankStatementForm.tsx)",
-      "Bash(git -C c:/Projects/manabiyav3 show HEAD:apps/admin/modules/admin/docs/modals/StudentCertificateModal.tsx)"
+      "Bash(git -C c:/Projects/manabiyav3 show HEAD:apps/admin/modules/admin/docs/modals/StudentCertificateModal.tsx)",
+      "Bash(npm run:*)"
     ]
   }
 }

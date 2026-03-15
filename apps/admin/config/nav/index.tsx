@@ -39,12 +39,6 @@ export const navItems: PropAdminNavItems[] = [
     description: "Student Management",
   },
   {
-    label: "Documents",
-    icon: FileTextIcon,
-    value: "/admin/docs",
-    description: "Document Management",
-  },
-  {
     label: "Custom Documents",
     icon: FolderPlusIcon,
     value: "/admin/customs",
@@ -53,8 +47,8 @@ export const navItems: PropAdminNavItems[] = [
   {
     label: "Intakes",
     icon: CalendarIcon,
+    value: "/admin/intakes",
     description: "Overview",
-
   },
   {
     divider: true,

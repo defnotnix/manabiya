@@ -27,10 +27,22 @@ export const STUDENT_API = {
   },
 
   getStudent: async (id: string) => {
+    // Try detail endpoint first
     const data = await moduleApiCall.getSingleRecord({
       endpoint: ENDPOINTS.STUDENTS,
       id,
     });
+
+    // If detail endpoint fails, try fetching from list and filtering
+    if (!data) {
+      const listData = await moduleApiCall.getRecords({
+        endpoint: ENDPOINTS.STUDENTS,
+      });
+      const results = Array.isArray(listData) ? listData : listData?.results || [];
+      const student = results.find((s: any) => String(s.id) === String(id));
+      return { data: student || null };
+    }
+
     return { data };
   },
 
@@ -74,6 +86,21 @@ export const STUDENT_API = {
       body: {},
     });
     return { data: result };
+  },
+
+  searchStudents: async (search: string) => {
+    const data = await moduleApiCall.getRecords({
+      endpoint: ENDPOINTS.STUDENTS,
+      params: { search },
+    });
+    return { data: Array.isArray(data) ? data : data?.results || [] };
+  },
+
+  getBatchStudents: async (batchId: string, params?: any) => {
+    return await moduleApiCall.getRecords({
+      endpoint: `${ENDPOINTS.BATCHES}${batchId}/students/`,
+      paginationProps: params,
+    });
   },
 };
 

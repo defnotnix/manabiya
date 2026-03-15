@@ -142,8 +142,7 @@ export function TemplateStudentCertificate() {
 
   return (
     <>
-      <StudentCertMissingBanner />
-
+     
       <Paper
         radius={0}
         style={{

@@ -1,4 +1,4 @@
-import { Stack, Center, Text } from "@mantine/core";
+import { Stack, Center, Text, Container } from "@mantine/core";
 import type { BankStatementData } from "@/context/DocumentContext";
 import { ContextEditor } from "@/components/layout/editor/editor.context";
 import { FormHandler } from "@/components/framework/FormHandler";
@@ -16,6 +16,19 @@ import { TemplateJanautthanStatement } from "./janautthan/statement";
 import { TemplateTribeniStatement } from "./tribeni/statement";
 import { TemplateShahabhagiStatement } from "./shahabhagi/statement";
 
+// Import all bank certificate templates
+import { TemplateBigyalaxmiCertificate } from "./bigyalaxmi/certificate";
+import { TemplateSumnimaCertificate } from "./sumnima/certificate";
+import { TemplateMataBageshworiCertificate } from "./mataBageshwori/certificate";
+import { TemplateNarayanCertificate } from "./narayan/certificate";
+import { TemplateHimchuliCertificate } from "./himchuli/certificate";
+import { TemplateVyasertificate } from "./vyas/certificate";
+import { TemplateBirendranagarCertificate } from "./birendranagar/certificate";
+import { TemplateKarnaliCertificate } from "./karnali/certificate";
+import { TemplateJanautthanCertificate } from "./janautthan/certificate";
+import { TemplateTribeniCertificate } from "./tribeni/certificate";
+import { TemplateShahabhagiCertificate } from "./shahabhagi/certificate";
+
 const bankStatementMap: Record<string, React.ComponentType<any>> = {
   bigyalaxmi: TemplateBigyalaxmiStatement,
   sumnima: TemplateSumnimaStatement,
@@ -30,9 +43,30 @@ const bankStatementMap: Record<string, React.ComponentType<any>> = {
   shahabhagi: TemplateShahabhagiStatement,
 };
 
+const bankCertificateMap: Record<string, React.ComponentType<any>> = {
+  bigyalaxmi: TemplateBigyalaxmiCertificate,
+  sumnima: TemplateSumnimaCertificate,
+  mataBageshwori: TemplateMataBageshworiCertificate,
+  narayan: TemplateNarayanCertificate,
+  himchuli: TemplateHimchuliCertificate,
+  vyas: TemplateVyasertificate,
+  birendranagar: TemplateBirendranagarCertificate,
+  karnali: TemplateKarnaliCertificate,
+  janautthan: TemplateJanautthanCertificate,
+  tribeni: TemplateTribeniCertificate,
+  shahabhagi: TemplateShahabhagiCertificate,
+};
+
 export function BankStatementDisplayTemplate({ data, bankKey: propBankKey }: { data: BankStatementData | null; bankKey?: string }) {
   // Determine which bank template to render - use prop first, then fallback to data
   const bankKey = propBankKey || data?.bank_template || data?.bank;
+
+  console.log("BankStatementDisplayTemplate - propBankKey:", propBankKey);
+  console.log("BankStatementDisplayTemplate - data.bank_template:", data?.bank_template);
+  console.log("BankStatementDisplayTemplate - data.bank:", data?.bank);
+  console.log("BankStatementDisplayTemplate - resolved bankKey:", bankKey);
+  console.log("BankStatementDisplayTemplate - data:", data);
+
   if (!bankKey) {
     return (
       <Center py="xl">
@@ -42,7 +76,12 @@ export function BankStatementDisplayTemplate({ data, bankKey: propBankKey }: { d
   }
 
   const StatementComponent = bankStatementMap[bankKey];
-  if (!StatementComponent) {
+  const CertificateComponent = bankCertificateMap[bankKey];
+
+  console.log("BankStatementDisplayTemplate - StatementComponent:", StatementComponent);
+  console.log("BankStatementDisplayTemplate - CertificateComponent:", CertificateComponent);
+
+  if (!StatementComponent || !CertificateComponent) {
     return (
       <Center py="xl">
         <Text size="sm" c="dimmed">Template not available for {bankKey}</Text>
@@ -50,14 +89,20 @@ export function BankStatementDisplayTemplate({ data, bankKey: propBankKey }: { d
     );
   }
 
-  // Render the bank-specific statement template with context providers
-  // Even if data is null, render the template with empty/default values
+  // Render the bank-specific statement and certificate templates with context providers
+  // Similar to WodaDocumentDisplayTemplate, use Container and Stack for layout
   return (
     <ContextEditor.Provider>
       <FormHandler.Provider values={data || {}}>
-        <Stack gap={0}>
-          <StatementComponent />
-        </Stack>
+        <Container size="8.3in" px={{ base: "xs", lg: 0 }} my="md">
+          <Stack gap={4}>
+            {/* Bank Certificate */}
+            <CertificateComponent />
+
+            {/* Bank Statement */}
+            <StatementComponent />
+          </Stack>
+        </Container>
       </FormHandler.Provider>
     </ContextEditor.Provider>
   );

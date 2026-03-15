@@ -273,7 +273,6 @@ export function TemplateTaxClearance() {
                     <Text lh=".25in">{occupationinfo.name}</Text>
                   </td>
                   <td
-                    key={index}
                     style={{
                       textAlign: "center",
                       lineHeight: ".2in",
@@ -285,7 +284,6 @@ export function TemplateTaxClearance() {
                     })}
                   </td>
                   <td
-                    key={index}
                     style={{
                       textAlign: "center",
                       lineHeight: ".2in",
@@ -297,7 +295,6 @@ export function TemplateTaxClearance() {
                     })}
                   </td>
                   <td
-                    key={index}
                     style={{
                       textAlign: "center",
                       lineHeight: ".2in",

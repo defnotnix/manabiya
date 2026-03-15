@@ -29,6 +29,9 @@ import { useDocContext, WODA_SUB_LABELS, WodaDocData } from "@/context/DocumentC
 import { ContextEditor } from "@/components/layout/editor/editor.context";
 import { notifications } from "@mantine/notifications";
 import { moduleApiCall, FormHandler } from "@settle/core";
+import moment from "moment";
+//@ts-ignore
+import adbs from "ad-bs-converter";
 
 
 interface WodaDrawerProps {
@@ -110,6 +113,21 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
       initial_address_name: wodaData?.initial_address_name || "",
       address_name_change_date: wodaData?.address_name_change_date ? new Date(wodaData.address_name_change_date) : null,
       address_name_change_date_bs: wodaData?.address_name_change_date_bs || "",
+
+      // Applicant Details
+      applicant_gender: wodaData?.applicant_gender || "",
+      applicant_honorific: wodaData?.applicant_honorific || "",
+      applicant_name: wodaData?.applicant_name || "",
+      applicant_permanent_address: wodaData?.applicant_permanent_address || "",
+      applicant_dob: wodaData?.applicant_dob ? new Date(wodaData.applicant_dob) : null,
+      applicant_dob_bs: wodaData?.applicant_dob_bs || "",
+      applicant_birth_address: wodaData?.applicant_birth_address || "",
+      applicant_citizenship: wodaData?.applicant_citizenship || "",
+      applicant_citizenship_issuer: wodaData?.applicant_citizenship_issuer || "",
+      applicant_father_honorific: wodaData?.applicant_father_honorific || "",
+      applicant_father_name: wodaData?.applicant_father_name || "",
+      applicant_mother_honorific: wodaData?.applicant_mother_honorific || "",
+      applicant_mother_name: wodaData?.applicant_mother_name || "",
     },
   });
 
@@ -154,6 +172,19 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
         initial_address_name: wodaData.initial_address_name || "",
         address_name_change_date: wodaData.address_name_change_date ? new Date(wodaData.address_name_change_date) : null,
         address_name_change_date_bs: wodaData.address_name_change_date_bs || "",
+        applicant_gender: wodaData.applicant_gender || "",
+        applicant_honorific: wodaData.applicant_honorific || "",
+        applicant_name: wodaData.applicant_name || "",
+        applicant_permanent_address: wodaData.applicant_permanent_address || "",
+        applicant_dob: wodaData.applicant_dob ? new Date(wodaData.applicant_dob) : null,
+        applicant_dob_bs: wodaData.applicant_dob_bs || "",
+        applicant_birth_address: wodaData.applicant_birth_address || "",
+        applicant_citizenship: wodaData.applicant_citizenship || "",
+        applicant_citizenship_issuer: wodaData.applicant_citizenship_issuer || "",
+        applicant_father_honorific: wodaData.applicant_father_honorific || "",
+        applicant_father_name: wodaData.applicant_father_name || "",
+        applicant_mother_honorific: wodaData.applicant_mother_honorific || "",
+        applicant_mother_name: wodaData.applicant_mother_name || "",
       });
     } else if (opened) {
       form.reset();
@@ -235,6 +266,25 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
             initialName: form.values.initial_address_name,
             changeDate: form.values.address_name_change_date,
             changeDateBs: form.values.address_name_change_date_bs,
+          },
+          applicant: {
+            gender: form.values.applicant_gender,
+            honorific: form.values.applicant_honorific,
+            name: form.values.applicant_name,
+            permanentAddress: form.values.applicant_permanent_address,
+            dob: form.values.applicant_dob,
+            dobBs: form.values.applicant_dob_bs,
+            birthAddress: form.values.applicant_birth_address,
+            citizenship: form.values.applicant_citizenship,
+            citizenshipIssuer: form.values.applicant_citizenship_issuer,
+            father: {
+              honorific: form.values.applicant_father_honorific,
+              name: form.values.applicant_father_name,
+            },
+            mother: {
+              honorific: form.values.applicant_mother_honorific,
+              name: form.values.applicant_mother_name,
+            },
           },
         },
       };
@@ -363,9 +413,149 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
 
 
         <Stack gap="md">
-          {/* Applicant Details */}
+          {/* Applicant Personal Details */}
           <div>
             <Text size="xs" fw={600} tt="uppercase" mb="sm">Applicant Details</Text>
+            <SimpleGrid cols={2} spacing="xs">
+              <Select
+                label="Applicant Gender"
+                description="Applicant Gender"
+                placeholder="e.g. Male, Female"
+                data={["Male", "Female"]}
+                {...form.getInputProps("applicant_gender")}
+              />
+              <TextInput
+                label="Applicant Honorific"
+                description="Applicant Honorifics"
+                placeholder="e.g. Mr, Miss, Mrs"
+                {...form.getInputProps("applicant_honorific")}
+              />
+            </SimpleGrid>
+            <TextInput
+              label="Applicant Name"
+              description="Applicant Name"
+              placeholder="e.g. John Doe"
+              mt="sm"
+              {...form.getInputProps("applicant_name")}
+            />
+            <TextInput
+              label="Permanent Address"
+              description="Full Permanent Address"
+              placeholder="e.g. Thakurbaba Municipality, Ward No 8, Bardiya, Lumbini Province, Nepal"
+              mt="sm"
+              {...form.getInputProps("applicant_permanent_address")}
+            />
+
+            <SimpleGrid cols={2} spacing="xs" mt="sm">
+              <DateInput
+                valueFormat="YYYY/MM/DD"
+                label="Date of Birth (A.D.)"
+                description="Applicant's Date of Birth"
+                placeholder="Select Date of Birth"
+                {...form.getInputProps("applicant_dob")}
+                onChange={(e) => {
+                  try {
+                    const _edate = moment(e).format("YYYY/MM/DD");
+                    const _ndate = adbs.ad2bs(_edate);
+
+                    form.setFieldValue("applicant_dob", new Date(_edate));
+                    form.setFieldValue(
+                      "applicant_dob_bs",
+                      `${_ndate.en.year}/${_ndate.en.month.toLocaleString(
+                        "en-US",
+                        {
+                          minimumIntegerDigits: 2,
+                          useGrouping: false,
+                        }
+                      )}/${_ndate.en.day.toLocaleString("en-US", {
+                        minimumIntegerDigits: 2,
+                        useGrouping: false,
+                      })}`
+                    );
+                  } catch (err) {
+                    form.setFieldValue("applicant_dob", null);
+                  }
+                }}
+              />
+              <TextInput
+                readOnly
+                label="Date of Birth (B.S.)"
+                description="Applicant's Date of Birth"
+                placeholder="Auto-filled"
+                {...form.getInputProps("applicant_dob_bs")}
+              />
+            </SimpleGrid>
+
+            <TextInput
+              label="Birth Address"
+              description="Birth Address of the Applicant"
+              placeholder="e.g. Geruwa Rural Municipality, Ward No. 1, Bardiya, Lumbini Province, Nepal"
+              mt="sm"
+              {...form.getInputProps("applicant_birth_address")}
+            />
+
+            <SimpleGrid cols={2} spacing="xs" mt="sm">
+              <TextInput
+                label="Applicant Citizenship No."
+                description="Applicant's Citizenship ID Number"
+                placeholder="e.g. xx-xx-xx-xxxx"
+                {...form.getInputProps("applicant_citizenship")}
+              />
+              <TextInput
+                label="Applicant Citizenship Issuer"
+                description="Citizenship Issuer for the applicant"
+                placeholder="e.g. District Administration Office, Bardiya"
+                {...form.getInputProps("applicant_citizenship_issuer")}
+              />
+            </SimpleGrid>
+
+            <Divider my="md" />
+
+            <Text size="xs" fw={600} tt="uppercase" mb="sm">Guardian Details</Text>
+
+            <Grid gutter="xs">
+              <Grid.Col span={2}>
+                <Select
+                  label="Father's Honorific"
+                  description="Mr/Late"
+                  placeholder="e.g. Mr."
+                  data={["Mr.", "Late"]}
+                  {...form.getInputProps("applicant_father_honorific")}
+                />
+              </Grid.Col>
+              <Grid.Col span={4}>
+                <TextInput
+                  label="Father's Name"
+                  description="Applicant's Father's Name"
+                  placeholder="e.g. John Doe"
+                  {...form.getInputProps("applicant_father_name")}
+                />
+              </Grid.Col>
+              <Grid.Col span={2}>
+                <Select
+                  label="Mother's Honorific"
+                  description="Mrs/Late"
+                  placeholder="e.g. Mrs."
+                  data={["Mrs.", "Late"]}
+                  {...form.getInputProps("applicant_mother_honorific")}
+                />
+              </Grid.Col>
+              <Grid.Col span={4}>
+                <TextInput
+                  label="Mother's Name"
+                  description="Applicant's Mother's Name"
+                  placeholder="e.g. Jane Doe"
+                  {...form.getInputProps("applicant_mother_name")}
+                />
+              </Grid.Col>
+            </Grid>
+          </div>
+
+          <Divider />
+
+          {/* Document Info */}
+          <div>
+            <Text size="xs" fw={600} tt="uppercase" mb="sm">Document Info</Text>
             <SimpleGrid cols={2} spacing="xs">
               <TextInput
                 label="Document Reference No."
@@ -709,21 +899,21 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
           setShowCustomGroupModal(false);
           customGroupForm.reset();
         }}
-        title="Create Custom Document Group"
+        title="Save Document as?"
         centered
       >
         <Box p="md">
           <Stack gap="md">
             <TextInput
-              label="Group Name"
-              placeholder="e.g. MySchool Documents"
+              label="Document Name"
+              placeholder="e.g. Ramesh Full Documents"
               {...customGroupForm.getInputProps("name")}
               autoFocus
               required
             />
             <Textarea
-              label="Description"
-              placeholder="Enter a description for this group (optional)"
+              label="Remarks"
+              placeholder="Enter remarks for this document (optional)"
               {...customGroupForm.getInputProps("description")}
               rows={3}
             />
@@ -738,7 +928,7 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 Cancel
               </Button>
               <Button onClick={handleCreateCustomGroup} loading={isLoading}>
-                Create Group
+              Create
               </Button>
             </Group>
           </Stack>

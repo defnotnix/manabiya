@@ -4,7 +4,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { FormWrapper } from "@settle/core";
 import { FormShell, triggerNotification } from "@settle/admin";
-import { Loader, Center, Alert } from "@mantine/core";
+import { Loader, Center, Alert, Button } from "@mantine/core";
 import {
   STUDENT_MODULE_CONFIG,
   STUDENT_API,
@@ -55,7 +55,35 @@ function EditPageContent({ isLocked, student, id }: any) {
 export function EditPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params?.id as string;
+  let id = params?.id as string;
+
+  // If coming from DataTableShell with query params, redirect to correct format
+  if (typeof window !== "undefined") {
+    const searchParams = new URLSearchParams(window.location.search);
+    const idsParam = searchParams.get("ids");
+    if (idsParam && (!id || id === "edit")) {
+      router.push(`/admin/students/${idsParam}/edit`);
+      return (
+        <Center h="100vh">
+          <Loader />
+        </Center>
+      );
+    }
+  }
+
+  // Validate ID
+  if (!id || id === "edit" || id === "new") {
+    return (
+      <Center h="100vh">
+        <Alert color="red" title="Invalid Student ID">
+          Please select a valid student to edit. <br />
+          <Button mt="sm" onClick={() => router.push("/admin/students")}>
+            Go Back to Students
+          </Button>
+        </Alert>
+      </Center>
+    );
+  }
 
   const {
     data: student,
@@ -65,8 +93,24 @@ export function EditPage() {
     queryKey: ["student", id],
     queryFn: async () => {
       const response = await STUDENT_API.getStudent(id);
-      return response?.data;
+      console.log("Student API Response:", response);
+      if (!response?.data) {
+        console.error("No student data returned from API");
+        throw new Error("Failed to fetch student");
+      }
+      return response.data;
     },
+  });
+
+  const {
+    data: contact,
+  } = useQuery({
+    queryKey: ["contact", id],
+    queryFn: async () => {
+      const res = await CONTACT_API.getContactByStudent(String(id));
+      return res.data;
+    },
+    enabled: !!student,
   });
 
   if (isLoading) {
@@ -95,12 +139,12 @@ export function EditPage() {
       formName="student-form"
       initial={{
         ...student,
-        email: student?.contact_detail?.email || "",
-        contact: student?.contact_detail?.contact || "",
-        phone_number: student?.contact_detail?.phone_number || "",
-        emergency_contact_name: student?.contact_detail?.emergency_contact_name || "",
-        emergency_contact_relation: student?.contact_detail?.emergency_contact_relation || "",
-        emergency_contact_phone: student?.contact_detail?.emergency_contact_phone || "",
+        email: student?.email || "",
+        contact: student?.contact || "",
+        phone_number: contact?.phone_number || "",
+        emergency_contact_name: contact?.emergency_contact_name || "",
+        emergency_contact_relation: contact?.emergency_contact_relation || "",
+        emergency_contact_phone: contact?.emergency_contact_phone || "",
         grading_grammar: student?.gradings?.[0]?.grammar || "",
         grading_conversation: student?.gradings?.[0]?.conversation || "",
         grading_composition: student?.gradings?.[0]?.composition || "",
@@ -133,7 +177,7 @@ export function EditPage() {
         const studentRes = await STUDENT_API.updateStudent(id, studentPayload);
 
         // 2. Update Contact Information
-        if (student?.contact_detail?.id) {
+        if (contact?.id) {
           const contactPayload = {
             email: data.email,
             contact: data.contact,
@@ -142,7 +186,7 @@ export function EditPage() {
             emergency_contact_relation: data.emergency_contact_relation,
             emergency_contact_phone: data.emergency_contact_phone,
           };
-          await CONTACT_API.updateContact(String(student.contact_detail.id), contactPayload);
+          await CONTACT_API.updateContact(String(contact.id), contactPayload);
         } else {
           // If no existing contact, create it
           const contactPayload = {

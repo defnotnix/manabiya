@@ -1,35 +1,18 @@
 "use client";
 
+import { Container, Group, Stack, Text } from "@mantine/core";
 import {
-  ActionIcon,
-  Autocomplete,
-  Box,
-  Button,
-  Center,
-  Container,
-  Divider,
-  Group,
-  Menu,
-  Paper,
-  Select,
-  SimpleGrid,
-  Stack,
-  Text,
-  TextInput,
-  Title,
-} from "@mantine/core";
-import {
-  ArrowRightIcon,
-  CalendarIcon,
-  CaretDownIcon,
-  CircleIcon,
-  MagnifyingGlassIcon,
-  Plus,
-  PlusIcon,
-  UsersIcon,
-} from "@phosphor-icons/react";
+  StudentSearchInput,
+  StudentResultsTable,
+  ActiveIntakesSection,
+  QuickActionButtons,
+} from "./components";
+import { useStudentSearch } from "./hooks/useStudentSearch";
 
 export function ModuleAdminHome() {
+  const { searchQuery, setSearchQuery, students, isFetching, isSearchActive } =
+    useStudentSearch();
+
   return (
     <Container size="md">
       <Stack gap={0}>
@@ -52,92 +35,24 @@ export function ModuleAdminHome() {
             You have 1123 Students | 332 Documents | 12 Intakes
           </Text>
 
-          <Autocomplete
-            styles={{
-              input: {
-                fontSize: "var(--mantine-font-size-xs)",
-              },
-            }}
-            size="lg"
-            placeholder="Search Student"
-            rightSection={<MagnifyingGlassIcon />}
+          <StudentSearchInput
+            value={searchQuery}
+            onChange={setSearchQuery}
+            isLoading={isFetching}
           />
 
-          <Group justify="space-between" gap="xs">
-            <Group gap={4}>
-              <Button size="sm" variant="light" leftSection={<UsersIcon />}>
-                Manage Students
-              </Button>
-              <Button size="sm" variant="light" leftSection={<CalendarIcon />}>
-                Manage Intakes
-              </Button>
-            </Group>
-            <Group gap={4}>
-              <Button size="sm" color="dark" leftSection={<PlusIcon />}>
-                Student
-              </Button>
-              <Button size="sm" color="dark" leftSection={<PlusIcon />}>
-                Intake
-              </Button>
-
-              <Menu>
-                <Menu.Target>
-                  <Button
-                    size="sm"
-                    leftSection={<PlusIcon />}
-                    rightSection={<CaretDownIcon />}
-                  >
-                    Custom Document
-                  </Button>
-                </Menu.Target>
-
-                <Menu.Dropdown>
-                  <Menu.Item leftSection={<PlusIcon />}>
-                    <Text size="xs">Student Certificate</Text>
-                  </Menu.Item>
-                  <Menu.Item leftSection={<PlusIcon />}>
-                    <Text size="xs">Student CV</Text>
-                  </Menu.Item>
-                  <Menu.Item leftSection={<PlusIcon />}>
-                    <Text size="xs">Woda Documents</Text>
-                  </Menu.Item>
-                  <Menu.Item leftSection={<PlusIcon />}>
-                    <Text size="xs">Bank Statement</Text>
-                  </Menu.Item>
-                </Menu.Dropdown>
-              </Menu>
-            </Group>
-          </Group>
+          <QuickActionButtons />
         </Stack>
 
-        <Divider my="xl" label="Active Intakes" />
-
-        <SimpleGrid cols={3}>
-          <Paper withBorder>
-            <Box p="md">
-              <Group justify="space-between">
-                <Text size="xs">127 Days</Text>
-              </Group>
-              <Text size="md" fw={800}>
-                April Intake
-              </Text>
-            </Box>
-
-            <Paper bg="teal.0" p="md" radius={0}>
-              <Group justify="space-between">
-                <Group gap={8}>
-                  <CircleIcon
-                    size={8}
-                    weight="fill"
-                    color="var(--mantine-color-teal-7)"
-                  />
-                  <Text size="xs">ACTIVE</Text>
-                </Group>
-                <ArrowRightIcon />
-              </Group>
-            </Paper>
-          </Paper>
-        </SimpleGrid>
+        {isSearchActive ? (
+          <StudentResultsTable
+            students={students}
+            count={students.length}
+            isLoading={isFetching}
+          />
+        ) : (
+          <ActiveIntakesSection />
+        )}
       </Stack>
     </Container>
   );
