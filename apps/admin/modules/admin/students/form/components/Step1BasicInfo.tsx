@@ -126,7 +126,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
             placeholder="Enter first name (Japanese)"
             disabled={disabled}
             leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0 } }}
+            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
             {...form.getInputProps("jp_first_name")}
           />
         </Stack>
@@ -142,7 +142,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
             placeholder="Enter middle name (Japanese)"
             disabled={disabled}
             leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0 } }}
+            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
             {...form.getInputProps("jp_middle_name")}
           />
         </Stack>
@@ -159,7 +159,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
             placeholder="Enter last name (Japanese)"
             disabled={disabled}
             leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0 } }}
+            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
             {...form.getInputProps("jp_last_name")}
           />
         </Stack>
@@ -180,7 +180,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
             disabled={disabled}
             valueFormat="YYYY-MM-DD"
             leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0 } }}
+            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
             {...form.getInputProps("jp_date_of_birth")}
           />
         </Stack>
@@ -198,7 +198,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
             data={GENDER_OPTIONS}
             disabled={disabled}
             leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0 } }}
+            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
             {...form.getInputProps("jp_gender")}
           />
         </Stack>
@@ -216,7 +216,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
           placeholder="Enter current address (Japanese)"
           disabled={disabled}
           leftSection={<Text size="xs">JP</Text>}
-          styles={{ input: { borderTop: 0 } }}
+          styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
           {...form.getInputProps("jp_current_address")}
         />
       </Stack>
@@ -233,7 +233,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
           placeholder="Enter permanent address (Japanese)"
           disabled={disabled}
           leftSection={<Text size="xs">JP</Text>}
-          styles={{ input: { borderTop: 0 } }}
+          styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
           {...form.getInputProps("jp_permanent_address")}
         />
       </Stack>
