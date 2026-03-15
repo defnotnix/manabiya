@@ -21,6 +21,13 @@ const step1Schema = z.object({
   gender: z.string().optional(),
   current_address: z.string().optional(),
   permanent_address: z.string().optional(),
+  jp_first_name: z.string().optional(),
+  jp_middle_name: z.string().optional(),
+  jp_last_name: z.string().optional(),
+  jp_date_of_birth: z.any().optional(),
+  jp_gender: z.string().optional(),
+  jp_current_address: z.string().optional(),
+  jp_permanent_address: z.string().optional(),
 });
 
 // Step 2: Contact Info validation
@@ -81,6 +88,13 @@ export const studentFormConfig = {
     gender: "",
     current_address: "",
     permanent_address: "",
+    jp_first_name: "",
+    jp_middle_name: "",
+    jp_last_name: "",
+    jp_date_of_birth: null,
+    jp_gender: "",
+    jp_current_address: "",
+    jp_permanent_address: "",
 
     // Contact Info (Step 2)
     email: "",

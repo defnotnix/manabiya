@@ -67,20 +67,33 @@ export function Step5Review() {
         <Divider mb="md" />
         <SimpleGrid cols={3} spacing="md">
           <ReviewField label="Student Code" value={values.student_code} />
-          <ReviewField label="First Name" value={values.first_name} />
-          <ReviewField label="Middle Name" value={values.middle_name} />
-          <ReviewField label="Last Name" value={values.last_name} />
+          <ReviewField label="First Name (EN)" value={values.first_name} />
+          <ReviewField label="First Name (JP)" value={values.jp_first_name} />
+          <ReviewField label="Middle Name (EN)" value={values.middle_name} />
+          <ReviewField label="Middle Name (JP)" value={values.jp_middle_name} />
+          <ReviewField label="Last Name (EN)" value={values.last_name} />
+          <ReviewField label="Last Name (JP)" value={values.jp_last_name} />
           <ReviewField
-            label="Date of Birth"
+            label="Date of Birth (EN)"
             value={formatDate(values.date_of_birth)}
           />
-          <ReviewField label="Gender" value={values.gender} />
+          <ReviewField
+            label="Date of Birth (JP)"
+            value={formatDate(values.jp_date_of_birth)}
+          />
+          <ReviewField label="Gender (EN)" value={values.gender} />
+          <ReviewField label="Gender (JP)" value={values.jp_gender} />
         </SimpleGrid>
         <SimpleGrid cols={2} spacing="md" mt="md">
-          <ReviewField label="Current Address" value={values.current_address} />
+          <ReviewField label="Current Address (EN)" value={values.current_address} />
+          <ReviewField label="Current Address (JP)" value={values.jp_current_address} />
           <ReviewField
-            label="Permanent Address"
+            label="Permanent Address (EN)"
             value={values.permanent_address}
+          />
+          <ReviewField
+            label="Permanent Address (JP)"
+            value={values.jp_permanent_address}
           />
         </SimpleGrid>
       </Paper>

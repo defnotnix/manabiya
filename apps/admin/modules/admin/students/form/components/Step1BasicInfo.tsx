@@ -112,59 +112,131 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
         {...form.getInputProps("student_code")}
       />
 
-      <Group grow>
-        <TextInput
-          label="First Name"
-          placeholder="Enter first name"
-          required
-          disabled={disabled}
-          {...form.getInputProps("first_name")}
-        />
-        <TextInput
-          label="Middle Name"
-          placeholder="Enter middle name"
-          disabled={disabled}
-          {...form.getInputProps("middle_name")}
-        />
-        <TextInput
-          label="Last Name"
-          placeholder="Enter last name"
-          required
-          disabled={disabled}
-          {...form.getInputProps("last_name")}
-        />
+      <Group grow align="flex-start">
+        <Stack gap={0}>
+          <TextInput
+            label="First Name"
+            placeholder="Enter first name"
+            required
+            disabled={disabled}
+            leftSection={<Text size="xs">EN</Text>}
+            {...form.getInputProps("first_name")}
+          />
+          <TextInput
+            placeholder="Enter first name (Japanese)"
+            disabled={disabled}
+            leftSection={<Text size="xs">JP</Text>}
+            styles={{ input: { borderTop: 0 } }}
+            {...form.getInputProps("jp_first_name")}
+          />
+        </Stack>
+        <Stack gap={0}>
+          <TextInput
+            label="Middle Name"
+            placeholder="Enter middle name"
+            disabled={disabled}
+            leftSection={<Text size="xs">EN</Text>}
+            {...form.getInputProps("middle_name")}
+          />
+          <TextInput
+            placeholder="Enter middle name (Japanese)"
+            disabled={disabled}
+            leftSection={<Text size="xs">JP</Text>}
+            styles={{ input: { borderTop: 0 } }}
+            {...form.getInputProps("jp_middle_name")}
+          />
+        </Stack>
+        <Stack gap={0}>
+          <TextInput
+            label="Last Name"
+            placeholder="Enter last name"
+            required
+            disabled={disabled}
+            leftSection={<Text size="xs">EN</Text>}
+            {...form.getInputProps("last_name")}
+          />
+          <TextInput
+            placeholder="Enter last name (Japanese)"
+            disabled={disabled}
+            leftSection={<Text size="xs">JP</Text>}
+            styles={{ input: { borderTop: 0 } }}
+            {...form.getInputProps("jp_last_name")}
+          />
+        </Stack>
       </Group>
 
-      <Group grow>
-        <DateInput
-          label="Date of Birth"
-          placeholder="Select date"
-          disabled={disabled}
-          valueFormat="YYYY-MM-DD"
-          {...form.getInputProps("date_of_birth")}
-        />
-        <Select
-          label="Gender"
-          placeholder="Select gender"
-          data={GENDER_OPTIONS}
-          disabled={disabled}
-          {...form.getInputProps("gender")}
-        />
+      <Group grow align="flex-start">
+        <Stack gap={0}>
+          <DateInput
+            label="Date of Birth"
+            placeholder="Select date"
+            disabled={disabled}
+            valueFormat="YYYY-MM-DD"
+            leftSection={<Text size="xs">EN</Text>}
+            {...form.getInputProps("date_of_birth")}
+          />
+          <DateInput
+            placeholder="Select date (Japanese)"
+            disabled={disabled}
+            valueFormat="YYYY-MM-DD"
+            leftSection={<Text size="xs">JP</Text>}
+            styles={{ input: { borderTop: 0 } }}
+            {...form.getInputProps("jp_date_of_birth")}
+          />
+        </Stack>
+        <Stack gap={0}>
+          <Select
+            label="Gender"
+            placeholder="Select gender"
+            data={GENDER_OPTIONS}
+            disabled={disabled}
+            leftSection={<Text size="xs">EN</Text>}
+            {...form.getInputProps("gender")}
+          />
+          <Select
+            placeholder="Select gender"
+            data={GENDER_OPTIONS}
+            disabled={disabled}
+            leftSection={<Text size="xs">JP</Text>}
+            styles={{ input: { borderTop: 0 } }}
+            {...form.getInputProps("jp_gender")}
+          />
+        </Stack>
       </Group>
 
-      <TextInput
-        label="Current Address"
-        placeholder="Enter current address"
-        disabled={disabled}
-        {...form.getInputProps("current_address")}
-      />
+      <Stack gap={0}>
+        <TextInput
+          label="Current Address"
+          placeholder="Enter current address"
+          disabled={disabled}
+          leftSection={<Text size="xs">EN</Text>}
+          {...form.getInputProps("current_address")}
+        />
+        <TextInput
+          placeholder="Enter current address (Japanese)"
+          disabled={disabled}
+          leftSection={<Text size="xs">JP</Text>}
+          styles={{ input: { borderTop: 0 } }}
+          {...form.getInputProps("jp_current_address")}
+        />
+      </Stack>
 
-      <TextInput
-        label="Permanent Address"
-        placeholder="Enter permanent address"
-        disabled={disabled}
-        {...form.getInputProps("permanent_address")}
-      />
+      <Stack gap={0}>
+        <TextInput
+          label="Permanent Address"
+          placeholder="Enter permanent address"
+          disabled={disabled}
+          leftSection={<Text size="xs">EN</Text>}
+          {...form.getInputProps("permanent_address")}
+        />
+        <TextInput
+          placeholder="Enter permanent address (Japanese)"
+          disabled={disabled}
+          leftSection={<Text size="xs">JP</Text>}
+          styles={{ input: { borderTop: 0 } }}
+          {...form.getInputProps("jp_permanent_address")}
+        />
+      </Stack>
 
 
     </Stack>
