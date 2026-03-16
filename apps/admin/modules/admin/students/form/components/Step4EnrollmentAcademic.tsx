@@ -1,6 +1,6 @@
 "use client";
 
-import { Stack, Group, Text, TextInput, Table, NumberInput, Paper, ScrollArea, Select } from "@mantine/core";
+import { Stack, Group, Text, TextInput, Table, NumberInput, Paper, ScrollArea, Select, Button } from "@mantine/core";
 import { DateInput, MonthPickerInput } from "@mantine/dates";
 import { FormWrapper } from "@settle/core";
 import { useQuery } from "@tanstack/react-query";
@@ -29,13 +29,17 @@ export function Step4EnrollmentAcademic({
     // Marking State
     const handleStartMonthChange = (date: Date | null) => {
         form.setFieldValue("marking_start_date", date);
+    };
+
+    const handleGenerateMarkings = () => {
+        const date = form.getValues().marking_start_date;
         if (!date) return;
 
         const currentMarkings = form.getValues().markings || [];
         const newMarkings: any[] = [];
 
         let currentDate = dayjs(date);
-        for (let i = 0; i < 24; i++) {
+        for (let i = 0; i < 12; i++) {
             const year = currentDate.year();
             const month = currentDate.month() + 1;
 
@@ -71,55 +75,48 @@ export function Step4EnrollmentAcademic({
         const current = [...(form.getValues().markings || [])];
         const row = current[index];
         const maxDaysInMonth = dayjs().year(row.year).month(row.month - 1).daysInMonth();
+        const defaultHours = form.getValues().default_class_hours;
 
         // cap total_days
         if (row.total_days !== null && row.total_days > maxDaysInMonth) {
             row.total_days = maxDaysInMonth;
         }
 
-        const t = row.total_days !== null ? Number(row.total_days) : null;
-        const c = row.class_hours ? Number(row.class_hours) : null;
-
-        // cap class_hours
-        if (row.class_hours) {
-            const maxHours = (t !== null ? t : maxDaysInMonth) * 24;
-            if (!isNaN(c!) && c! > maxHours) {
-                row.class_hours = String(maxHours);
-            }
+        // Calculate class_hours from total_days * default_class_hours
+        if (fieldBlurred === "total_days" && row.total_days !== null && defaultHours) {
+            row.class_hours = String(Number(row.total_days) * Number(defaultHours));
         }
 
-        // Re-read strictly capped class hours
-        const finalC = row.class_hours ? Number(row.class_hours) : null;
+        const t = row.total_days !== null ? Number(row.total_days) : null;
 
         let p = row.present !== null ? Number(row.present) : null;
         let a = row.absent !== null ? Number(row.absent) : null;
 
-        // Limiting bounds and calculating based on *class_hours* (finalC) if it exists
-        // If not, we don't assume boundaries for present/absent since hours are the primary metric
-        if (fieldBlurred === "class_hours" || fieldBlurred === "present") {
-            if (p !== null && finalC !== null && p > finalC) {
-                p = finalC;
+        // Limiting bounds and calculating based on total_days
+        if (fieldBlurred === "present") {
+            if (p !== null && t !== null && p > t) {
+                p = t;
                 row.present = p;
             }
-            if (finalC !== null && p !== null) {
-                a = Math.max(0, finalC - p);
+            if (t !== null && p !== null) {
+                a = Math.max(0, t - p);
                 row.absent = a;
             }
         } else if (fieldBlurred === "absent") {
-            if (a !== null && finalC !== null && a > finalC) {
-                a = finalC;
+            if (a !== null && t !== null && a > t) {
+                a = t;
                 row.absent = a;
             }
-            if (finalC !== null && a !== null) {
-                p = Math.max(0, finalC - a);
+            if (t !== null && a !== null) {
+                p = Math.max(0, t - a);
                 row.present = p;
             }
         }
 
         if (p !== null && a !== null && (p + a) > 0) {
             row.attendance_percent = ((p / (p + a)) * 100).toFixed(2);
-        } else if (p !== null && finalC !== null && finalC > 0) {
-            row.attendance_percent = ((p / finalC) * 100).toFixed(2);
+        } else if (p !== null && t !== null && t > 0) {
+            row.attendance_percent = ((p / t) * 100).toFixed(2);
         } else {
             row.attendance_percent = "";
         }
@@ -221,22 +218,41 @@ export function Step4EnrollmentAcademic({
                     <Text fw={600} size="sm">Marking (Attendance) Information</Text>
                     <MonthPickerInput
                         label="Marking Start Month"
-                        placeholder="Pick start month to auto-generate 24 months"
+                        placeholder="Pick start month to auto-generate 12 months"
                         disabled={disabled}
                         value={values.marking_start_date ? new Date(values.marking_start_date) : null}
                         onChange={(val: any) => handleStartMonthChange(val)}
                     />
+
+                    {values.marking_start_date && (
+                        <Stack gap="md">
+                            <TextInput
+                                label="Default Class Hours"
+                                placeholder="Enter default class hours"
+                                disabled={disabled}
+                                value={values.default_class_hours ?? ""}
+                                onChange={(e) => form.setFieldValue("default_class_hours", e.currentTarget.value)}
+                            />
+                            <Button
+                                onClick={handleGenerateMarkings}
+                                disabled={disabled}
+                                variant="default"
+                            >
+                                Generate 12 Months
+                            </Button>
+                        </Stack>
+                    )}
 
                     {values.markings && values.markings.length > 0 && (
                         <ScrollArea type="auto" offsetScrollbars>
                             <Table striped highlightOnHover withTableBorder>
                                 <Table.Thead>
                                     <Table.Tr>
-                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Month/Year</Table.Th>
+                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Month</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Tot. Days</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Class Hrs</Table.Th>
-                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Present</Table.Th>
-                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Absent</Table.Th>
+                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Present Days</Table.Th>
+                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Absent Days</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Attend. %</Table.Th>
                                     </Table.Tr>
                                 </Table.Thead>
@@ -244,7 +260,7 @@ export function Step4EnrollmentAcademic({
                                     {values.markings.map((mark: any, index: number) => (
                                         <Table.Tr key={`${mark.year}-${mark.month}`}>
                                             <Table.Td style={{ whiteSpace: 'nowrap' }}>
-                                                <Text size="sm" fw={500}>{dayjs().year(mark.year).month(mark.month - 1).format("MMM YYYY")}</Text>
+                                                <Text size="sm" fw={500}>{dayjs().year(mark.year).month(mark.month - 1).format("MMM")}</Text>
                                             </Table.Td>
                                             <Table.Td>
                                                 <NumberInput
@@ -260,16 +276,14 @@ export function Step4EnrollmentAcademic({
                                                 <TextInput
                                                     size="xs"
                                                     placeholder="Hrs"
-                                                    disabled={disabled}
+                                                    readOnly
                                                     value={values.markings[index]?.class_hours ?? ""}
-                                                    onChange={(e) => updateMarkingFieldValue(index, "class_hours", e.currentTarget.value)}
-                                                    onBlur={() => handleMarkingBlur(index, "class_hours")}
                                                 />
                                             </Table.Td>
                                             <Table.Td>
                                                 <NumberInput
                                                     size="xs"
-                                                    placeholder="Pres"
+                                                    placeholder="Days"
                                                     disabled={disabled}
                                                     value={values.markings[index]?.present ?? ""}
                                                     onChange={(val) => updateMarkingFieldValue(index, "present", val)}
@@ -279,8 +293,8 @@ export function Step4EnrollmentAcademic({
                                             <Table.Td>
                                                 <NumberInput
                                                     size="xs"
-                                                    placeholder="Abs"
-                                                    disabled={disabled || !values.markings[index]?.class_hours}
+                                                    placeholder="Days"
+                                                    disabled={disabled || !values.markings[index]?.total_days}
                                                     value={values.markings[index]?.absent ?? ""}
                                                     onChange={(val) => updateMarkingFieldValue(index, "absent", val)}
                                                     onBlur={() => handleMarkingBlur(index, "absent")}

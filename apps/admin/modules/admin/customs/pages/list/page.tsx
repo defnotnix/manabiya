@@ -35,6 +35,13 @@ export function ListPage() {
     return col;
   });
 
+  // Handle custom document creation - redirect to docs page
+  const handleCreateSuccess = (response: any) => {
+    if (response?.id) {
+      router.push(`/admin/docs?custom=${response.id}`);
+    }
+  };
+
   return (
     <DataTableWrapper
       queryKey="customs.list"
@@ -46,7 +53,11 @@ export function ListPage() {
         columns={columnsWithActions}
         idAccessor="id"
         filterList={[]}
-        onCreateApi={async (data) => CUSTOMS_API.createCustom(data)}
+        onCreateApi={async (data) => {
+          const response = await CUSTOMS_API.createCustom(data);
+          handleCreateSuccess(response);
+          return response;
+        }}
         onEditApi={async (id, data) => CUSTOMS_API.updateCustom(String(id), data)}
         onDeleteApi={async (id) => CUSTOMS_API.deleteCustom(String(id))}
         createFormComponent={<CustomsForm />}

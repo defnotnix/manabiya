@@ -18,6 +18,7 @@ import {
 import { StudentsForm, STUDENT_FORM_STEPS } from "../../form/StudentsForm";
 import { studentFormConfig } from "../../form/form.config";
 import { LockedStudentBanner } from "../../components/LockedStudentBanner";
+import { FloatingClipboardButton } from "../../../../clipboard";
 
 function EditPageContent({ isLocked, student, id }: any) {
   const formProps = FormWrapper.useFormProps();
@@ -48,6 +49,7 @@ function EditPageContent({ isLocked, student, id }: any) {
       >
         <StudentsForm isLocked={isLocked} />
       </FormShell>
+      <FloatingClipboardButton />
     </>
   );
 }

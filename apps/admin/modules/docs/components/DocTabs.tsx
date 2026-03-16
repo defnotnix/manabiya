@@ -154,29 +154,7 @@ export function DocTabs({
                             </Group>
                         )}
 
-                        {activeDocument?.type === "student-certificate" && (
-                            <Button
-                                radius={0}
-                                color="teal"
-                                size="xs"
-                                onClick={onOpenCertificateDrawer}
-                                leftSection={<PenIcon />}
-                            >
-                                Edit
-                            </Button>
-                        )}
 
-                        {activeDocument?.type === "student-cv" && (
-                            <Button
-                                radius={0}
-                                color="teal"
-                                size="xs"
-                                onClick={onOpenCvDrawer}
-                                leftSection={<PenIcon />}
-                            >
-                                Edit
-                            </Button>
-                        )}
                     </Group>
                 </Group>
             </Container>

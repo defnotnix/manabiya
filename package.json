@@ -21,6 +21,7 @@
     "node": ">=18"
   },
   "dependencies": {
-    "framer-motion": "^12.23.26"
+    "framer-motion": "^12.23.26",
+    "react-to-print": "^3.3.0"
   }
 }

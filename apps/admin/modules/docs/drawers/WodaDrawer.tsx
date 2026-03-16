@@ -40,7 +40,7 @@ interface WodaDrawerProps {
 }
 
 export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
-  const { addDocument, wodaData, setWodaData, documents, customGroupId, setCustomGroupId, studentId, activeDocument } = useDocContext();
+  const { addDocument, wodaData, setWodaData, documents, customGroupId, setCustomGroupId, studentId } = useDocContext();
   const { dispatch } = useContext(ContextEditor.Context) || { dispatch: () => { } };
   const [isLoading, setIsLoading] = useState(false);
   const [showCustomGroupModal, setShowCustomGroupModal] = useState(false);
@@ -298,24 +298,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
         custom: customId || null,
       };
 
-      // Check if editing existing document
-      const existingWodaId = activeDocument?.type === "woda-documents" ? activeDocument.meta?.wodaDocId : null;
-
-      let savedWoda: any;
-      if (existingWodaId) {
-        // Update existing woda document
-        savedWoda = await moduleApiCall.editRecord({
-          endpoint: "/api/documents/woda-docs/",
-          id: existingWodaId,
-          body: wodaPayload,
-        });
-      } else {
-        // Create new woda document
-        savedWoda = await moduleApiCall.createRecord({
-          endpoint: "/api/documents/woda-docs/",
-          body: wodaPayload,
-        });
-      }
+      // Create new woda document
+      const savedWoda = await moduleApiCall.createRecord({
+        endpoint: "/api/documents/woda-docs/",
+        body: wodaPayload,
+      });
 
       if (!savedWoda) {
         throw new Error("Failed to save woda document");
@@ -412,10 +399,10 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
       <form onSubmit={form.onSubmit(handleSubmit)}>
 
 
-        <Stack gap="md">
+        <Stack gap={0}>
           {/* Applicant Personal Details */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Applicant Details</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Applicant Details</Text>
             <SimpleGrid cols={2} spacing="xs">
               <Select
                 label="Applicant Gender"
@@ -549,13 +536,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 />
               </Grid.Col>
             </Grid>
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Document Info */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Document Info</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Document Info</Text>
             <SimpleGrid cols={2} spacing="xs">
               <TextInput
                 label="Document Reference No."
@@ -570,20 +555,19 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {...form.getInputProps("wodadoc_date")}
               />
             </SimpleGrid>
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Spokesperson Details */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Spokesperson Details</Text>
-            <SimpleGrid cols={1} spacing="xs">
-              <TextInput
-                label="Spokeperson's Full Name"
-                description="Spokeperson's Full Name"
-                placeholder="e.g. John Doe"
-                {...form.getInputProps("spokesperson_name")}
-              />
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Spokesperson Details</Text>
+            <TextInput
+              label="Spokeperson's Full Name"
+              description="Spokeperson's Full Name"
+              placeholder="e.g. John Doe"
+              mb="sm"
+              {...form.getInputProps("spokesperson_name")}
+            />
+            <SimpleGrid cols={2} spacing="xs">
               <TextInput
                 label="Spokeperson's Post"
                 description="Spokesperson's Post"
@@ -597,13 +581,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {...form.getInputProps("spokesperson_contact")}
               />
             </SimpleGrid>
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Relationship Verification */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Relationship Verification Certificate</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Relationship Verification Certificate</Text>
             <Textarea
               rows={6}
               placeholder="e.g. Local Government Operation Act..."
@@ -637,13 +619,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {...form.getInputProps("relation_extra_relation")}
               />
             </SimpleGrid>
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Fiscal Year */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Fiscal Year Details</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Fiscal Year Details</Text>
             {[1, 2, 3].map((year) => (
               <div key={year}>
                 <Text size="xs" fw={600} tt="uppercase" mb="sm">Year {year}</Text>
@@ -666,13 +646,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {year < 3 && <Divider my="md" />}
               </div>
             ))}
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Occupation */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Occupation Details</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Occupation Details</Text>
             <Select
               label="Earning Guardian"
               placeholder="Select Guardian"
@@ -740,25 +718,21 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
               placeholder="End Note..."
               {...form.getInputProps("occupation_note")}
             />
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Date of Birth Verification */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Date of Birth Verification</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Date of Birth Verification</Text>
             <Textarea
               rows={6}
               placeholder="e.g. Local Government Operation Act..."
               {...form.getInputProps("signature_issued_act_dob")}
             />
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Income Details */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Income & Conversion Details</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Income & Conversion Details</Text>
             <SimpleGrid cols={2} spacing="xs">
               <NumberInput
                 label="USD Conversion Rate"
@@ -771,13 +745,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {...form.getInputProps("rate_date")}
               />
             </SimpleGrid>
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Tax Details */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Tax Clearance Details</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Tax Clearance Details</Text>
             <SimpleGrid cols={2} spacing="xs" mb="md">
               <NumberInput
                 label="TAX Rate"
@@ -796,13 +768,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
               placeholder="TAX Clearance Signature..."
               {...form.getInputProps("signature_tax")}
             />
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Migration Details */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Migration Certificate</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Migration Certificate</Text>
             <SimpleGrid cols={2} spacing="xs" mb="md">
               <TextInput
                 label="Initial Address"
@@ -821,13 +791,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
               placeholder="e.g. along with her parent"
               {...form.getInputProps("signature_migration_alongwith")}
             />
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Surname Verification */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Surname Verification</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Surname Verification</Text>
             <SimpleGrid cols={2} spacing="xs">
               <TextInput
                 label="Surname Compared With"
@@ -846,13 +814,11 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
               mt="sm"
               {...form.getInputProps("applicant_surname")}
             />
-          </div>
-
-          <Divider />
+          </Box>
 
           {/* Address Change Certificate */}
-          <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Address Change Certificate</Text>
+          <Box p="md">
+            <Text size="xs" fw={600} tt="uppercase" mb="sm" c="dimmed">Address Change Certificate</Text>
             <TextInput
               label="Initial Address Name"
               placeholder="e.g. Bannatoli Village..."
@@ -873,9 +839,10 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
                 {...form.getInputProps("address_name_change_date_bs")}
               />
             </SimpleGrid>
-          </div>
+          </Box>
 
-          <Group justify="flex-end">
+          <Box p="md">
+            <Group justify="flex-end">
             <Button
               variant="light"
               onClick={() => {
@@ -890,6 +857,7 @@ export function WodaDrawer({ opened, onClose }: WodaDrawerProps) {
               {isLoading ? "Saving..." : "Save Document"}
             </Button>
           </Group>
+          </Box>
         </Stack>
       </form>
 

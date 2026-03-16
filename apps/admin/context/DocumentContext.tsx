@@ -577,14 +577,73 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
         if (!activeDocument) {
             setWodaData(null);
             setBankData(null);
+            setDocumentData(null);
             return;
         }
 
         const fetchDocumentData = async () => {
             try {
-                if (activeDocument.type === "woda-documents" && activeDocument.meta?.wodaDocId) {
+                if (activeDocument.type === "student-certificate" && studentId) {
+                    // Fetch complete student information for certificate
+                    const studentData = await moduleApiCall.getSingleRecord({
+                        endpoint: "/api/students/information/",
+                        id: studentId,
+                    });
+
+                    if (studentData) {
+                        // Transform marking data from API format to template format
+                        const transformedMarkings = (studentData.markings || []).map((mark: any) => ({
+                            month: mark.month || `${mark.year}-${String(mark.month).padStart(2, '0')}` || "",
+                            total_days: mark.total_days || 0,
+                            class_hr: parseFloat(mark.class_hours) || 0,
+                            present: mark.present || 0,
+                            absent: mark.absent || 0,
+                            attendance_percentage: parseFloat(mark.attendance_percent) || (mark.attendance_percentage || 0),
+                        }));
+
+                        const contactDetail = studentData.contact_detail;
+                        const firstGrading = studentData.gradings?.[0];
+
+                        const certificateData: StudentCertificateData = {
+                            firstname: studentData.first_name || "",
+                            middlename: studentData.middle_name || "",
+                            lastname: studentData.last_name || "",
+                            date_of_birth: studentData.date_of_birth ? studentData.date_of_birth.split('T')[0] : "",
+                            gender: studentData.gender === "female" ? "Female" : "Male",
+                            address: studentData.current_address || "",
+                            date_of_admission: studentData.date_of_admission ? studentData.date_of_admission.split('T')[0] : "",
+                            date_of_completion: studentData.date_of_completion ? studentData.date_of_completion.split('T')[0] : "",
+                            issue: "",
+                            coursehour: studentData.batch_detail?.per_class_hours ? parseFloat(studentData.batch_detail.per_class_hours) : 0,
+                            grammar: firstGrading?.grammar || "A",
+                            listening: firstGrading?.listening || "A",
+                            conversation: firstGrading?.conversation || "A",
+                            reading: firstGrading?.reading || "A",
+                            composition: firstGrading?.composition || "A",
+                            studyType: 0,
+                            batch: {
+                                course: {
+                                    name: studentData.batch_detail?.name || "",
+                                    level: studentData.batch_detail?.course || "",
+                                    total_days: studentData.batch_detail?.total_days || 0,
+                                    books: studentData.batch_detail?.books
+                                        ? [{ name: studentData.batch_detail.books }]
+                                        : [],
+                                },
+                                instructor: studentData.batch_detail?.instructor
+                                    ? [{ name: studentData.batch_detail.instructor }]
+                                    : [],
+                            },
+                            marking: transformedMarkings,
+                        };
+
+                        setDocumentData(certificateData);
+                        console.log("Student certificate data loaded:", certificateData);
+                    }
+                } else if (activeDocument.type === "woda-documents" && activeDocument.meta?.wodaDocId) {
                     // Clear bank data when switching to woda
                     setBankData(null);
+                    setDocumentData(null);
 
                     // Fetch woda document data
                     const data = await moduleApiCall.getSingleRecord({
@@ -600,6 +659,7 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
                 } else if (activeDocument.type === "bank-statement" && activeDocument.meta?.statementId) {
                     // Clear woda data when switching to bank statement
                     setWodaData(null);
+                    setDocumentData(null);
 
                     // Fetch bank statement data
                     const data = await moduleApiCall.getSingleRecord({
@@ -630,7 +690,7 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
         };
 
         fetchDocumentData();
-    }, [activeDocument]);
+    }, [activeDocument, studentId]);
 
     const documentMode: DocumentMode = useMemo(() => {
         if (studentId) return "student";

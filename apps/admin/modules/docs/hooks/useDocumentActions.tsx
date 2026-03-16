@@ -3,6 +3,7 @@ import { modals } from "@mantine/modals";
 import { notifications } from "@mantine/notifications";
 import { moduleApiCall } from "@settle/core";
 import { Text } from "@mantine/core";
+import { useReactToPrint } from "react-to-print";
 import { PRINT_LOG_API } from "@/modules/admin/students/module.config";
 import { DocType } from "@/context/DocumentContext";
 
@@ -11,6 +12,7 @@ interface UseDocumentActionsProps {
     activeDocumentType?: DocType;
     activeDocumentLabel?: string | null;
     onDocumentRemoved: (docId: string) => void;
+    printableContentRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 export function useDocumentActions({
@@ -18,6 +20,7 @@ export function useDocumentActions({
     activeDocumentType,
     activeDocumentLabel,
     onDocumentRemoved,
+    printableContentRef,
 }: UseDocumentActionsProps): {
     isDeleting: boolean;
     handlePrintAll: () => void;
@@ -40,15 +43,21 @@ export function useDocumentActions({
         });
     };
 
-    const handlePrintAll = () => {
-        window.print();
-        logPrint("all");
-    };
+    const handlePrintAll = useReactToPrint({
+        contentRef: printableContentRef,
+        documentTitle: "All Documents",
+        onAfterPrint: () => {
+            logPrint("all");
+        },
+    });
 
-    const handlePrintCurrent = () => {
-        window.print();
-        logPrint("current");
-    };
+    const handlePrintCurrent = useReactToPrint({
+        contentRef: printableContentRef,
+        documentTitle: activeDocumentLabel || "Document",
+        onAfterPrint: () => {
+            logPrint("current");
+        },
+    });
 
     const handleRemoveDocument = (docId: string, docLabel: string, docType: DocType) => {
         modals.openConfirmModal({

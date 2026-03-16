@@ -15,26 +15,30 @@ import {
 } from "../../module.config";
 import { StudentsForm, STUDENT_FORM_STEPS } from "../../form/StudentsForm";
 import { studentFormConfig } from "../../form/form.config";
+import { FloatingClipboardButton } from "../../../../clipboard";
 
 function NewPageContent() {
   const formProps = FormWrapper.useFormProps();
 
   return (
-    <FormShell
-      moduleInfo={STUDENT_MODULE_CONFIG}
-      title="Create New Student"
-      bread={[
-        { label: "Students", link: "/admin/students" },
-        { label: "New" },
-      ]}
-      steps={STUDENT_FORM_STEPS}
-      showStepper={true}
-      enableStepTracking={true}
-      onStepNext={formProps?.handleStepNext}
-      onStepBack={formProps?.handleStepBack}
-    >
-      <StudentsForm />
-    </FormShell>
+    <>
+      <FormShell
+        moduleInfo={STUDENT_MODULE_CONFIG}
+        title="Create New Student"
+        bread={[
+          { label: "Students", link: "/admin/students" },
+          { label: "New" },
+        ]}
+        steps={STUDENT_FORM_STEPS}
+        showStepper={true}
+        enableStepTracking={true}
+        onStepNext={formProps?.handleStepNext}
+        onStepBack={formProps?.handleStepBack}
+      >
+        <StudentsForm />
+      </FormShell>
+      <FloatingClipboardButton />
+    </>
   );
 }
 

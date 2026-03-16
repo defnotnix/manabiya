@@ -280,7 +280,7 @@ export function TemplateBigyalaxmiStatement() {
               textAlign: "right",
             }}
           >
-            {form.values?.statements_opening_bal.toLocaleString(undefined, {
+            {(form.values?.statements_opening_bal ?? 0).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -381,7 +381,7 @@ export function TemplateBigyalaxmiStatement() {
         <tr>
           <td>
             <Text ta="center" {..._defaultTextProps} fw={800}>
-              {form.values?.statement_debit_total.toLocaleString(undefined, {
+              {(form.values?.statement_debit_total ?? 0).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -389,7 +389,7 @@ export function TemplateBigyalaxmiStatement() {
           </td>
           <td>
             <Text ta="center" {..._defaultTextProps} fw={800}>
-              {form.values?.statement_credit_total.toLocaleString(undefined, {
+              {(form.values?.statement_credit_total ?? 0).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -397,7 +397,7 @@ export function TemplateBigyalaxmiStatement() {
           </td>
           <td>
             <Text ta="center" {..._defaultTextProps} fw={800}>
-              {form.values?.statement_balance_total.toLocaleString(undefined, {
+              {(form.values?.statement_balance_total ?? 0).toLocaleString(undefined, {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2,
               })}
@@ -452,12 +452,17 @@ export function TemplateBigyalaxmiStatement() {
             <DocumentHeader />
 
             <table className={classes.st_table}>
-              <TableHeader />
-              {index == 0 && <RenderTableStart />}
-              <RenderTable data={stChunk} />
-
+              <thead>
+                <TableHeader />
+              </thead>
+              <tbody>
+                {index == 0 && <RenderTableStart />}
+                <RenderTable data={stChunk} />
+              </tbody>
               {index == chunkedStatements.length - 1 && stChunk.length < 27 && (
-                <TableSummary />
+                <tfoot>
+                  <TableSummary />
+                </tfoot>
               )}
             </table>
 
@@ -478,7 +483,9 @@ export function TemplateBigyalaxmiStatement() {
             <DocumentHeader />
 
             <table className={classes.st_table}>
-              <TableSummary />
+              <tfoot>
+                <TableSummary />
+              </tfoot>
             </table>
 
             <PageNumber page={chunkedStatements.length + 1} />

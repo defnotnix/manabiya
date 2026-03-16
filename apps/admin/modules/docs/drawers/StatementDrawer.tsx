@@ -39,7 +39,7 @@ interface StatementDrawerProps {
 }
 
 export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
-  const { addDocument, bankData, setBankData, documents, customGroupId, setCustomGroupId, studentId, activeDocument } = useDocContext();
+  const { addDocument, bankData, setBankData, documents, customGroupId, setCustomGroupId, studentId } = useDocContext();
 
   const [intrestStartIndex, setIntrestStartIndex] = useState(0);
   const [pastIntrestStartIndex, setPastIntrestStartIndex] = useState<number[]>([]);
@@ -338,28 +338,15 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
         custom: customId || null,
       };
 
-      // Check if editing existing document
-      const existingStatementId = activeDocument?.type === "bank-statement" ? activeDocument.meta?.statementId : null;
-
       let savedStatement: any;
       console.log("Statement payload to be saved:", statementPayload);
 
-      if (existingStatementId) {
-        // Update existing statement
-        console.log("Updating existing statement with ID:", existingStatementId);
-        savedStatement = await moduleApiCall.editRecord({
-          endpoint: "/api/documents/statements/",
-          id: existingStatementId,
-          body: statementPayload,
-        });
-      } else {
-        // Create new statement
-        console.log("Creating new statement...");
-        savedStatement = await moduleApiCall.createRecord({
-          endpoint: "/api/documents/statements/",
-          body: statementPayload,
-        });
-      }
+      // Create new statement
+      console.log("Creating new statement...");
+      savedStatement = await moduleApiCall.createRecord({
+        endpoint: "/api/documents/statements/",
+        body: statementPayload,
+      });
 
       console.log("API response - savedStatement:", savedStatement);
 
@@ -475,12 +462,10 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
       title="Bank Statement Form"
     >
       <form onSubmit={form.onSubmit(handleSubmit)}>
-
-
-        <Stack gap="md">
+        <Stack gap="lg">
           {/* Bank Template Selection */}
           <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Select Bank Template</Text>
+            <Text size="xs" fw={600} tt="uppercase" mb="md">Select Bank Template</Text>
 
             <Radio.Group
               value={form.values.bank_template}
@@ -508,11 +493,11 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
             </Radio.Group>
           </div>
 
-          <Divider />
+          <Divider my="md" />
 
           {/* Account Details */}
           <div>
-            <Text size="xs" fw={600} tt="uppercase" mb="sm">Account Details</Text>
+            <Text size="xs" fw={600} tt="uppercase" mb="md">Account Details</Text>
             <SimpleGrid spacing="xs" cols={4}>
               <TextInput
                 label="Reference No. CERT."
@@ -559,9 +544,9 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
               />
             </SimpleGrid>
 
-            <Divider />
+            <Divider my="md" />
 
-            <Text size="xs" fw={600} tt="uppercase">Statement Details</Text>
+            <Text size="xs" fw={600} tt="uppercase" mb="md">Statement Details</Text>
 
             <SimpleGrid spacing="xs" cols={4}>
               <DateInput
@@ -609,7 +594,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
               />
             </SimpleGrid>
 
-            <Text size="xs" fw={600} tt="uppercase">Conversions</Text>
+            <Text size="xs" fw={600} tt="uppercase" mb="md" mt="md">Conversions</Text>
 
             <SimpleGrid spacing="xs" cols={3}>
               <NumberInput
@@ -660,7 +645,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
               />
             </SimpleGrid>
 
-            <Text size="xs" fw={600} tt="uppercase">Spokesperson</Text>
+            <Text size="xs" fw={600} tt="uppercase" mb="md" mt="md">Spokesperson</Text>
 
             <SimpleGrid spacing="xs" cols={2}>
               <TextInput
@@ -676,11 +661,11 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
             </SimpleGrid>
           </div>
 
-          <Divider />
+          <Divider my="md" />
 
           {/* Statement Entries */}
           <div>
-            <Group justify="space-between">
+            <Group justify="space-between" mb="md">
               <Text size="xs" fw={600} tt="uppercase">Statement Entries</Text>
               <Group>
                 <Checkbox
@@ -715,16 +700,16 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
             </Group>
 
             <div style={{ overflowX: "auto" }}>
-              <Table withColumnBorders withTableBorder verticalSpacing={0} horizontalSpacing={0}>
+              <Table withColumnBorders withTableBorder verticalSpacing="xs" horizontalSpacing="xs">
                 <Table.Thead style={{ background: "var(--mantine-color-gray-0)" }}>
                   <Table.Tr>
-                    <Table.Th w={100}>Date</Table.Th>
-                    <Table.Th w={200}>Description</Table.Th>
-                    {form.values.statements_has_code && <Table.Th w={80}>Code</Table.Th>}
-                    {form.values.statements_has_cheque && <Table.Th w={100}>Cheque No.</Table.Th>}
-                    <Table.Th w={120}>Debit</Table.Th>
-                    <Table.Th w={120}>Credit</Table.Th>
-                    <Table.Th w={120}>Balance</Table.Th>
+                    <Table.Th w={100} p="sm"><Text size="xs" fw={600}>Date</Text></Table.Th>
+                    <Table.Th w={200} p="sm"><Text size="xs" fw={600}>Description</Text></Table.Th>
+                    {form.values.statements_has_code && <Table.Th w={80} p="sm"><Text size="xs" fw={600}>Code</Text></Table.Th>}
+                    {form.values.statements_has_cheque && <Table.Th w={100} p="sm"><Text size="xs" fw={600}>Cheque No.</Text></Table.Th>}
+                    <Table.Th w={120} p="sm"><Text size="xs" fw={600}>Debit</Text></Table.Th>
+                    <Table.Th w={120} p="sm"><Text size="xs" fw={600}>Credit</Text></Table.Th>
+                    <Table.Th w={120} p="sm"><Text size="xs" fw={600}>Balance</Text></Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
@@ -903,7 +888,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
               </Table>
             </div>
 
-            <Group justify="space-between" gap="xs">
+            <Group justify="space-between" gap="xs" mt="md" mb="md">
               <Text size="xs">
                 Generate Interest & TAX <b>({form.values.statements.length - intrestStartIndex})</b>
               </Text>
@@ -953,6 +938,8 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
               </Group>
             </Group>
           </div>
+
+          <Divider my="md" />
 
           <Group justify="flex-end">
             <Button
