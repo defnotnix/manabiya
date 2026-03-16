@@ -32,7 +32,7 @@ export function LayoutApp({ children }: PropsWithChildren) {
         },
       }}
     >
-      <MantineProvider theme={configThemeMantine} defaultColorScheme="light">
+      <MantineProvider theme={configThemeMantine} defaultColorScheme="dark">
         <ModalsProvider>
           <Notifications />
 

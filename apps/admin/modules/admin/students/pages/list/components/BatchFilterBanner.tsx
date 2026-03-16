@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, Button, Text, Container, Paper, Menu, Loader } from "@mantine/core";
+import { Group, Button, Text, Container, Paper, Menu, Loader, useMantineColorScheme } from "@mantine/core";
 import { useRouter } from "next/navigation";
 import { XIcon, CaretDownIcon } from "@phosphor-icons/react";
 import { useQuery } from "@tanstack/react-query";
@@ -12,19 +12,27 @@ interface BatchFilterBannerProps {
 
 export function BatchFilterBanner({ batchName }: BatchFilterBannerProps) {
   const router = useRouter();
+  const { colorScheme } = useMantineColorScheme();
   const { data: batches = [], isLoading } = useQuery({
     queryKey: ["batches"],
     queryFn: async () => {
-      const result = await BATCH_API.getBatches();
-      const batchList = result?.data || [];
-      return Array.isArray(batchList) ? batchList : [];
+      try {
+        const result = await BATCH_API.getBatches();
+        const batchList = result?.data || [];
+        return Array.isArray(batchList) ? batchList : [];
+      } catch (error) {
+        console.error("Failed to fetch batches:", error);
+        return [];
+      }
     },
   });
 
   if (!batchName) return null;
 
+  const batchesArray = Array.isArray(batches) ? batches : [];
+
   return (
-    <Paper bg="brand.0">
+    <Paper bg={colorScheme === "dark" ? "gray.9" : "brand.0"}>
       <Container size="xl">
         <Group gap="xs" justify="space-between">
           <Group gap="xs">
@@ -40,7 +48,7 @@ export function BatchFilterBanner({ batchName }: BatchFilterBannerProps) {
                 </Button>
               </Menu.Target>
               <Menu.Dropdown>
-                {batches.map((batch: any) => (
+                {batchesArray.map((batch: any) => (
                   <Menu.Item
                     key={batch.id}
                     onClick={() =>

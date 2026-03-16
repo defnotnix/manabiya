@@ -28,11 +28,11 @@ export function ModuleAdminHome() {
               textAlign: "center",
             }}
           >
-            Manabiya quick access
+            Quick Access
           </h1>
 
           <Text size="xs" c="dimmed" ta="center">
-            You have 1123 Students | 332 Documents | 12 Intakes
+            Freely search students from the search below.
           </Text>
 
           <StudentSearchInput

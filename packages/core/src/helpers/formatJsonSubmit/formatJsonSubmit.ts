@@ -86,6 +86,7 @@ export async function formatJsonSubmit({
     Object.entries(_dataFormatted).forEach(([key, value]) => {
       formData.append(key, value);
     });
+    console.log("[formatJsonSubmit] Converting to FormData with entries:", Array.from(formData.entries()));
     return formData;
   } else {
     return _dataFormatted;

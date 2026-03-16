@@ -80,6 +80,7 @@ const batchSchema = z.object({
 export const studentFormConfig = {
   initial: {
     // Basic Info (Step 1)
+    image: null,
     student_code: "",
     first_name: "",
     middle_name: "",

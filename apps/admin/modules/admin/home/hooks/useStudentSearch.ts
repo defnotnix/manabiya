@@ -10,11 +10,11 @@ export function useStudentSearch() {
   const { data: searchData, isFetching } = useQuery({
     queryKey: ["student-search", debouncedSearch],
     queryFn: () => STUDENT_API.searchStudents(debouncedSearch),
-    enabled: debouncedSearch.trim().length > 1,
+    enabled: debouncedSearch.trim().length > 0,
   });
 
   const students = searchData?.data ?? [];
-  const isSearchActive = searchQuery.trim().length > 0;
+  const isSearchActive = debouncedSearch.trim().length > 0;
 
   return {
     searchQuery,

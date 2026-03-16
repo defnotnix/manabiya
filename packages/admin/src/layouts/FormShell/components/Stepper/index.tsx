@@ -12,6 +12,7 @@ import {
   Stepper,
   Text,
   Timeline,
+  useComputedColorScheme,
 } from "@mantine/core";
 
 import { FormWrapper } from "@settle/core";
@@ -32,6 +33,7 @@ export function FormShellStepper({
 }: PropFormShellStepper) {
   const { handleStepNext, handleStepBack, isLoading } =
     FormWrapper.useFormProps();
+  const computedColorScheme = useComputedColorScheme("light");
 
   const isLastStep = currentStep === steps.length - 1;
   const isFirstStep = currentStep === 0;
@@ -65,7 +67,7 @@ export function FormShellStepper({
         <Menu.Target>
           <Paper
             withBorder
-            bg="brand.0"
+            bg={computedColorScheme === "dark" ? "dark.6" : "brand.0"}
             p="xs"
             style={{
               cursor: "pointer",

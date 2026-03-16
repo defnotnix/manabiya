@@ -17,22 +17,13 @@ import {
 } from "../../module.config";
 import { StudentsForm, STUDENT_FORM_STEPS } from "../../form/StudentsForm";
 import { studentFormConfig } from "../../form/form.config";
-import { LockedStudentBanner } from "../../components/LockedStudentBanner";
 import { FloatingClipboardButton } from "../../../../clipboard";
 
-function EditPageContent({ isLocked, student, id }: any) {
+function EditPageContent({ isLocked, student }: any) {
   const formProps = FormWrapper.useFormProps();
 
   return (
     <>
-      {isLocked && (
-        <LockedStudentBanner
-          studentId={id}
-          lockedBy={student.locked_by}
-          lockedAt={student.locked_at}
-        />
-      )}
-
       <FormShell
         moduleInfo={STUDENT_MODULE_CONFIG}
         title={`Edit Student: ${student.first_name} ${student.last_name}`}
@@ -272,7 +263,7 @@ export function EditPage() {
         router.push("/admin/students");
       }}
     >
-      <EditPageContent isLocked={isLocked} student={student} id={id} />
+      <EditPageContent isLocked={isLocked} student={student} />
     </FormWrapper>
   );
 }

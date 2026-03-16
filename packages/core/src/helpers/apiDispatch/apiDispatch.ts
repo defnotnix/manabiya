@@ -216,6 +216,15 @@ async function makeRequest<T>(
     if (method === "get" || method === "delete") {
       response = await axios[method](endpoint, config);
     } else {
+      // Log data format for verification
+      const isFormData = data instanceof FormData;
+      console.log(`[API ${method.toUpperCase()}] ${endpoint}`, {
+        isFormData,
+        contentType: config.headers?.["Content-Type"] || "auto",
+      });
+      if (isFormData) {
+        console.log("[FormData entries]", Array.from(data.entries()));
+      }
       response = await axios[method](endpoint, data, config);
     }
     return { err: false, data: response.data };

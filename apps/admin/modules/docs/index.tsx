@@ -1,9 +1,10 @@
 "use client";
 
-import { Center, Divider, LoadingOverlay, ScrollArea, Text, Stack, Group, Box, Paper } from "@mantine/core";
+import { Center, Divider, LoadingOverlay, ScrollArea, Text, Stack, Group, Box, Paper, useMantineColorScheme, Select, SimpleGrid } from "@mantine/core";
 import { DateInput } from "@mantine/dates";
 import { useDisclosure } from "@mantine/hooks";
 import { useRef, useEffect, useState } from "react";
+import { moduleApiCall } from "@settle/core";
 import { useDocContext } from "@/context/DocumentContext";
 import { WodaDocumentDisplayTemplate, BankStatementDisplayTemplate } from "@/components/templates";
 import { TemplateStudentCertificate } from "@/components/templates/student-certificate";
@@ -15,31 +16,14 @@ import { DocTabs } from "./components/DocTabs";
 import { EmptyState } from "./components/EmptyState";
 import { useDocumentActions } from "./hooks/useDocumentActions";
 
-function DocTemplate() {
-    const { activeDocument, bankData, wodaData, documentData, setDocumentData } = useDocContext();
-    const [issueDate, setIssueDate] = useState<Date | null>(null);
+interface DocTemplateProps {
+    selectedInstructor: string | null;
+    selectedDirector: string | null;
+    signatures: Array<{ id: string; name: string }>;
+}
 
-    // Update document data when issue date changes
-    const handleIssueDateChange = (dateStr: string | null) => {
-        if (dateStr) {
-            const date = new Date(dateStr);
-            setIssueDate(date);
-            if (documentData) {
-                setDocumentData({
-                    ...documentData,
-                    issue: dateStr,
-                });
-            }
-        } else {
-            setIssueDate(null);
-            if (documentData) {
-                setDocumentData({
-                    ...documentData,
-                    issue: "",
-                });
-            }
-        }
-    };
+function DocTemplate(props: DocTemplateProps) {
+    const { activeDocument, bankData, wodaData, documentData } = useDocContext();
 
     if (!activeDocument) {
         return (
@@ -59,7 +43,11 @@ function DocTemplate() {
                 </Center>
             );
         }
-        return <WodaDocumentDisplayTemplate data={wodaData} />;
+        return (
+            <div data-mantine-color-scheme="light">
+                <WodaDocumentDisplayTemplate data={wodaData} />
+            </div>
+        );
     }
 
     if (activeDocument.type === "bank-statement") {
@@ -71,27 +59,23 @@ function DocTemplate() {
             );
         }
         const bankKey = activeDocument.meta?.bankKey;
-        return <BankStatementDisplayTemplate data={bankData} bankKey={bankKey} />;
+        return (
+            <div data-mantine-color-scheme="light">
+                <BankStatementDisplayTemplate data={bankData} bankKey={bankKey} />
+            </div>
+        );
     }
 
     if (activeDocument.type === "student-certificate") {
         return (
             <Stack gap="md" align="center">
-                <Box style={{ width: "100%", maxWidth: "900px" }}>
-                    <Paper p="md" radius="md" withBorder>
-                        <Group gap="md">
-                            <DateInput
-                                label="Issue Date"
-                                placeholder="Select issue date"
-                                value={issueDate}
-                                onChange={handleIssueDateChange}
-                                clearable
-                                style={{ flex: 1 }}
-                            />
-                        </Group>
-                    </Paper>
-                </Box>
-                <TemplateStudentCertificate />
+                <div data-mantine-color-scheme="light">
+                    <TemplateStudentCertificate
+                        selectedInstructor={props.selectedInstructor}
+                        selectedDirector={props.selectedDirector}
+                        signatures={props.signatures}
+                    />
+                </div>
             </Stack>
         );
     }
@@ -116,12 +100,61 @@ function DocTemplate() {
 }
 
 export function ModuleAdminDocs() {
-    const { activeDocument, activeDocumentId, studentId, documents, removeDocument, setActiveDocumentId } = useDocContext();
+    const { colorScheme } = useMantineColorScheme();
+    const { activeDocument, activeDocumentId, studentId, documents, removeDocument, setActiveDocumentId, documentData, setDocumentData } = useDocContext();
     const printableContentRef = useRef<HTMLDivElement>(null);
     const [wodaDrawerOpened, wodaDrawerHandlers] = useDisclosure(false);
     const [statementDrawerOpened, statementDrawerHandlers] = useDisclosure(false);
     const [certificateDrawerOpened, certificateDrawerHandlers] = useDisclosure(false);
     const [cvDrawerOpened, cvDrawerHandlers] = useDisclosure(false);
+    const [issueDate, setIssueDate] = useState<Date | null>(null);
+    const [signatures, setSignatures] = useState<Array<{ id: string; name: string }>>([]);
+    const [selectedInstructor, setSelectedInstructor] = useState<string | null>(null);
+    const [selectedDirector, setSelectedDirector] = useState<string | null>(null);
+
+    const backgroundColor = colorScheme === "dark" ? "var(--mantine-color-dark-7)" : "var(--mantine-color-gray-2)";
+
+    // Fetch signatures on component mount
+    useEffect(() => {
+        const fetchSignatures = async () => {
+            try {
+                const response = await moduleApiCall.getRecords({
+                    endpoint: "/api/students/signatures/",
+                });
+                if (response?.results) {
+                    setSignatures(response.results);
+                    if (response.results.length > 0) {
+                        setSelectedInstructor(String(response.results[0].id));
+                        setSelectedDirector(String(response.results[0].id));
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching signatures:", error);
+            }
+        };
+        fetchSignatures();
+    }, []);
+
+    const handleIssueDateChange = (dateStr: string | null) => {
+        if (dateStr) {
+            const date = new Date(dateStr);
+            setIssueDate(date);
+            if (documentData) {
+                setDocumentData({
+                    ...documentData,
+                    issue: dateStr,
+                });
+            }
+        } else {
+            setIssueDate(null);
+            if (documentData) {
+                setDocumentData({
+                    ...documentData,
+                    issue: "",
+                });
+            }
+        }
+    };
 
     // Auto-select certificate document when page loads with student_id
     useEffect(() => {
@@ -144,7 +177,7 @@ export function ModuleAdminDocs() {
     return (
         <div
             style={{
-                background: "var(--mantine-color-gray-2)",
+                background: backgroundColor,
                 minHeight: "100vh",
                 overflow: "hidden",
             }}
@@ -174,6 +207,41 @@ export function ModuleAdminDocs() {
                 </>
             )}
 
+            {activeDocument?.type === "student-certificate" && (
+                <Box p="md" className="no-print">
+                    <SimpleGrid cols={3} spacing="md" style={{ maxWidth: "900px", margin: "0 auto" }}>
+                        <DateInput
+                            label="Issue Date"
+                            placeholder="Select issue date"
+                            value={issueDate}
+                            onChange={handleIssueDateChange}
+                            clearable
+                        />
+                        <Select
+                            label="Instructor"
+                            placeholder="Select instructor"
+                            data={signatures.map((sig) => ({
+                                value: String(sig.id),
+                                label: sig.name,
+                            }))}
+                            value={selectedInstructor}
+                            onChange={setSelectedInstructor}
+                            searchable
+                        />
+                        <Select
+                            label="Managing Director"
+                            placeholder="Select director"
+                            data={signatures.map((sig) => ({
+                                value: String(sig.id),
+                                label: sig.name,
+                            }))}
+                            value={selectedDirector}
+                            onChange={setSelectedDirector}
+                            searchable
+                        />
+                    </SimpleGrid>
+                </Box>
+            )}
 
             <ScrollArea h={"calc(100vh - 75px)"}>
                 <div style={{ position: "relative" }}>
@@ -199,7 +267,11 @@ export function ModuleAdminDocs() {
                     ) : (
                         <div ref={printableContentRef}>
                             <Center>
-                                <DocTemplate />
+                                <DocTemplate
+                                    selectedInstructor={selectedInstructor}
+                                    selectedDirector={selectedDirector}
+                                    signatures={signatures}
+                                />
                             </Center>
                         </div>
                     )}

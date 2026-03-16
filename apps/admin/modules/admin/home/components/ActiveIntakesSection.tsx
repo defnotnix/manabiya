@@ -1,7 +1,7 @@
 "use client";
 
-import { Box, Button, Divider, Group, Paper, SimpleGrid, Text, ActionIcon, Menu, Center, Loader, Stack } from "@mantine/core";
-import { ArrowRightIcon, CircleIcon, PlusIcon, DotsThreeVerticalIcon, TrashIcon, PencilIcon } from "@phosphor-icons/react";
+import { Box, Button, Divider, Group, Paper, SimpleGrid, Text, ActionIcon, Menu, Center, Loader, Stack, useMantineColorScheme, useMantineTheme } from "@mantine/core";
+import { ArrowRightIcon, PlusIcon, DotsThreeVerticalIcon, TrashIcon, PencilIcon } from "@phosphor-icons/react";
 import { useDisclosure } from "@mantine/hooks";
 import { notifications } from "@mantine/notifications";
 import { useRouter } from "next/navigation";
@@ -11,6 +11,8 @@ import { BatchModal } from "../../students/modals/BatchModal";
 
 export function ActiveIntakesSection() {
   const router = useRouter();
+  const theme = useMantineTheme();
+  const { colorScheme } = useMantineColorScheme();
   const { batches, isLoading, isDeleting, deleteBatch, refetch } = useBatches();
   const [modalOpened, modalHandlers] = useDisclosure(false);
   const [editRecord, setEditRecord] = useState<any>(null);
@@ -59,12 +61,14 @@ export function ActiveIntakesSection() {
           <Loader />
         </Center>
       ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="md">
+        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xs">
           {/* New Intake Button Card */}
           <Paper
+            opacity={.5}
             withBorder
             p="md"
             onClick={handleNewBatch}
+            bg={colorScheme === "dark" ? "dark.7" : "white"}
             style={{
               display: "flex",
               alignItems: "center",
@@ -74,7 +78,7 @@ export function ActiveIntakesSection() {
               transition: "all 0.2s ease",
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(0, 0, 0, 0.15)";
+              e.currentTarget.style.boxShadow = colorScheme === "dark" ? "0 4px 12px rgba(255, 255, 255, 0.1)" : "0 4px 12px rgba(0, 0, 0, 0.15)";
               e.currentTarget.style.transform = "translateY(-2px)";
             }}
             onMouseLeave={(e) => {
@@ -91,8 +95,8 @@ export function ActiveIntakesSection() {
           </Paper>
 
           {/* Batch Cards */}
-          {batches.map((batch: any) => (
-            <Paper key={batch.id} withBorder pos="relative">
+          {batches.filter((batch: any) => batch.is_active).map((batch: any) => (
+            <Paper key={batch.id} withBorder pos="relative" bg={colorScheme === "dark" ? "dark.7" : "white"}>
               <Box p="md">
                 <Group justify="space-between" mb="xs">
                   <Text size="sm" c="dimmed">
@@ -140,10 +144,10 @@ export function ActiveIntakesSection() {
                 </Text>
               </Box>
 
-              <Paper
-                bg={batch.is_active ? "teal.0" : "gray.1"}
-                p="md"
-                radius={0}
+              <Box
+                px="md"
+                py="xs"
+
                 onClick={() =>
                   router.push(
                     `/admin/students?batch=${batch.id}&batch_name=${encodeURIComponent(batch.name)}`
@@ -151,29 +155,17 @@ export function ActiveIntakesSection() {
                 }
                 style={{ cursor: "pointer" }}
               >
-                <Group justify="space-between">
-                  <Group gap={8}>
-                    <CircleIcon
-                      size={8}
-                      weight="fill"
-                      color={
-                        batch.is_active
-                          ? "var(--mantine-color-teal-7)"
-                          : "var(--mantine-color-gray-5)"
-                      }
-                    />
-                    <Text size="xs">{batch.is_active ? "ACTIVE" : "INACTIVE"}</Text>
-                  </Group>
-                  <ArrowRightIcon />
+                <Group justify="flex-end">
+                  <ArrowRightIcon size={18} color={colorScheme === "dark" ? "var(--mantine-color-gray-0)" : "var(--mantine-color-gray-9)"} />
                 </Group>
-              </Paper>
+              </Box>
 
               {/* Delete Confirmation Modal */}
               {deleteConfirm === batch.id && (
                 <Paper
                   pos="absolute"
                   inset={0}
-                  bg="rgba(0, 0, 0, 0.5)"
+                  bg={colorScheme === "dark" ? "rgba(0, 0, 0, 0.7)" : "rgba(0, 0, 0, 0.5)"}
                   p="md"
                   radius="md"
                   style={{
@@ -185,7 +177,7 @@ export function ActiveIntakesSection() {
                     backdropFilter: "blur(4px)",
                   }}
                 >
-                  <Text size="sm" c="white" mb="md" ta="center">
+                  <Text size="sm" c={colorScheme === "dark" ? "gray.0" : "white"} mb="md" ta="center">
                     Delete "{batch.name}"?
                   </Text>
                   <Group gap="xs">

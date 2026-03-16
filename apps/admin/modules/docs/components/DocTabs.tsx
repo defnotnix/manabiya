@@ -36,7 +36,7 @@ export function DocTabs({
     const { activeDocument, bankData } = useDocContext();
 
     return (
-        <Paper >
+        <Paper radius={0}>
             <Container size="xl">
                 <Group justify="space-between">
                     <Group gap={0}>

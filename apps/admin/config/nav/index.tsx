@@ -54,10 +54,22 @@ export const navItems: PropAdminNavItems[] = [
     divider: true,
   },
   {
+    label: "Batches",
+    icon: CalendarIcon,
+    value: "/admin/settings/batches",
+    description: "Manage class batches",
+  },
+  {
+    label: "Signatures",
+    icon: FileTextIcon,
+    value: "/admin/settings/signatures",
+    description: "Manage certificate signatures",
+  },
+  {
     label: "Admin Accounts",
     icon: KeyIcon,
-    description: "Overview",
-
+    value: "/admin/settings/users",
+    description: "Manage user accounts",
   },
 
 

@@ -53,8 +53,8 @@ export function ListPage() {
             <Tooltip label={row.locked ? "Click to unlock" : "Click to lock"}>
               <ActionIcon
                 size="sm"
-                variant="subtle"
-                color={row.locked ? "red" : "gray"}
+                variant={row.locked ? undefined : "subtle"}
+                color={row.locked ? undefined : "gray"}
                 onClick={(e) => handleToggleLock(row, e)}
                 loading={loadingIds.has(String(row.id))}
               >
@@ -133,7 +133,7 @@ export function ListPage() {
         }}
         rowStyle={(record: any) => ({
           backgroundColor: record.locked
-            ? "var(--mantine-color-red-0)"
+            ? "rgba(18, 148, 255, 0.04)"
             : undefined,
         })}
       />

@@ -1,6 +1,6 @@
 "use client";
 
-import { Group, Button, Box, CheckIcon } from "@mantine/core";
+import { Group, Button, Box, CheckIcon, Divider } from "@mantine/core";
 import {
   ArrowLeft,
   ArrowRight,
@@ -57,12 +57,11 @@ export function FormShellFooter({
 
   return (
     <Box
-      style={{
-        borderTop: "1px solid var(--mantine-color-gray-2)",
-      }}
+
       py="md"
       mt="md"
     >
+      <Divider mb="md" />
       <Group justify="space-between">
         {/* Left side - Back button for stepper */}
         {withStepper ? (

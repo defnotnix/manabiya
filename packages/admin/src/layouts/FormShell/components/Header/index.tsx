@@ -2,16 +2,13 @@
 
 import {
   Box,
-  Container,
-  Breadcrumbs,
   Text,
-  Stack,
   Group,
-  ActionIcon,
   Button,
+  useComputedColorScheme,
 } from "@mantine/core";
 import { PropFormShellHeader } from "../../FormShell.type";
-import { ArrowLeftIcon, HouseIcon } from "@phosphor-icons/react";
+import { ArrowLeftIcon } from "@phosphor-icons/react";
 import { modals } from "@mantine/modals";
 import { useRouter } from "next/navigation";
 
@@ -21,12 +18,13 @@ export function FormShellHeader({
   title,
 }: PropFormShellHeader) {
   const Router = useRouter();
+  const computedColorScheme = useComputedColorScheme("light");
 
   return (
     <>
       <Box
-        bg="var(--mantine-color-gray-0)"
-        style={{ borderBottom: "1px solid var(--mantine-color-gray-2)" }}
+        bg={computedColorScheme === "dark" ? "dark.7" : "gray.0"}
+        style={{ borderBottom: `1px solid var(--mantine-color-${computedColorScheme === "dark" ? "dark" : "gray"}-${computedColorScheme === "dark" ? "5" : "2"})` }}
       >
         <Group pr="lg" h={40} justify="space-between">
           {/* Breadcrumbs */}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Stack, TextInput, Select, Group, Image, Button, Text, Box, Center } from "@mantine/core";
+import { Stack, TextInput, Select, Group, Image, Button, Text, Box, Center, useMantineTheme } from "@mantine/core";
 import { Dropzone } from "@mantine/dropzone";
 import { DateInput } from "@mantine/dates";
 import { FormWrapper } from "@settle/core";
@@ -15,6 +15,7 @@ interface Step1BasicInfoProps {
 export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
   const form = FormWrapper.useForm();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const theme = useMantineTheme();
 
   const handleDrop = (files: File[]) => {
     if (files.length > 0) {
@@ -56,7 +57,9 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
       <Box >
         <Text size="xs" fw={900} mb="xs">Student Picture</Text>
         <Dropzone
-          bg="brand.1"
+          style={{
+            border: "1px solid rgba(125,125,125,.3)"
+          }}
           onDrop={handleDrop}
           onReject={(files) => console.log("rejected files", files)}
           maxSize={5 * 1024 * 1024}
@@ -166,42 +169,20 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
       </Group>
 
       <Group grow align="flex-start">
-        <Stack gap={0}>
-          <DateInput
-            label="Date of Birth"
-            placeholder="Select date"
-            disabled={disabled}
-            valueFormat="YYYY-MM-DD"
-            leftSection={<Text size="xs">EN</Text>}
-            {...form.getInputProps("date_of_birth")}
-          />
-          <DateInput
-            placeholder="Select date (Japanese)"
-            disabled={disabled}
-            valueFormat="YYYY-MM-DD"
-            leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
-            {...form.getInputProps("jp_date_of_birth")}
-          />
-        </Stack>
-        <Stack gap={0}>
-          <Select
-            label="Gender"
-            placeholder="Select gender"
-            data={GENDER_OPTIONS}
-            disabled={disabled}
-            leftSection={<Text size="xs">EN</Text>}
-            {...form.getInputProps("gender")}
-          />
-          <Select
-            placeholder="Select gender"
-            data={GENDER_OPTIONS}
-            disabled={disabled}
-            leftSection={<Text size="xs">JP</Text>}
-            styles={{ input: { borderTop: 0, fontSize: "var(--mantine-font-size-xs)" } }}
-            {...form.getInputProps("jp_gender")}
-          />
-        </Stack>
+        <DateInput
+          label="Date of Birth"
+          placeholder="Select date"
+          disabled={disabled}
+          valueFormat="YYYY-MM-DD"
+          {...form.getInputProps("date_of_birth")}
+        />
+        <Select
+          label="Gender"
+          placeholder="Select gender"
+          data={GENDER_OPTIONS}
+          disabled={disabled}
+          {...form.getInputProps("gender")}
+        />
       </Group>
 
       <Stack gap={0}>

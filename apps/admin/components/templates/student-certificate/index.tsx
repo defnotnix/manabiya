@@ -15,8 +15,9 @@ import {
   Center,
 } from "@mantine/core";
 import dayjs from "dayjs";
-import { useDocContext, StudentCertificateData } from "@/context/DocumentContext";
+import { useDocContext, StudentCertificateData, CertificateMarkEntry } from "@/context/DocumentContext";
 import { StudentCertMissingBanner } from "./MissingBanner";
+import leafImage from "../../../assets/leaf.png";
 
 const EMPTY_CERT: StudentCertificateData = {
   firstname: "",
@@ -89,27 +90,36 @@ const TableHeader = () => (
   </Table.Tr>
 );
 
-function EmptyRows({ count }: { count: number }) {
-  return (
-    <>
-      {Array.from({ length: count }).map((_, i) => (
-        <Table.Tr key={i}>
-          <Table.Td>-</Table.Td>
-          <Table.Td>-</Table.Td>
-          <Table.Td>-</Table.Td>
-          <Table.Td>-</Table.Td>
-          <Table.Td>-</Table.Td>
-          <Table.Td>-</Table.Td>
-        </Table.Tr>
-      ))}
-    </>
-  );
+interface CertificateProps {
+  selectedInstructor: string | null;
+  selectedDirector: string | null;
+  signatures: Array<{ id: string; name: string }>;
 }
 
-export function TemplateStudentCertificate() {
+export function TemplateStudentCertificate({
+  selectedInstructor,
+  selectedDirector,
+  signatures,
+}: CertificateProps) {
   const { documentData } = useDocContext();
 
   const d = documentData ?? EMPTY_CERT;
+
+  const getInstructorName = () => {
+    if (selectedInstructor) {
+      const sig = signatures.find((s) => String(s.id) === selectedInstructor);
+      return sig?.name ?? "";
+    }
+    return "";
+  };
+
+  const getDirectorName = () => {
+    if (selectedDirector) {
+      const sig = signatures.find((s) => String(s.id) === selectedDirector);
+      return sig?.name ?? "";
+    }
+    return "";
+  };
 
   const marking = d.marking ?? [];
 
@@ -129,20 +139,61 @@ export function TemplateStudentCertificate() {
   }
 
   function attendancePct(mark: (typeof marking)[0]) {
+    if (!mark || mark.total_days === 0) return 0;
     if (mark.attendance_percentage === 100 || mark.attendance_percentage === 0) {
       return mark.attendance_percentage;
     }
     return ((mark.present / mark.total_days) * 100).toFixed(2);
   }
 
-  const firstHalf = marking.slice(0, 6);
-  const secondHalf = marking.slice(6, 12);
+  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+  // Find the first month from the marking data
+  let startMonth = 1;
+  if (marking.length > 0) {
+    const firstMarkingMonth = marking[0].month as string | number;
+    if (typeof firstMarkingMonth === "string") {
+      const parts = firstMarkingMonth.split("-");
+      startMonth = parseInt(parts[parts.length - 1]);
+    } else {
+      startMonth = firstMarkingMonth;
+    }
+  }
+
+  const allMonthsData = Array.from({ length: 12 }, (_, i) => {
+    const monthNum = ((startMonth - 1 + i) % 12) + 1;
+    const monthIndex = (startMonth - 1 + i) % 12;
+    const markingData = marking.find((m) => {
+      let mMonth: number;
+      const monthValue = m.month as string | number;
+      if (typeof monthValue === "string") {
+        // Handle formats like "2026-11" or just "11"
+        const parts = monthValue.split("-");
+        mMonth = parseInt(parts[parts.length - 1]);
+      } else {
+        mMonth = monthValue;
+      }
+      return mMonth === monthNum;
+    });
+    return {
+      month: monthNames[monthIndex],
+      total_days: markingData?.total_days || 0,
+      class_hr: markingData?.class_hr || 0,
+      present: markingData?.present || 0,
+      absent: markingData?.absent || 0,
+      attendance_percentage: typeof markingData?.attendance_percentage === "string"
+        ? parseFloat(markingData.attendance_percentage)
+        : markingData?.attendance_percentage || 0,
+    } as CertificateMarkEntry;
+  });
+
+  const firstHalf = allMonthsData.slice(0, 6);
+  const secondHalf = allMonthsData.slice(6, 12);
 
   const grades = ["A", "B", "C", "D"];
 
   return (
     <>
-     
       <Paper
         radius={0}
         style={{
@@ -150,6 +201,9 @@ export function TemplateStudentCertificate() {
           width: "8.3in",
           minHeight: "11.7in",
           padding: "12mm",
+          background: "white",
+          color: "black",
+          overflow:"hidden"
         }}
       >
         {/* Header */}
@@ -290,7 +344,7 @@ export function TemplateStudentCertificate() {
                   w="35mm"
                   h="45mm"
                   style={{
-                    background: "var(--mantine-color-gray-2)",
+                    background: "#e8e8e8",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -313,7 +367,7 @@ export function TemplateStudentCertificate() {
 
           <Grid.Col span={6}>
             <Table verticalSpacing={4} fz={9} withTableBorder withColumnBorders>
-              <Table.Thead style={{ background: "var(--mantine-color-gray-1)" }}>
+              <Table.Thead style={{ background: "#f0f0f0", color: "black" }}>
                 <TableHeader />
               </Table.Thead>
               <Table.Tbody>
@@ -321,20 +375,19 @@ export function TemplateStudentCertificate() {
                   <Table.Tr key={i}>
                     <Table.Td>{mark.month}</Table.Td>
                     <Table.Td>{mark.total_days}</Table.Td>
-                    <Table.Td>{mark.total_days * d.coursehour}</Table.Td>
+                    <Table.Td>{mark.class_hr * mark.total_days}</Table.Td>
                     <Table.Td>{mark.present * d.coursehour}</Table.Td>
                     <Table.Td>{mark.absent * d.coursehour}</Table.Td>
                     <Table.Td>{attendancePct(mark)}</Table.Td>
                   </Table.Tr>
                 ))}
-                <EmptyRows count={Math.max(0, 6 - firstHalf.length)} />
               </Table.Tbody>
             </Table>
           </Grid.Col>
 
           <Grid.Col span={6}>
             <Table verticalSpacing={4} fz={9} withTableBorder withColumnBorders>
-              <Table.Thead style={{ background: "var(--mantine-color-gray-1)" }}>
+              <Table.Thead style={{ background: "#f0f0f0", color: "black" }}>
                 <TableHeader />
               </Table.Thead>
               <Table.Tbody>
@@ -342,25 +395,19 @@ export function TemplateStudentCertificate() {
                   <Table.Tr key={i}>
                     <Table.Td>{mark.month}</Table.Td>
                     <Table.Td>{mark.total_days}</Table.Td>
-                    <Table.Td>{mark.total_days * d.coursehour}</Table.Td>
+                    <Table.Td>{mark.class_hr * mark.total_days}</Table.Td>
                     <Table.Td>{mark.present * d.coursehour}</Table.Td>
                     <Table.Td>{mark.absent * d.coursehour}</Table.Td>
                     <Table.Td>{attendancePct(mark)}</Table.Td>
                   </Table.Tr>
                 ))}
-                <EmptyRows
-                  count={Math.max(
-                    0,
-                    marking.length > 6 ? 12 - marking.length : 6
-                  )}
-                />
               </Table.Tbody>
             </Table>
           </Grid.Col>
 
           <Grid.Col span={12}>
             <Table verticalSpacing={4} fz={9} withTableBorder withColumnBorders>
-              <Table.Thead style={{ background: "var(--mantine-color-gray-1)" }}>
+              <Table.Thead style={{ background: "#f0f0f0", color: "black" }}>
                 <Table.Tr>
                   <Table.Th style={{ textAlign: "center" }}>
                     Total Class Hours Until Certificate Issued Date
@@ -489,21 +536,53 @@ export function TemplateStudentCertificate() {
         {/* Signatures */}
         <Grid style={{ position: "relative" }}>
           <Grid.Col span={3}>
-            <Space h={64} />
-            <Divider mb="xs" />
-            <Text fz={10} fw={600} ta="center">
-              {d.batch.instructor?.[0]?.name ?? ""}
-            </Text>
-            <Text fz={10} ta="center">教師</Text>
-            <Text fz={10} ta="center">Instructor</Text>
+            <Box style={{ position: "relative" }}>
+              <Space h={64} />
+              {getInstructorName() && (
+                <Text
+                  fz={10}
+                  fw={600}
+                  ta="center"
+                  style={{
+                    position: "absolute",
+                    bottom: "100%",
+                    left: 0,
+                    right: 0,
+                    marginBottom: "4px",
+                  }}
+                >
+                  {getInstructorName()}
+                </Text>
+              )}
+              <Divider mb="xs" />
+              <Text fz={10} ta="center">教師</Text>
+              <Text fz={10} ta="center">Instructor</Text>
+            </Box>
           </Grid.Col>
 
           <Grid.Col span={3}>
-            <Space h={64} />
-            <Divider mb="xs" />
-            <Text fz={10} fw={600} ta="center">Pukar Shrestha</Text>
-            <Text fz={10} ta="center">社長</Text>
-            <Text fz={10} ta="center">Managing Director</Text>
+            <Box style={{ position: "relative" }}>
+              <Space h={64} />
+              {getDirectorName() && (
+                <Text
+                  fz={10}
+                  fw={600}
+                  ta="center"
+                  style={{
+                    position: "absolute",
+                    bottom: "100%",
+                    left: 0,
+                    right: 0,
+                    marginBottom: "4px",
+                  }}
+                >
+                  {getDirectorName()}
+                </Text>
+              )}
+              <Divider mb="xs" />
+              <Text fz={10} ta="center">社長</Text>
+              <Text fz={10} ta="center">Managing Director</Text>
+            </Box>
           </Grid.Col>
 
           <Grid.Col span={3} />
@@ -529,7 +608,8 @@ export function TemplateStudentCertificate() {
               height: 500,
               width: 500,
               opacity: 0.05,
-              background: "var(--mantine-color-gray-5)",
+              backgroundImage: `url(${leafImage.src})`,
+              backgroundSize: "cover",
               borderRadius: "50%",
               zIndex: 0,
             }}
