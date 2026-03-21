@@ -133,7 +133,7 @@ export function FormBankStatement() {
       onConfirm: () => {
         form.removeListItem("statements", id);
       },
-      styles: { header: { background: "var(--mantine-color-red-1)" } },
+      styles: { header: { background: "var(--mantine-color-red-light)" } },
       size: "sm",
     });
   };

@@ -1,9 +1,19 @@
-import { Badge, Image, Group } from "@mantine/core";
+import { Image, Group } from "@mantine/core";
 
 export const signaturesListColumns = [
   {
     accessor: "name",
     title: "Name",
+    width: 150,
+  },
+  {
+    accessor: "role",
+    title: "Role (EN)",
+    width: 150,
+  },
+  {
+    accessor: "jp_role",
+    title: "Role (JP)",
     width: 150,
   },
   {
@@ -24,16 +34,6 @@ export const signaturesListColumns = [
           <span style={{ color: "#999" }}>No image</span>
         )}
       </Group>
-    ),
-  },
-  {
-    accessor: "is_active",
-    title: "Status",
-    width: 100,
-    render: (record: any) => (
-      <Badge color={record.is_active ? "green" : "gray"} size="sm">
-        {record.is_active ? "Active" : "Inactive"}
-      </Badge>
     ),
   },
   {

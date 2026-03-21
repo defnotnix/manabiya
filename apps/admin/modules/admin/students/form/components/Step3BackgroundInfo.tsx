@@ -1,6 +1,6 @@
 "use client";
 
-import { Stack, Text } from "@mantine/core";
+import { Stack, Text, Group, Button } from "@mantine/core";
 import { FormWrapper } from "@settle/core";
 import { useDisclosure } from "@mantine/hooks";
 import { useState } from "react";
@@ -8,12 +8,15 @@ import { FormListRender } from "./FormListRender";
 import { ExperienceModal } from "../../modals/ExperienceModal";
 import { EducationModal } from "../../modals/EducationModal";
 import { FamilyMemberModal } from "../../modals/FamilyMemberModal";
+import { FloppyDiskIcon } from "@phosphor-icons/react";
 
 interface Step3BackgroundInfoProps {
     disabled?: boolean;
+    onSave?: () => void;
+    isSaving?: boolean;
 }
 
-export function Step3BackgroundInfo({ disabled = false }: Step3BackgroundInfoProps) {
+export function Step3BackgroundInfo({ disabled = false, onSave, isSaving = false }: Step3BackgroundInfoProps) {
     const form = FormWrapper.useForm();
     const [, forceUpdate] = useState({});
 
@@ -51,6 +54,20 @@ export function Step3BackgroundInfo({ disabled = false }: Step3BackgroundInfoPro
 
     return (
         <Stack gap="xl">
+            {onSave && (
+                <Group justify="flex-end">
+                    <Button
+                        size="xs"
+                        loading={isSaving}
+                        onClick={onSave}
+                        leftSection={<FloppyDiskIcon size={14} />}
+                        disabled={disabled}
+                    >
+                        Save Changes
+                    </Button>
+                </Group>
+            )}
+
             <FormListRender
                 title="Experiences"
                 items={values.experiences || []}

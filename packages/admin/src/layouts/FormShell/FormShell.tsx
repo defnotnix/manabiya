@@ -47,7 +47,7 @@ export function FormShell({
       {/* Header */}
       <FormShellHeader bread={bread} moduleInfo={moduleInfo} title={title} />
 
-      <Paper radius={0}>
+      <Paper radius={0} bg="transparent">
         {showStepper && steps.length > 0 && (
           <FormShellStepper
             steps={steps}
@@ -62,10 +62,10 @@ export function FormShell({
           />
         )}
 
-        <Container size="sm" py={32}>
-          <Box component="div" flex={1}>
+        <Container size="sm" py={24}>
+          <Paper component="div" flex={1} bg="dark.7" p="xl">
             {children}
-          </Box>
+          </Paper>
 
           {/* Footer with Submit/Next/Back buttons */}
         </Container>

@@ -178,12 +178,26 @@ type AdminShellNavbarProps = PropAdminNavSideNav & {
 function NavbarContent({
   singleNavLayout,
   toggle,
+  disableSetAway,
+  disablePauseNotifications,
+  disableHelp,
+  disableSettings,
+  disableTheme,
+  disableNavRightPanel,
+  navIcon,
 }: {
   singleNavLayout: boolean;
   toggle?: () => void;
+  disableSetAway?: boolean;
+  disablePauseNotifications?: boolean;
+  disableHelp?: boolean;
+  disableSettings?: boolean;
+  disableTheme?: boolean;
+  disableNavRightPanel?: boolean;
+  navIcon?: any;
 }) {
   const { activeGroupHasPanel } = useNav();
-  const showPanel = !singleNavLayout && activeGroupHasPanel;
+  const showPanel = !singleNavLayout && activeGroupHasPanel && !disableNavRightPanel;
 
   return (
     <Group
@@ -194,7 +208,14 @@ function NavbarContent({
       style={{ overflow: "hidden" }}
     >
       {/* Left Rail */}
-      <NavRail />
+      <NavRail
+        disableSetAway={disableSetAway}
+        disablePauseNotifications={disablePauseNotifications}
+        disableHelp={disableHelp}
+        disableSettings={disableSettings}
+        disableTheme={disableTheme}
+        navIcon={navIcon}
+      />
 
       {/* Right Panel - Hidden when singleNavLayout or active group has no children */}
       {showPanel && <NavPanelContainer toggle={toggle} />}
@@ -209,6 +230,13 @@ export function AdminShellNavbar({
   singleNavLayout = false,
   onNavbarWidthChange,
   toggle,
+  disableSetAway,
+  disablePauseNotifications,
+  disableHelp,
+  disableSettings,
+  disableTheme,
+  disableNavRightPanel,
+  navIcon,
 }: AdminShellNavbarProps) {
   // Normalize configuration: Use provided navConfig or migrate legacy items
   const config = useMemo(() => {
@@ -236,7 +264,17 @@ export function AdminShellNavbar({
         shortcut={["mod + K", "mod + P"]}
       />
 
-      <NavbarContent singleNavLayout={singleNavLayout} toggle={toggle} />
+      <NavbarContent
+        singleNavLayout={singleNavLayout}
+        toggle={toggle}
+        disableSetAway={disableSetAway}
+        disablePauseNotifications={disablePauseNotifications}
+        disableHelp={disableHelp}
+        disableSettings={disableSettings}
+        disableTheme={disableTheme}
+        disableNavRightPanel={disableNavRightPanel}
+        navIcon={navIcon}
+      />
     </NavProvider>
   );
 }

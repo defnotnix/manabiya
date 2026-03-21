@@ -7,13 +7,7 @@ export function DataTableEmptyState() {
   return (
     <Center>
       <Stack>
-        <Center>
-          <SmileyNervousIcon
-            size={48}
-            weight="duotone"
-            color="var(--mantine-color-brand-2)"
-          />
-        </Center>
+    
 
         <div>
           <Text size="lg" c="gray.4" ta="center">

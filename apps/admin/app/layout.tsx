@@ -2,7 +2,7 @@ import { ColorSchemeScript } from "@mantine/core";
 import { LayoutApp } from "../layouts/app";
 
 export const metadata = {
-  title: "built to build.",
+  title: "Manabiya Nepal",
 };
 
 export default function RootLayout({
@@ -14,6 +14,8 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <ColorSchemeScript defaultColorScheme="light" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" />
         <link

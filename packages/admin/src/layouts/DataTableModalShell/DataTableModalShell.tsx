@@ -64,6 +64,7 @@ export function DataTableModalShell({
   // Review
   onReviewClick,
   hasReviewPage = false,
+  disableReviewButton = false,
 
   // Validator
   validator,
@@ -219,17 +220,68 @@ export function DataTableModalShell({
         confirmProps: { color: "red", size: "xs" },
         cancelProps: { size: "xs" },
         onConfirm: () => {
-          ids.forEach((id) => deleteMutation.mutate(id));
+          const notificationId = notifications.show({
+            loading: true,
+            title: "Deleting",
+            message: `Deleting ${ids.length} item${ids.length === 1 ? "" : "s"}...`,
+            autoClose: false,
+            withCloseButton: false,
+          });
+
+          Promise.allSettled(
+            ids.map((id) => {
+              const idToSubmit = transformOnDelete ? transformOnDelete(id) : id;
+              return onDeleteApi!(idToSubmit);
+            })
+          ).then((results) => {
+            const failed = results.filter((r) => r.status === "rejected");
+            const succeeded = results.filter((r) => r.status === "fulfilled");
+
+            if (failed.length === 0) {
+              notifications.update({
+                id: notificationId,
+                loading: false,
+                title: "Success",
+                message: `${succeeded.length} item${succeeded.length === 1 ? "" : "s"} deleted successfully`,
+                color: "green",
+                autoClose: 3000,
+                withCloseButton: true,
+              });
+              onDeleteSuccess?.(ids[0]);
+              refetch();
+            } else if (succeeded.length === 0) {
+              notifications.update({
+                id: notificationId,
+                loading: false,
+                title: "Error",
+                message: `Failed to delete ${failed.length} item${failed.length === 1 ? "" : "s"}`,
+                color: "red",
+                autoClose: 5000,
+                withCloseButton: true,
+              });
+            } else {
+              notifications.update({
+                id: notificationId,
+                loading: false,
+                title: "Partial Success",
+                message: `${succeeded.length} deleted, ${failed.length} failed`,
+                color: "yellow",
+                autoClose: 5000,
+                withCloseButton: true,
+              });
+              refetch();
+            }
+          });
         },
         styles: {
           header: {
-            background: "var(--mantine-color-red-1)",
+            background: "var(--mantine-color-red-light)",
           },
         },
         size: "sm",
       });
     },
-    [deleteMutation]
+    [onDeleteApi, transformOnDelete, onDeleteSuccess, refetch]
   );
 
   // * ENHANCED COLUMNS WITH ACTIONS
@@ -262,6 +314,7 @@ export function DataTableModalShell({
         disableCreateButton={!onCreateApi}
         disableEditButton={!onEditApi}
         disableDeleteButton={!onDeleteApi}
+        disableReviewButton={disableReviewButton}
       />
 
       {onCreateApi || onEditApi ? (

@@ -8,8 +8,7 @@ export const batchesFormSchema = z.object({
   books: z.string().optional().default(""),
   instructor: z.string().min(1, "Instructor name is required"),
   total_days: z.number().min(1, "Total days must be at least 1"),
-  per_class_hours: z.string().min(1, "Class hours per session is required"),
-  is_active: z.boolean().default(true),
+  per_class_hours: z.number().min(0.5, "Class hours per session must be at least 0.5").max(99.99, "Class hours per session must not exceed 99.99"),
 });
 
 export const batchesFormConfig = {
@@ -20,8 +19,7 @@ export const batchesFormConfig = {
     books: "",
     instructor: "",
     total_days: 0,
-    per_class_hours: "1.50",
-    is_active: true,
+    per_class_hours: 1.5,
   },
   steps: 1,
   validation: [zodResolver(batchesFormSchema)],

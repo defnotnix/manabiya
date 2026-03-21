@@ -10,15 +10,11 @@
 
 .entryCard {
   padding: var(--mantine-spacing-sm);
-  border: 1px solid var(--mantine-color-gray-2);
   border-radius: var(--mantine-radius-md);
-  background: var(--mantine-color-gray-0);
   transition: all 200ms ease;
 }
 
 .entryCard:hover {
-  background: var(--mantine-color-gray-1);
-  border-color: var(--mantine-color-gray-3);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 

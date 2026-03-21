@@ -29,6 +29,25 @@ import { triggerNotification } from "../../helpers";
 import { PageSignInProps } from "./PageSignIn.type";
 
 /**
+ * Decode JWT token
+ */
+function decodeJWT(token: string): Record<string, any> {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return {};
+  }
+}
+
+/**
  * Storage keys for authentication tokens
  */
 const AUTH_TOKEN_KEYS = {
@@ -76,11 +95,15 @@ function SignInForm({
   isLoading,
   onForgotPassword,
   skipEmailValidation = false,
+  disableSignUp = false,
+  disableForgotPassword = false,
 }: {
   onSubmit: (username: string, password: string) => void;
   isLoading: boolean;
   onForgotPassword?: () => void;
   skipEmailValidation?: boolean;
+  disableSignUp?: boolean;
+  disableForgotPassword?: boolean;
 }) {
   const form = useForm({
     initialValues: {
@@ -140,21 +163,25 @@ function SignInForm({
         />
 
         <Group justify="space-between" my="xs">
-          <Text size="xs" c="dimmed">
-            No account?{" "}
-            <Anchor size="xs" href="/register">
-              Sign up
+          {!disableSignUp && (
+            <Text size="xs" c="dimmed">
+              No account?{" "}
+              <Anchor size="xs" href="/register">
+                Sign up
+              </Anchor>
+            </Text>
+          )}
+          {!disableForgotPassword && (
+            <Anchor
+              component="button"
+              type="button"
+              size="xs"
+              c="dimmed"
+              onClick={() => onForgotPassword?.()}
+            >
+              Forgot Password?
             </Anchor>
-          </Text>
-          <Anchor
-            component="button"
-            type="button"
-            size="xs"
-            c="dimmed"
-            onClick={() => onForgotPassword?.()}
-          >
-            Forgot Password?
-          </Anchor>
+          )}
         </Group>
 
         <Button
@@ -195,6 +222,8 @@ export function PageSignIn({
   onAppleLogin,
   onDiscordLogin,
   onMagicLinkLogin,
+  disableSignUp = false,
+  disableForgotPassword = false,
 }: PageSignInProps) {
   const [showMagicLink, setShowMagicLink] = useState(false);
   const [magicLinkEmail, setMagicLinkEmail] = useState("");
@@ -225,20 +254,44 @@ export function PageSignIn({
         });
         onError?.(response);
       } else {
-        if (response.data?.access) {
-          sessionStorage.setItem(
-            AUTH_TOKEN_KEYS.ACCESS_TOKEN,
-            response.data.access,
-          );
+        const accessToken = response.data?.access;
+        const refreshToken = response.data?.refresh;
+
+        if (accessToken) {
+          // Store in both sessionStorage and localStorage
+          sessionStorage.setItem(AUTH_TOKEN_KEYS.ACCESS_TOKEN, accessToken);
+          localStorage.setItem("access_token", accessToken);
+
+          // Decode JWT to extract user info
+          const decoded = decodeJWT(accessToken);
+          if (decoded) {
+            localStorage.setItem(
+              "token_payload",
+              JSON.stringify(decoded)
+            );
+          }
         }
-        if (response.data?.refresh) {
-          sessionStorage.setItem(
-            AUTH_TOKEN_KEYS.REFRESH_TOKEN,
-            response.data.refresh,
-          );
+
+        if (refreshToken) {
+          sessionStorage.setItem(AUTH_TOKEN_KEYS.REFRESH_TOKEN, refreshToken);
+          localStorage.setItem("refresh_token", refreshToken);
         }
 
         onSuccess?.(response.data);
+
+        // Fetch and store user data
+        try {
+          const userResponse = await apiDispatch.get({
+            endpoint: "/api/auth/users/me/",
+          });
+
+          if (!userResponse.err && userResponse.data) {
+            localStorage.setItem("user_data", JSON.stringify(userResponse.data));
+          }
+        } catch (userError) {
+          console.error("Failed to fetch user data:", userError);
+          // Continue with redirect even if user data fetch fails
+        }
 
         triggerNotification.auth.isSuccess({
           title: "Sign In Successful!",
@@ -416,6 +469,8 @@ export function PageSignIn({
                     isLoading={isLoading}
                     onForgotPassword={onForgotPassword}
                     skipEmailValidation={skipEmailValidation}
+                    disableSignUp={disableSignUp}
+                    disableForgotPassword={disableForgotPassword}
                   />
                 </>
               ) : (

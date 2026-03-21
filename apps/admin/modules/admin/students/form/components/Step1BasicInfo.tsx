@@ -5,17 +5,35 @@ import { Dropzone } from "@mantine/dropzone";
 import { DateInput } from "@mantine/dates";
 import { FormWrapper } from "@settle/core";
 import { GENDER_OPTIONS } from "../../module.config";
-import { useState } from "react";
-import { UserFocusIcon } from "@phosphor-icons/react";
+import { useState, useEffect } from "react";
+import { UserFocusIcon, FloppyDiskIcon } from "@phosphor-icons/react";
 
 interface Step1BasicInfoProps {
   disabled?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
 }
 
-export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
+export function Step1BasicInfo({ disabled = false, onSave, isSaving = false }: Step1BasicInfoProps) {
   const form = FormWrapper.useForm();
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const theme = useMantineTheme();
+
+  // Sync image preview with form's image value
+  useEffect(() => {
+    const formImage = form.getValues().image;
+    if (formImage instanceof File) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(formImage);
+    } else if (typeof formImage === "string") {
+      setImagePreview(formImage);
+    } else {
+      setImagePreview(null);
+    }
+  }, [form]);
 
   const handleDrop = (files: File[]) => {
     if (files.length > 0) {
@@ -46,20 +64,30 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
     }
   };
 
-  const handleRemoveImage = () => {
-    setImagePreview(null);
-    form.setFieldValue("image", null);
-  };
-
   return (
     <Stack gap="md">
+      {onSave && (
+        <Group justify="flex-end">
+          <Button
+            size="xs"
+            loading={isSaving}
+            onClick={onSave}
+            leftSection={<FloppyDiskIcon size={14} />}
+            disabled={disabled}
+          >
+            Save Changes
+          </Button>
+        </Group>
+      )}
 
       <Box >
         <Text size="xs" fw={900} mb="xs">Student Picture</Text>
         <Dropzone
+          bg="dark.6"
           style={{
             border: "1px solid rgba(125,125,125,.3)"
           }}
+          radius="md"
           onDrop={handleDrop}
           onReject={(files) => console.log("rejected files", files)}
           maxSize={5 * 1024 * 1024}
@@ -67,9 +95,10 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
           disabled={disabled}
         >
           {imagePreview ? (
-            <Group justify="center" gap="xl" mih={200} style={{ pointerEvents: "none" }}>
-              <Stack gap="md" align="center" justify="center" style={{ width: "100%" }}>
+            <Group justify="center" gap="xl" mih={200}>
+              <Stack py="md" gap="md" align="center" justify="center" style={{ width: "100%", cursor: "pointer", position: "relative" }}>
                 <Image
+
                   src={imagePreview}
                   alt="Student picture preview"
                   h={150}
@@ -77,15 +106,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
                   fit="cover"
                   style={{ borderRadius: "8px" }}
                 />
-                <Button
-                  variant="light"
-                  color="red"
-                  size="sm"
-                  onClick={handleRemoveImage}
-                  disabled={disabled}
-                >
-                  Remove
-                </Button>
+                <Text size="xs" c="dimmed">Click to change</Text>
               </Stack>
             </Group>
           ) : (
@@ -107,13 +128,6 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
           </Text>
         )}
       </Box>
-
-      <TextInput
-        label="Student Code"
-        placeholder="Auto-generated if left empty"
-        disabled={disabled}
-        {...form.getInputProps("student_code")}
-      />
 
       <Group grow align="flex-start">
         <Stack gap={0}>
@@ -189,6 +203,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
         <TextInput
           label="Current Address"
           placeholder="Enter current address"
+          required
           disabled={disabled}
           leftSection={<Text size="xs">EN</Text>}
           {...form.getInputProps("current_address")}
@@ -206,6 +221,7 @@ export function Step1BasicInfo({ disabled = false }: Step1BasicInfoProps) {
         <TextInput
           label="Permanent Address"
           placeholder="Enter permanent address"
+          required
           disabled={disabled}
           leftSection={<Text size="xs">EN</Text>}
           {...form.getInputProps("permanent_address")}

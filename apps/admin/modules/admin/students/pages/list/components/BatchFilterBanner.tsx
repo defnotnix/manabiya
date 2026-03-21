@@ -36,7 +36,7 @@ export function BatchFilterBanner({ batchName }: BatchFilterBannerProps) {
       <Container size="xl">
         <Group gap="xs" justify="space-between">
           <Group gap="xs">
-            <Text size="sm">Viewing Batch:</Text>
+            <Text size="sm">Batch</Text>
             <Menu position="bottom-start">
               <Menu.Target>
                 <Button

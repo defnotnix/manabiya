@@ -39,6 +39,7 @@ const useDataTableWrapperStore = create(
 
       return {
         setPaginationData: (paginationData: any) => {
+          if (!paginationData) return;
           set((state) => ({
             // Support both snake_case (API) and camelCase formats
             pages: paginationData.total_pages ?? paginationData.pages ?? 1,

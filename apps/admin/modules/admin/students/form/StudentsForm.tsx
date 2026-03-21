@@ -9,17 +9,19 @@ import { Step5Review } from "./components/Step5Review";
 
 interface StudentsFormProps {
   isLocked?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
 }
 
-export function StudentsForm({ isLocked = false }: StudentsFormProps) {
+export function StudentsForm({ isLocked = false, onSave, isSaving = false }: StudentsFormProps) {
   const formProps = FormWrapper.useFormProps();
   const currentStep = formProps?.current ?? 0;
 
   const stepComponents = [
-    <Step1BasicInfo key="step1" disabled={isLocked} />,
-    <Step2ContactInfo key="step2" disabled={isLocked} />,
-    <Step3BackgroundInfo key="step3" disabled={isLocked} />,
-    <Step4EnrollmentAcademic key="step4" disabled={isLocked} />,
+    <Step1BasicInfo key="step1" disabled={isLocked} onSave={onSave} isSaving={isSaving} />,
+    <Step2ContactInfo key="step2" disabled={isLocked} onSave={onSave} isSaving={isSaving} />,
+    <Step3BackgroundInfo key="step3" disabled={isLocked} onSave={onSave} isSaving={isSaving} />,
+    <Step4EnrollmentAcademic key="step4" disabled={isLocked} onSave={onSave} isSaving={isSaving} />,
     <Step5Review key="step5" />,
   ];
 

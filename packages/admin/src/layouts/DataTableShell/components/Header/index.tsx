@@ -27,6 +27,7 @@ export function DataTableShellHeader({
   sustained = false,
   onNewClick,
   disableCreateButton = false,
+  customHeading,
 }: PropDataTableHeader) {
   // * CONTEXT
   const moreActionsMenuId = useId();
@@ -64,7 +65,7 @@ export function DataTableShellHeader({
           <Group gap={8}>
             <div>
               <Text size="xl" fw={900}>
-                {moduleInfo.label}
+                {customHeading || moduleInfo.label}
               </Text>
             </div>
 
@@ -76,7 +77,8 @@ export function DataTableShellHeader({
 
         {/* Desktop: Full buttons */}
         <Group gap={4} visibleFrom="lg">
-          <Menu id={moreActionsMenuId}>
+
+          {/* <Menu id={moreActionsMenuId}>
             <Menu.Target>
               <Button
                 rightSection={<CaretDownIcon />}
@@ -87,8 +89,8 @@ export function DataTableShellHeader({
                 More Actions
               </Button>
             </Menu.Target>
-            <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
-          </Menu>
+            <Menu.Dropdown></Menu.Dropdown>
+          </Menu> */}
 
           <Button
             leftSection={<ArrowClockwiseIcon />}
@@ -124,14 +126,14 @@ export function DataTableShellHeader({
               </Button>
             )}
 
-            <Menu id={newButtonMenuId}>
+            {/* <Menu id={newButtonMenuId}>
               <Menu.Target>
                 <Button size="xs" px={8} ml={1} disabled={disableCreateButton}>
                   <CaretDownIcon />
                 </Button>
               </Menu.Target>
-              <Menu.Dropdown>{/* future actions */}</Menu.Dropdown>
-            </Menu>
+              <Menu.Dropdown></Menu.Dropdown>
+            </Menu> */}
           </ButtonGroup>
         </Group>
       </Group>

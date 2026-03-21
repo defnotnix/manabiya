@@ -210,7 +210,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
       }
 
       form.insertListItem("statements", {
-        date: intrestDate,
+        date: intrestDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
         description: "Interest",
         credit: roundHalfToEven(Number(_acquiredIntrest)),
         debit: 0,
@@ -221,7 +221,7 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
       });
 
       form.insertListItem("statements", {
-        date: intrestDate,
+        date: intrestDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
         description: "Tax Deduction",
         credit: 0,
         debit: Number((_acquiredIntrest * (taxRate / 100)).toFixed(2)),
@@ -604,8 +604,9 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
                 placeholder="e.g. 1278492.18"
                 {...form.getInputProps("statement_opening_balance")}
                 onChange={(e) => {
-                  form.setFieldValue("statement_opening_balance", e);
-                  form.setFieldValue("statements_opening_bal", e);
+                  const value = typeof e === 'string' ? parseFloat(e) || 0 : e;
+                  form.setFieldValue("statement_opening_balance", value);
+                  form.setFieldValue("statements_opening_bal", value);
                 }}
               />
               <NumberInput
@@ -614,11 +615,12 @@ export function StatementDrawer({ opened, onClose }: StatementDrawerProps) {
                 label="USD Rate"
                 placeholder="e.g. 133.53"
                 {...form.getInputProps("statement_usdrate")}
-                onChange={(e: number) => {
-                  form.setFieldValue("statement_usdrate", e);
+                onChange={(e: string | number) => {
+                  const value = typeof e === 'string' ? parseFloat(e) || 0 : e;
+                  form.setFieldValue("statement_usdrate", value);
                   form.setFieldValue(
                     "statement_usdrate_equiv",
-                    (Number(form.values.statements_opening_bal) / e).toFixed(2)
+                    Number((Number(form.values.statements_opening_bal) / value).toFixed(2))
                   );
                 }}
               />

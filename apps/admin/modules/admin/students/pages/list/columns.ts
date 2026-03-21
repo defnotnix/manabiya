@@ -2,12 +2,17 @@ export const columns = [
   {
     accessorKey: "student_code",
     header: "Code",
-    size: 120,
+    size: 160,
   },
   {
     accessorKey: "full_name",
     header: "Full Name",
     size: 200,
+  },
+  {
+    accessorKey: "batch_detail.name",
+    header: "Batch",
+    size: 220,
   },
   {
     accessorKey: "email",
@@ -28,7 +33,7 @@ export const columns = [
     accessorKey: "actions",
     header: "Document",
     size: 100,
-    
+
   },
 ];
 

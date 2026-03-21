@@ -48,7 +48,7 @@ export function FormListRender({
             </Group>
 
             {items.length === 0 ? (
-                <Paper withBorder p="md" bg="gray.0" style={{ borderStyle: "dashed" }}>
+                <Paper withBorder p="md" style={{ borderStyle: "dashed" }}>
                     <Text size="sm" c="dimmed" ta="center">
                         No {title.toLowerCase()} added yet.
                     </Text>

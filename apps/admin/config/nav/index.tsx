@@ -18,19 +18,20 @@ import {
   HouseSimpleIcon,
   FolderPlusIcon,
   FileTextIcon,
+  SignatureIcon,
+  ClockCounterClockwiseIcon,
 } from "@phosphor-icons/react";
 import { PropAdminNavItems } from "@settle/admin";
 
-export const navItems: PropAdminNavItems[] = [
+const baseNavItems: PropAdminNavItems[] = [
   // General Group
+
+
   {
-    label: "Quick Access",
-    icon: HouseSimpleIcon,
-    value: "/admin",
-    description: "Overview",
-  },
-  {
-    divider: true,
+    label: "Batches",
+    icon: CalendarIcon,
+    value: "/admin/settings/batches",
+    description: "Manage class batches",
   },
   {
     label: "Students",
@@ -44,26 +45,24 @@ export const navItems: PropAdminNavItems[] = [
     value: "/admin/customs",
     description: "Custom Documents",
   },
+
   {
-    label: "Intakes",
-    icon: CalendarIcon,
-    value: "/admin/intakes",
-    description: "Overview",
+    label: "Signatures",
+    icon: SignatureIcon,
+    value: "/admin/settings/signatures",
+    description: "Manage certificate signatures",
   },
+];
+
+const adminOnlyNavItems: PropAdminNavItems[] = [
   {
     divider: true,
   },
   {
-    label: "Batches",
-    icon: CalendarIcon,
-    value: "/admin/settings/batches",
-    description: "Manage class batches",
-  },
-  {
-    label: "Signatures",
-    icon: FileTextIcon,
-    value: "/admin/settings/signatures",
-    description: "Manage certificate signatures",
+    label: "Audit Logs",
+    icon: ClockCounterClockwiseIcon,
+    value: "/admin/students/audit-logs",
+    description: "Student activity audit trail",
   },
   {
     label: "Admin Accounts",
@@ -71,8 +70,22 @@ export const navItems: PropAdminNavItems[] = [
     value: "/admin/settings/users",
     description: "Manage user accounts",
   },
-
-
-
-
 ];
+
+/**
+ * Get navigation items filtered by user role
+ * @param isAdmin - Whether the current user is an admin
+ * @returns Filtered navigation items
+ */
+export function getNavItems(isAdmin: boolean): PropAdminNavItems[] {
+  const items = [...baseNavItems];
+
+  if (isAdmin) {
+    items.push(...adminOnlyNavItems);
+  }
+
+  return items;
+}
+
+// Export base items for backward compatibility
+export const navItems: PropAdminNavItems[] = getNavItems(true);

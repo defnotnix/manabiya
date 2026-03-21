@@ -37,12 +37,16 @@ export function DataTableShell({
   disableCreateButton = false,
   disableEditButton = false,
   disableDeleteButton = false,
+  disableReviewButton = false,
   rowExpansion,
+  customHeading,
 }: PropDataTableShell) {
   // * CONTEXT
   const { filters } = DataTableWrapper.useDataTableWrapperStore();
 
   // * STATE
+
+  const storageKey = `datatable_columns_${moduleInfo?.name || "default"}`;
 
   const [customColumns, setCustomColumns] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState(0);
@@ -50,13 +54,46 @@ export function DataTableShell({
   // * EFFECT
 
   useEffect(() => {
-    setCustomColumns(
-      columns.map((cinfo: any) => ({
-        ...cinfo,
-        visible: true,
-      })),
-    );
-  }, [columns]);
+    // Load saved column state from localStorage on mount
+    if (typeof window === "undefined") return;
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const savedColumns = JSON.parse(saved);
+        if (Array.isArray(savedColumns) && savedColumns.length > 0) {
+          // Apply saved visibility to current columns
+          const columnsWithSaved = columns.map((cinfo: any) => {
+            // Match by accessorKey first, then by accessor
+            const savedColumn = savedColumns.find((sc: any) => {
+              if (cinfo.accessorKey && sc.accessorKey === cinfo.accessorKey) {
+                return true;
+              }
+              if (cinfo.accessor && sc.accessor === cinfo.accessor) {
+                return true;
+              }
+              return false;
+            });
+            return {
+              ...cinfo,
+              visible: savedColumn?.visible ?? true,
+            };
+          });
+          setCustomColumns(columnsWithSaved);
+          return;
+        }
+      }
+    } catch (error) {
+      console.warn("Failed to load column preferences:", error);
+    }
+
+    // Default: all columns visible
+    const defaultColumns = columns.map((cinfo: any) => ({
+      ...cinfo,
+      visible: true,
+    }));
+    setCustomColumns(defaultColumns);
+  }, [columns, storageKey]);
 
   // * FUNCTIONS
 
@@ -72,21 +109,35 @@ export function DataTableShell({
   );
 
   const handleToggleColumn = useCallback((index: number) => {
-    setCustomColumns((prev: any) =>
-      prev.map((cinfo: any, cindex: number) =>
+    setCustomColumns((prev: any) => {
+      const updated = prev.map((cinfo: any, cindex: number) =>
         cindex === index ? { ...cinfo, visible: !cinfo.visible } : cinfo,
-      ),
-    );
-  }, []);
+      );
+      // Save to localStorage
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(updated));
+      } catch (error) {
+        console.warn("Failed to save column preferences:", error);
+      }
+      return updated;
+    });
+  }, [storageKey]);
 
   const handleResetColumns = useCallback(() => {
-    setCustomColumns((prev: any) =>
-      prev.map((e: any) => ({
+    setCustomColumns((prev: any) => {
+      const updated = prev.map((e: any) => ({
         ...e,
         visible: true,
-      })),
-    );
-  }, []);
+      }));
+      // Clear localStorage when resetting
+      try {
+        localStorage.removeItem(storageKey);
+      } catch (error) {
+        console.warn("Failed to clear column preferences:", error);
+      }
+      return updated;
+    });
+  }, [storageKey]);
 
   const [selectedRecords, setSelectedRecords] = useState<any[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -112,6 +163,7 @@ export function DataTableShell({
           sustained={sustained}
           onNewClick={onNewClick}
           disableCreateButton={disableCreateButton}
+          customHeading={customHeading}
         />
       </Container>
 
@@ -163,6 +215,7 @@ export function DataTableShell({
           onReviewClick={onReviewClick}
           disableEditButton={disableEditButton}
           disableDeleteButton={disableDeleteButton}
+          disableReviewButton={disableReviewButton}
         />
       </Container>
     </DataTableShellContext.Provider>

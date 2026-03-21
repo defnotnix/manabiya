@@ -248,7 +248,8 @@ function SharedModalContent({
             if (isCreate) {
               return apiFunction?.(dataToSubmit);
             } else {
-              return apiFunction?.(data[idAccessor], dataToSubmit);
+              const recordId = data instanceof FormData ? data.get(idAccessor) : data[idAccessor];
+              return apiFunction?.(recordId, dataToSubmit);
             }
           }}
           transformFnSubmit={(formdata) => formdata}

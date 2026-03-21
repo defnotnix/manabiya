@@ -1,9 +1,18 @@
 "use client";
 
-import { CircleIcon } from "@phosphor-icons/react";
+import Image from "next/image";
+import logoWhite from "@/assets/logowhite.png";
 import { PageSignIn } from "@settle/admin";
 
-export function ModuleSignIn() {
+interface ModuleSignInProps {
+  disableSignUp?: boolean;
+  disableForgotPassword?: boolean;
+}
+
+export function ModuleSignIn({
+  disableSignUp = true,
+  disableForgotPassword = true,
+}: ModuleSignInProps = {}) {
   return (
     <PageSignIn
       heading={["Welcome Back! to", "Manabiya Admin."]}
@@ -12,7 +21,9 @@ export function ModuleSignIn() {
       skipEmailValidation
       successRedirectUrl="/admin"
       forgotRedirectUrl="/forgot-password"
-      icon={<CircleIcon weight="duotone" color="var(--mantine-color-brand-6)" size={32} />}
+      icon={<Image src={logoWhite} alt="Manabiya Logo" width={64} height={64} />}
+      disableSignUp={disableSignUp}
+      disableForgotPassword={disableForgotPassword}
       // hasGoogleLogin={true}
       // hasAppleLogin={true}
       // hasDiscordLogin={true}

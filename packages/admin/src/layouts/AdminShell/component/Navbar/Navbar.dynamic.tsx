@@ -9,11 +9,8 @@ const AdminShellNavbarDynamic = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div style={{ padding: "1rem" }}>
-        <Skeleton height={40} mb="lg" />
-        <Skeleton height={40} mb="md" />
-        <Skeleton height={40} mb="md" />
-        <Skeleton height={40} mb="md" />
+      <div style={{ padding: "1rem", width: "fit-content" }}>
+        <Skeleton height={40} width={40} radius="sm" />
       </div>
     ),
   },

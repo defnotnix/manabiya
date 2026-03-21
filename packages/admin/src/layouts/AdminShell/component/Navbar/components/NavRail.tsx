@@ -6,7 +6,6 @@ import {
   Divider,
   Space,
   Stack,
-  ThemeIcon,
   Tooltip,
 } from "@mantine/core";
 import { BowlSteamIcon, GearSixIcon, InfoIcon } from "@phosphor-icons/react";
@@ -15,10 +14,27 @@ import { NavRailItem } from "../../../AdminShell.nav.types";
 import { useNav } from "../../../context/NavContext";
 import { UserInfoPopover } from "./UserInfoPopover";
 
-export function NavRail() {
+interface NavRailProps {
+  disableSetAway?: boolean;
+  disablePauseNotifications?: boolean;
+  disableHelp?: boolean;
+  disableSettings?: boolean;
+  disableTheme?: boolean;
+  navIcon?: React.ComponentType<any>;
+}
+
+export function NavRail({
+  disableSetAway,
+  disablePauseNotifications,
+  disableHelp,
+  disableSettings,
+  disableTheme,
+  navIcon,
+}: NavRailProps = {}) {
   const { config, activeGroupId, setActiveGroupId, singleNavLayout } = useNav();
   const router = useRouter();
   const pathname = usePathname();
+  const NavIcon = navIcon;
 
   const renderRailItem = (item: NavRailItem, index: number) => {
     // Handle divider
@@ -82,9 +98,15 @@ export function NavRail() {
         zIndex: 101,
       }}
     >
-      <ThemeIcon variant="fill" size="md" radius="md">
-        <BowlSteamIcon size={16} />
-      </ThemeIcon>
+      <ActionIcon
+        color="brand"
+
+        size="md"
+        radius="md"
+        onClick={() => router.push("/admin")}
+      >
+        {NavIcon ? <NavIcon size={16} /> : <BowlSteamIcon size={16} />}
+      </ActionIcon>
 
       <Space h="md" />
 
@@ -96,15 +118,21 @@ export function NavRail() {
       {/* User Avatar at bottom */}
 
       <Stack gap={4}>
-        <ActionIcon color="dark" variant="subtle">
+        {/* <ActionIcon color="dark" variant="subtle">
           <InfoIcon size={16} weight="bold" />
         </ActionIcon>
         <ActionIcon color="dark" variant="subtle">
           <GearSixIcon size={16} weight="bold" />
-        </ActionIcon>
+        </ActionIcon> */}
         <Divider my={4} />
 
-        <UserInfoPopover />
+        <UserInfoPopover
+          disableSetAway={disableSetAway}
+          disablePauseNotifications={disablePauseNotifications}
+          disableHelp={disableHelp}
+          disableSettings={disableSettings}
+          disableTheme={disableTheme}
+        />
       </Stack>
     </Stack>
   );

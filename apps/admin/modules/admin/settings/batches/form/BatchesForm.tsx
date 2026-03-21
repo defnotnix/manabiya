@@ -1,6 +1,6 @@
 "use client";
 
-import { Stack, TextInput, Select, NumberInput, Switch } from "@mantine/core";
+import { Stack, TextInput, Select, NumberInput } from "@mantine/core";
 import { FormWrapper } from "@settle/core";
 import { SHIFT_OPTIONS } from "./form.config";
 
@@ -52,17 +52,15 @@ export function BatchesForm() {
         {...form.getInputProps("total_days")}
       />
 
-      <TextInput
+      <NumberInput
         label="Class Hours Per Session"
         placeholder="1.50"
         required
+        min={0.5}
+        max={99.99}
+        step={0.5}
+        decimalScale={2}
         {...form.getInputProps("per_class_hours")}
-      />
-
-      <Switch
-        label="Active"
-        description="Enable this batch"
-        {...form.getInputProps("is_active", { type: "checkbox" })}
       />
     </Stack>
   );

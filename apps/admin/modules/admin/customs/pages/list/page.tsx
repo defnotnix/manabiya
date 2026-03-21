@@ -9,9 +9,11 @@ import { CUSTOMS_MODULE_CONFIG, CUSTOMS_API } from "../../module.config";
 import { CustomsForm } from "../../form/CustomsForm";
 import { customsFormConfig } from "../../form/form.config";
 import { customsListColumns } from "./list.columns";
+import { useIsAdmin } from "@/context/UserContext";
 
 export function ListPage() {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
 
   // Add cell renderer to documents column
   const columnsWithActions = customsListColumns.map((col: any) => {
@@ -44,28 +46,29 @@ export function ListPage() {
 
   return (
     <DataTableWrapper
-      queryKey="customs.list"
-      queryGetFn={async () => CUSTOMS_API.getCustoms()}
-      dataKey="results"
-    >
-      <DataTableModalShell
-        moduleInfo={CUSTOMS_MODULE_CONFIG}
-        columns={columnsWithActions}
-        idAccessor="id"
-        filterList={[]}
-        onCreateApi={async (data) => {
-          const response = await CUSTOMS_API.createCustom(data);
-          handleCreateSuccess(response);
-          return response;
-        }}
-        onEditApi={async (id, data) => CUSTOMS_API.updateCustom(String(id), data)}
-        onDeleteApi={async (id) => CUSTOMS_API.deleteCustom(String(id))}
-        createFormComponent={<CustomsForm />}
-        editFormComponent={<CustomsForm />}
-        createFormConfig={customsFormConfig}
-        editFormConfig={customsFormConfig}
-        modalWidth="lg"
-      />
-    </DataTableWrapper>
+        queryKey="customs.list"
+        queryGetFn={async () => CUSTOMS_API.getCustoms()}
+        dataKey="results"
+      >
+        <DataTableModalShell
+          moduleInfo={CUSTOMS_MODULE_CONFIG}
+          columns={columnsWithActions}
+          idAccessor="id"
+          filterList={[]}
+          onCreateApi={isAdmin ? async (data) => {
+            const response = await CUSTOMS_API.createCustom(data);
+            handleCreateSuccess(response);
+            return response;
+          } : undefined}
+          onEditApi={isAdmin ? async (id, data) => CUSTOMS_API.updateCustom(String(id), data) : undefined}
+          onDeleteApi={isAdmin ? async (id) => CUSTOMS_API.deleteCustom(String(id)) : undefined}
+          createFormComponent={<CustomsForm />}
+          editFormComponent={<CustomsForm />}
+          createFormConfig={customsFormConfig}
+          editFormConfig={customsFormConfig}
+          modalWidth="lg"
+          disableReviewButton={true}
+        />
+      </DataTableWrapper>
   );
 }

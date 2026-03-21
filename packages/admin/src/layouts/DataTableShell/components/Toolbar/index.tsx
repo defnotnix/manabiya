@@ -10,6 +10,7 @@ import {
   Drawer,
   Group,
   Menu,
+  Paper,
   Popover,
   Stack,
   Text,
@@ -17,6 +18,7 @@ import {
   UnstyledButton,
 } from "@mantine/core";
 import {
+  ArrowLeftIcon,
   CaretDownIcon,
   FunnelIcon,
   GearSixIcon,
@@ -72,41 +74,59 @@ export function DataTableShellToolbar({
   return (
     <>
       {/* Mobile: Fixed bottom center buttons */}
-      <Group
-        hiddenFrom="lg"
-        pos="fixed"
-        bottom={20}
-        left="50%"
-        style={{ transform: "translateX(-50%)", zIndex: 100 }}
-        gap="xs"
-      >
-        {/* New button */}
-        {sustained && handleNewClick ? (
-          <ActionIcon
-            size="xl"
-            radius="xl"
-            onClick={handleNewClick}
-            disabled={disableCreateButton}
-          >
-            <PlusIcon size={20} />
-          </ActionIcon>
-        ) : (
-          <ActionIcon
-            size="xl"
-            radius="xl"
-            component="a"
-            href={disableCreateButton ? undefined : finalHref}
-            disabled={disableCreateButton}
-          >
-            <PlusIcon size={20} />
-          </ActionIcon>
-        )}
 
-        {/* Filter button */}
-        <ActionIcon size="xl" radius="xl" onClick={openDrawer}>
-          <FunnelIcon size={20} />
-        </ActionIcon>
-      </Group>
+      <Paper
+        px="md"
+        w="100%"
+        hiddenFrom="lg" pos="fixed"
+        bottom={0}
+        left="50%"
+        style={{ transform: "translateX(-50%)", zIndex: 100 }}>
+
+        <Group
+          justify="space-between"
+          gap="xs"
+        >
+          <Group gap="xs">
+            <Button
+              variant="light"
+              leftSection={<ArrowLeftIcon />}
+            >
+              Back to Home
+            </Button>
+          </Group>
+          <Group gap={"xs"}>
+            {/* Filter button */}
+            <ActionIcon variant="subtle" size="lg" onClick={openDrawer}>
+              <FunnelIcon size={20} />
+            </ActionIcon>
+
+            {/* New button */}
+            {sustained && handleNewClick ? (
+              <ActionIcon
+                size="lg"
+             
+                onClick={handleNewClick}
+                disabled={disableCreateButton}
+              >
+                <PlusIcon size={20} />
+              </ActionIcon>
+            ) : (
+              <ActionIcon
+                size="lg"
+             
+                component="a"
+                href={disableCreateButton ? undefined : finalHref}
+                disabled={disableCreateButton}
+              >
+                <PlusIcon size={20} />
+              </ActionIcon>
+            )}
+
+
+          </Group>
+        </Group>
+      </Paper>
 
       {/* Mobile: Drawer with toolbar content */}
       <Drawer
@@ -176,6 +196,7 @@ export function DataTableShellToolbar({
                   size="xs"
                   leftSection={<Checkbox checked={checked} size="xs" />}
                   onClick={() => onToggleColumn(index)}
+                  style={{ color: "var(--mantine-color-text)" }}
                 >
                   {column.header}
                 </Button>
@@ -239,7 +260,7 @@ export function DataTableShellToolbar({
                   Columns
                 </Button>
               </Popover.Target>
-              <Popover.Dropdown p={0} w={200}>
+              <Popover.Dropdown p={0} w={200} style={{ backgroundColor: "var(--mantine-color-body)" }}>
                 <Stack gap={0}>
                   <Text px="sm" py="xs" size="xs" opacity={0.5}>
                     Select columns to view
@@ -259,6 +280,7 @@ export function DataTableShellToolbar({
                         size="xs"
                         leftSection={<Checkbox checked={checked} size="xs" />}
                         onClick={() => onToggleColumn(index)}
+                        style={{ color: "var(--mantine-color-text)" }}
                       >
                         {column.header}
                       </Button>

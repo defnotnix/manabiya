@@ -38,6 +38,7 @@ export type PropDataTableHeader = {
   sustained?: boolean;
   onNewClick?: () => void;
   disableCreateButton?: boolean;
+  customHeading?: string;
 };
 
 // ─────────────────────────────────────────────
@@ -95,6 +96,7 @@ export type PropDataTableShell = PropSustained &
     disableCreateButton?: boolean;
     disableEditButton?: boolean;
     disableDeleteButton?: boolean;
+    disableReviewButton?: boolean;
   };
 
 export type PropDataTableShellActions = PropIdAccessor & PropSustained & {
@@ -104,4 +106,5 @@ export type PropDataTableShellActions = PropIdAccessor & PropSustained & {
   onReviewClick?: (record: any) => void;
   disableEditButton?: boolean;
   disableDeleteButton?: boolean;
+  disableReviewButton?: boolean;
 };

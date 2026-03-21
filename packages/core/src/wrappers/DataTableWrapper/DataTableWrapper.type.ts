@@ -13,6 +13,7 @@ export type PropDataTableWrapper = {
   // aou
   queryGetFn: (queryProps: any) => Promise<any>;
   enableServerQuery?: boolean;
+  selectOnRowClick?: boolean;
 } & ( // If enableServerQuery is true, dataKey & paginationDataKey are required
   | {
       enableServerQuery: true;

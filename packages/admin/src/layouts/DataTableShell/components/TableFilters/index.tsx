@@ -43,7 +43,7 @@ export function DataTableShellFilter({
 
   return (
     <>
-      <Menu withArrow>
+      {/* <Menu withArrow>
         <Menu.Target>
           <Button variant="subtle" size="xs" rightSection={<CaretDownIcon />}>
             Filters
@@ -89,7 +89,7 @@ export function DataTableShellFilter({
             Clear Filters
           </Menu.Item>
         </Menu.Dropdown>
-      </Menu>
+      </Menu> */}
     </>
   );
 }

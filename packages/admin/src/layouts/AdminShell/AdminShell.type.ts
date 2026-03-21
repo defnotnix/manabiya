@@ -1,4 +1,4 @@
-import { JSX, ReactNode } from "react";
+import { JSX, ReactNode, ComponentType } from "react";
 import { Icon } from "@phosphor-icons/react";
 import {
   AppShellAsideConfiguration,
@@ -55,6 +55,16 @@ type PropAdminNavSideNav = {
   singleNavLayout?: boolean; // When true, only shows rail with direct href navigation
   onNavbarWidthChange?: (width: number) => void;
   toggle?: () => void;
+  // Avatar menu disable options
+  disableSetAway?: boolean;
+  disablePauseNotifications?: boolean;
+  disableHelp?: boolean;
+  disableSettings?: boolean;
+  disableTheme?: boolean;
+  // NavRightPanel disable option
+  disableNavRightPanel?: boolean;
+  // Navigation icon
+  navIcon?: Icon | ComponentType<any>;
 };
 
 type PropAdminNavStyles = {
@@ -70,6 +80,7 @@ type PropAdminNavGeneral = {
   children: ReactNode;
   aside?: ReactNode;
   asideProps?: AppShellAsideConfiguration;
+  navIcon?: Icon;
 };
 
 export type PropAdminNavLayout = PropAdminNavStyles &

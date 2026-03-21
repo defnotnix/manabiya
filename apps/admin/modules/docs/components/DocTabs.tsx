@@ -1,7 +1,7 @@
 "use client";
 
 import { Button, Container, Group, Menu, Paper, Text, Box } from "@mantine/core";
-import { PenIcon, PlusIcon, XIcon } from "@phosphor-icons/react";
+import { PenIcon, PlusIcon, XIcon, CaretDownIcon } from "@phosphor-icons/react";
 import { BANK_KEY_LABELS, DocType } from "@/context/DocumentContext";
 import { useDocContext } from "@/context/DocumentContext";
 
@@ -35,11 +35,14 @@ export function DocTabs({
 }: DocTabsProps) {
     const { activeDocument, bankData } = useDocContext();
 
+    const activeDocLabel = documents.find((d) => d.id === activeDocumentId)?.label || "Select Document";
+
     return (
         <Paper radius={0}>
             <Container size="xl">
                 <Group justify="space-between">
-                    <Group gap={0}>
+                    {/* Desktop View: Document Tabs */}
+                    <Group gap={0} visibleFrom="sm">
                         {documents.map((doc) => (
                             <Group key={doc.id} gap={0} wrap="nowrap">
                                 <Button
@@ -75,7 +78,6 @@ export function DocTabs({
                             <Menu.Target>
                                 <Button
                                     radius={0}
-
                                     color="brand"
                                     size="xs"
                                     variant="subtle"
@@ -114,7 +116,90 @@ export function DocTabs({
                         </Menu>
                     </Group>
 
-                    <Group justify="flex-end">
+                    {/* Mobile View: Dropdown */}
+                    <Group gap="xs" hiddenFrom="sm">
+                        <Menu withArrow position="bottom-start">
+                            <Menu.Target>
+                                <Button
+                                    radius={0}
+                                    size="xs"
+                                    color="blue"
+                                    variant="light"
+                                    rightSection={<CaretDownIcon size={12} />}
+                                    style={{ flex: 1 }}
+                                >
+                                    <Text size="xs" truncate>{activeDocLabel}</Text>
+                                </Button>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                {documents.map((doc) => (
+                                    <Menu.Item
+                                        key={doc.id}
+                                        onClick={() => onSelectDocument(doc.id)}
+                                        rightSection={
+                                            <XIcon
+                                                size={12}
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onRemoveDocument(doc.id, doc.label, doc.type);
+                                                }}
+                                                style={{ cursor: "pointer" }}
+                                            />
+                                        }
+                                    >
+                                        <Text size="xs">{doc.label}</Text>
+                                    </Menu.Item>
+                                ))}
+                            </Menu.Dropdown>
+                        </Menu>
+                    </Group>
+
+                    {/* Mobile: Add Document Button on Right */}
+                    <Group justify="flex-end" hiddenFrom="sm">
+                        <Menu withArrow position="bottom-end">
+                            <Menu.Target>
+                                <Button
+                                    radius={0}
+                                    color="brand"
+                                    size="xs"
+                                    variant="subtle"
+                                    leftSection={<PlusIcon />}
+                                >
+                                    Add
+                                </Button>
+                            </Menu.Target>
+                            <Menu.Dropdown>
+                                <Menu.Item
+                                    onClick={onOpenCertificateDrawer}
+                                    disabled={documents.some((d) => d.type === "student-certificate")}
+                                >
+                                    <Text size="xs">Student Certificate</Text>
+                                </Menu.Item>
+                                <Menu.Item
+                                    onClick={onOpenCvDrawer}
+                                    disabled={documents.some((d) => d.type === "student-cv")}
+                                >
+                                    <Text size="xs">Student CV</Text>
+                                </Menu.Item>
+                                <Menu.Divider />
+                                <Menu.Item
+                                    onClick={onOpenWodaDrawer}
+                                    disabled={documents.some((d) => d.type === "woda-documents")}
+                                >
+                                    <Text size="xs">Woda Certificate</Text>
+                                </Menu.Item>
+                                <Menu.Item
+                                    onClick={onOpenStatementDrawer}
+                                    disabled={documents.some((d) => d.type === "bank-statement")}
+                                >
+                                    <Text size="xs">Statement Document</Text>
+                                </Menu.Item>
+                            </Menu.Dropdown>
+                        </Menu>
+                    </Group>
+
+                    {/* Desktop: Edit Buttons on Right */}
+                    <Group justify="flex-end" visibleFrom="sm">
                         {activeDocument?.type === "woda-documents" && (
                             <Button
                                 radius={0}
@@ -153,8 +238,6 @@ export function DocTabs({
                                 </Button>
                             </Group>
                         )}
-
-
                     </Group>
                 </Group>
             </Container>

@@ -221,12 +221,13 @@ export const useClipboardApi = () => {
 
   const markClipboardAsUsed = async (id: number): Promise<ClipboardEntry | null> => {
     try {
-      const response = await moduleApiCall.customRequest({
-        endpoint: `${BASE_URL}/clipboards/${id}/use/`,
+      const response = await fetch(`${BASE_URL}/clipboards/${id}/use/`, {
         method: "POST",
-        body: { used: true },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ used: true }),
       });
-      return response;
+      if (!response.ok) throw new Error("Failed to mark as used");
+      return await response.json();
     } catch (error) {
       console.error("Failed to mark clipboard as used:", error);
       return null;

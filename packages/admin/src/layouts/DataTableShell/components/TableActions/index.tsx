@@ -16,6 +16,7 @@ export function DataTableShellTableActions({
   onReviewClick,
   disableEditButton = false,
   disableDeleteButton = false,
+  disableReviewButton = false,
 }: PropDataTableShellActions) {
   // * CONTEXT
 
@@ -68,21 +69,23 @@ export function DataTableShellTableActions({
                 {selectedRecords.length} selected
               </Text>
               <Divider mx="xs" opacity={0.1} orientation="vertical" />
-              <Button
-                leftSection={<EyeIcon />}
-                size="xs"
-                variant="subtle"
-                color="gray"
-                title={
-                  selectedRecords.length !== 1
-                    ? "Select only one record to review"
-                    : "Review selected record"
-                }
-                disabled={selectedRecords.length !== 1}
-                onClick={handleReview}
-              >
-                Review
-              </Button>
+              {!disableReviewButton && (
+                <Button
+                  leftSection={<EyeIcon />}
+                  size="xs"
+                  variant="subtle"
+                  color="gray"
+                  title={
+                    selectedRecords.length !== 1
+                      ? "Select only one record to review"
+                      : "Review selected record"
+                  }
+                  disabled={selectedRecords.length !== 1}
+                  onClick={handleReview}
+                >
+                  Review
+                </Button>
+              )}
 
               {selectedRecords.length == 1 && !disableEditButton && (
                 <Button

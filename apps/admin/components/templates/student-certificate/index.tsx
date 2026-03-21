@@ -18,6 +18,7 @@ import dayjs from "dayjs";
 import { useDocContext, StudentCertificateData, CertificateMarkEntry } from "@/context/DocumentContext";
 import { StudentCertMissingBanner } from "./MissingBanner";
 import leafImage from "../../../assets/leaf.png";
+import manabiyaLogo from "../../../assets/logowhite.png";
 
 const EMPTY_CERT: StudentCertificateData = {
   firstname: "",
@@ -47,8 +48,8 @@ function GradeBox({ grade, value }: { grade: string; value: string }) {
   return (
     <ActionIcon
       size="xs"
-      color="dark"
-      variant={value === grade ? "outline" : "transparent"}
+      color="dark.9"
+      variant={value === grade ? "outline" : "subtle"}
     >
       <Text fz={10}>{grade}</Text>
     </ActionIcon>
@@ -93,32 +94,32 @@ const TableHeader = () => (
 interface CertificateProps {
   selectedInstructor: string | null;
   selectedDirector: string | null;
-  signatures: Array<{ id: string; name: string }>;
+  signatures: Array<{ id: string; name: string; role?: string; jp_role?: string; signature_image: string }>;
+  overrideData?: StudentCertificateData;
 }
 
 export function TemplateStudentCertificate({
   selectedInstructor,
   selectedDirector,
   signatures,
+  overrideData,
 }: CertificateProps) {
   const { documentData } = useDocContext();
 
-  const d = documentData ?? EMPTY_CERT;
+  const d = overrideData ?? documentData ?? EMPTY_CERT;
 
-  const getInstructorName = () => {
+  const getInstructor = () => {
     if (selectedInstructor) {
-      const sig = signatures.find((s) => String(s.id) === selectedInstructor);
-      return sig?.name ?? "";
+      return signatures.find((s) => String(s.id) === selectedInstructor);
     }
-    return "";
+    return null;
   };
 
-  const getDirectorName = () => {
+  const getDirector = () => {
     if (selectedDirector) {
-      const sig = signatures.find((s) => String(s.id) === selectedDirector);
-      return sig?.name ?? "";
+      return signatures.find((s) => String(s.id) === selectedDirector);
     }
-    return "";
+    return null;
   };
 
   const marking = d.marking ?? [];
@@ -148,18 +149,21 @@ export function TemplateStudentCertificate({
 
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-  // Find the first month from the marking data
+  // Find the minimum (earliest) month from the marking data
   let startMonth = 1;
   if (marking.length > 0) {
-    const firstMarkingMonth = marking[0].month as string | number;
-    if (typeof firstMarkingMonth === "string") {
-      const parts = firstMarkingMonth.split("-");
-      startMonth = parseInt(parts[parts.length - 1]);
-    } else {
-      startMonth = firstMarkingMonth;
-    }
+    const months = marking.map((m) => {
+      const monthValue = m.month as string | number;
+      if (typeof monthValue === "string") {
+        const parts = monthValue.split("-");
+        return parseInt(parts[parts.length - 1]);
+      }
+      return monthValue as number;
+    });
+    startMonth = Math.min(...months);
   }
 
+  // Generate 12 months starting from the earliest month
   const allMonthsData = Array.from({ length: 12 }, (_, i) => {
     const monthNum = ((startMonth - 1 + i) % 12) + 1;
     const monthIndex = (startMonth - 1 + i) % 12;
@@ -199,28 +203,23 @@ export function TemplateStudentCertificate({
         style={{
           position: "relative",
           width: "8.3in",
-          minHeight: "11.7in",
+          height: "11.7in",
           padding: "12mm",
           background: "white",
           color: "black",
-          overflow:"hidden"
+          overflow: "hidden"
         }}
       >
         {/* Header */}
         <Group justify="space-between">
           <Group>
-            <Box
+            <Image
               w={100}
               h={100}
-              style={{
-                background: "var(--mantine-color-gray-2)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              <Text size="xs" c="dimmed" ta="center">Logo</Text>
-            </Box>
+              src={manabiyaLogo.src}
+              alt="Manabiya logo"
+              fit="contain"
+            />
             <Stack gap={2}>
               <Text fw={600} size="sm" style={{ lineHeight: 1.2 }}>
                 MANABIYA NEPAL
@@ -256,7 +255,7 @@ export function TemplateStudentCertificate({
           </Stack>
         </Group>
 
-        <Divider my={16} />
+        <Divider my={12} />
 
         {/* Student info + photo */}
         <Grid>
@@ -358,7 +357,7 @@ export function TemplateStudentCertificate({
         </Grid>
 
         {/* Attendance Summary */}
-        <Grid mt="sm">
+        <Grid mt="xs">
           <Grid.Col span={12}>
             <Text fz={10} fw={600} mt="xs">
               出席概要 (Attendance Summary)
@@ -375,7 +374,7 @@ export function TemplateStudentCertificate({
                   <Table.Tr key={i}>
                     <Table.Td>{mark.month}</Table.Td>
                     <Table.Td>{mark.total_days}</Table.Td>
-                    <Table.Td>{mark.class_hr * mark.total_days}</Table.Td>
+                    <Table.Td>{mark.class_hr}</Table.Td>
                     <Table.Td>{mark.present * d.coursehour}</Table.Td>
                     <Table.Td>{mark.absent * d.coursehour}</Table.Td>
                     <Table.Td>{attendancePct(mark)}</Table.Td>
@@ -395,7 +394,7 @@ export function TemplateStudentCertificate({
                   <Table.Tr key={i}>
                     <Table.Td>{mark.month}</Table.Td>
                     <Table.Td>{mark.total_days}</Table.Td>
-                    <Table.Td>{mark.class_hr * mark.total_days}</Table.Td>
+                    <Table.Td>{mark.class_hr}</Table.Td>
                     <Table.Td>{mark.present * d.coursehour}</Table.Td>
                     <Table.Td>{mark.absent * d.coursehour}</Table.Td>
                     <Table.Td>{attendancePct(mark)}</Table.Td>
@@ -441,7 +440,7 @@ export function TemplateStudentCertificate({
           成歓評価(Grading Evaluation)
         </Text>
 
-        <Table verticalSpacing={4} mt="xs" fz={10} withTableBorder withColumnBorders>
+        <Table verticalSpacing={4} mt="xs" fz={10} withTableBorder withColumnBorders >
           <Table.Tbody>
             <Table.Tr>
               <Table.Td><Text fz={10} fw={600}>文法(Grammar)</Text></Table.Td>
@@ -537,51 +536,43 @@ export function TemplateStudentCertificate({
         <Grid style={{ position: "relative" }}>
           <Grid.Col span={3}>
             <Box style={{ position: "relative" }}>
-              <Space h={64} />
-              {getInstructorName() && (
-                <Text
-                  fz={10}
-                  fw={600}
-                  ta="center"
-                  style={{
-                    position: "absolute",
-                    bottom: "100%",
-                    left: 0,
-                    right: 0,
-                    marginBottom: "4px",
-                  }}
-                >
-                  {getInstructorName()}
-                </Text>
+              {getInstructor()?.signature_image ? (
+                <Image
+                  src={getInstructor()!.signature_image}
+                  alt="Instructor signature"
+                  h={64}
+                  fit="contain"
+                />
+              ) : (
+                <Space h={64} />
               )}
               <Divider mb="xs" />
-              <Text fz={10} ta="center">教師</Text>
-              <Text fz={10} ta="center">Instructor</Text>
+              <Text fz={10} ta="center" fw={500}>{getInstructor()?.name}</Text>
+              {getInstructor()?.jp_role && (
+                <Text fz={10} ta="center">{getInstructor()!.jp_role}</Text>
+              )}
+              <Text fz={10} ta="center">{getInstructor()?.role || "Instructor"}</Text>
             </Box>
           </Grid.Col>
 
           <Grid.Col span={3}>
             <Box style={{ position: "relative" }}>
-              <Space h={64} />
-              {getDirectorName() && (
-                <Text
-                  fz={10}
-                  fw={600}
-                  ta="center"
-                  style={{
-                    position: "absolute",
-                    bottom: "100%",
-                    left: 0,
-                    right: 0,
-                    marginBottom: "4px",
-                  }}
-                >
-                  {getDirectorName()}
-                </Text>
+              {getDirector()?.signature_image ? (
+                <Image
+                  src={getDirector()!.signature_image}
+                  alt="Director signature"
+                  h={64}
+                  fit="contain"
+                />
+              ) : (
+                <Space h={64} />
               )}
               <Divider mb="xs" />
-              <Text fz={10} ta="center">社長</Text>
-              <Text fz={10} ta="center">Managing Director</Text>
+              <Text fz={10} ta="center" fw={500}>{getDirector()?.name}</Text>
+              {getDirector()?.jp_role && (
+                <Text fz={10} ta="center">{getDirector()!.jp_role}</Text>
+              )}
+              <Text fz={10} ta="center">{getDirector()?.role || "Managing Director"}</Text>
             </Box>
           </Grid.Col>
 

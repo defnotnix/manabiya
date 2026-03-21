@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button, Group, ActionIcon, Tooltip, Divider } from "@mantine/core";
-import { BookOpenIcon, LockIcon, LockOpenIcon } from "@phosphor-icons/react";
+import { BookOpenIcon, LockIcon, LockOpenIcon, ArrowUpRightIcon } from "@phosphor-icons/react";
 import { DataTableWrapper } from "@settle/core";
 import { DataTableShell } from "@settle/admin";
 import { STUDENT_MODULE_CONFIG, STUDENT_API } from "../../module.config";
@@ -10,12 +10,14 @@ import { columns, filterList, tabs } from "./columns";
 import { BatchFilterBanner } from "./components/BatchFilterBanner";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsAdmin } from "@/context/UserContext";
 
 export function ListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const [loadingIds, setLoadingIds] = useState<Set<string>>(new Set());
+  const isAdmin = useIsAdmin();
 
   // Get batch ID and name from URL params
   const batchId = searchParams.get("batch");
@@ -44,6 +46,21 @@ export function ListPage() {
 
   // Add cell renderer to full_name and actions columns
   const columnsWithActions = columns.map((col: any) => {
+    if (col.accessorKey === "student_code") {
+      return {
+        ...col,
+        render: (row: any) => (
+          <Button
+            variant="subtle"
+            size="xs"
+            rightSection={<ArrowUpRightIcon size={14} />}
+            onClick={() => router.push(`/admin/students/audit-logs?student=${row.id}`)}
+          >
+            {row.student_code}
+          </Button>
+        ),
+      };
+    }
     if (col.accessorKey === "full_name") {
       return {
         ...col,
@@ -95,7 +112,7 @@ export function ListPage() {
   return (
     <>
       <BatchFilterBanner batchName={batchName} />
-     <Divider/>
+      <Divider />
       <DataTableWrapper
         queryKey={`students.list.${batchId ?? "all"}`}
         enableServerQuery={true}
@@ -110,19 +127,20 @@ export function ListPage() {
 
       >
       <DataTableShell
-
         moduleInfo={STUDENT_MODULE_CONFIG}
+        customHeading={batchName ? `Batch ${batchName}` : undefined}
         columns={columnsWithActions}
         idAccessor="id"
         tabs={tabs}
         filterList={filterList}
         hasServerSearch={true}
-        newButtonHref="/admin/students/new"
-
+        newButtonHref={isAdmin ? `/admin/students/new${batchId ? `?batch=${batchId}&batch_name=${encodeURIComponent(batchName || "")}` : ""}` : undefined}
+        disableEditButton={!isAdmin}
+        disableDeleteButton={!isAdmin}
         onReviewClick={(record: any) => {
           router.push(`/admin/students/${record.id}`);
         }}
-        onDeleteClick={async (ids: any) => {
+        onDeleteClick={isAdmin ? async (ids: any) => {
           const idArray = Array.isArray(ids) ? ids : [ids];
           for (const id of idArray) {
             await STUDENT_API.deleteStudent(String(id));
@@ -130,7 +148,7 @@ export function ListPage() {
           // Refetch data after deletion
           await queryClient.refetchQueries({ queryKey: ["students.list"] });
           await queryClient.refetchQueries({ queryKey: ["students", "list"] });
-        }}
+        } : undefined}
         rowStyle={(record: any) => ({
           backgroundColor: record.locked
             ? "rgba(18, 148, 255, 0.04)"

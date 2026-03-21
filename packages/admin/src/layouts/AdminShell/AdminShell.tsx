@@ -23,7 +23,14 @@ export function AdminShell({
   onLogout,
   singleNavLayout = false,
   aside,
-  asideProps
+  asideProps,
+  disableSetAway,
+  disablePauseNotifications,
+  disableHelp,
+  disableSettings,
+  disableTheme,
+  disableNavRightPanel,
+  navIcon
 }: PropAdminNavLayout) {
   // * STATES
 
@@ -44,7 +51,7 @@ export function AdminShell({
     <>
       <AppShell
         navbar={{
-          width: navbarWidth,
+          width: 50,
           breakpoint: "sm",
           collapsed: { mobile: !opened },
         }}
@@ -54,7 +61,7 @@ export function AdminShell({
           ...asideProps
         } : undefined}
       >
-        <AppShell.Header hiddenFrom="md">
+        {/* <AppShell.Header hiddenFrom="md">
           <Group h={50} justify="space-between" px="md">
             <ActionIcon
               onClick={() => {
@@ -64,9 +71,9 @@ export function AdminShell({
               <ArrowRightIcon />
             </ActionIcon>
           </Group>
-        </AppShell.Header>
+        </AppShell.Header> */}
 
-        <AppShell.Navbar bg="none">
+        <AppShell.Navbar bg="none" style={{ width: "fit-content" }}>
           <AdminShellNavbarWrapper
             navItems={navItems}
             navModules={navModules}
@@ -74,6 +81,13 @@ export function AdminShell({
             singleNavLayout={singleNavLayout}
             onNavbarWidthChange={handleNavbarWidthChange}
             toggle={toggle}
+            disableSetAway={disableSetAway}
+            disablePauseNotifications={disablePauseNotifications}
+            disableHelp={disableHelp}
+            disableSettings={disableSettings}
+            disableTheme={disableTheme}
+            disableNavRightPanel={disableNavRightPanel}
+            navIcon={navIcon}
           />
         </AppShell.Navbar>
 
@@ -83,10 +97,7 @@ export function AdminShell({
             zIndex: 10,
           }}
           bg="none"
-          pt={{
-            base: opened ? 0 : 50,
-            md: 0,
-          }}
+          
         >
           {children}
         </AppShell.Main>

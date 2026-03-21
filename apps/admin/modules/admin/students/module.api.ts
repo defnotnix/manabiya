@@ -145,6 +145,15 @@ export const SIGNATURE_API = {
       id,
     });
   },
+
+  inactivateSignature: async (id: string) => {
+    const result = await moduleApiCall.editRecord({
+      endpoint: ENDPOINTS.SIGNATURES,
+      id,
+      body: { is_active: false },
+    });
+    return { data: result };
+  },
 };
 
 // Batches API
@@ -195,6 +204,15 @@ export const BATCH_API = {
       params: { search },
     });
     return { data: Array.isArray(data) ? data : data?.results || [] };
+  },
+
+  inactivateBatch: async (id: string) => {
+    const result = await moduleApiCall.editRecord({
+      endpoint: ENDPOINTS.BATCHES,
+      id,
+      body: { is_active: false },
+    });
+    return { data: result };
   },
 };
 

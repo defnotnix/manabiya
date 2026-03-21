@@ -22,6 +22,7 @@ export function DataTableWrapper<T>({
   dataKey,
   paginationDataKey,
   paginationResponseFn = () => {},
+  selectOnRowClick = false,
 }: PropDataTableWrapper) {
   // * STORE
   const { page, pageSize, search, filters, setPaginationData } =
@@ -124,6 +125,7 @@ export function DataTableWrapper<T>({
         isLoading: isLoading || isFetching,
         isError,
         refetch,
+        selectOnRowClick,
       }}
     >
       {children}

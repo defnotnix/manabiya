@@ -5,26 +5,29 @@ import { DateInput, MonthPickerInput } from "@mantine/dates";
 import { FormWrapper } from "@settle/core";
 import { useQuery } from "@tanstack/react-query";
 import { useDisclosure } from "@mantine/hooks";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import { SelectWithCreate } from "../../components/SelectWithCreate";
 import { BATCH_API, GRADE_OPTIONS } from "../../module.config";
 import { BatchModal } from "../../modals/BatchModal";
+import { FloppyDiskIcon } from "@phosphor-icons/react";
 
 interface Step4EnrollmentAcademicProps {
     disabled?: boolean;
+    onSave?: () => void;
+    isSaving?: boolean;
 }
 
 export function Step4EnrollmentAcademic({
     disabled = false,
+    onSave,
+    isSaving = false,
 }: Step4EnrollmentAcademicProps) {
     const form = FormWrapper.useForm();
     const [, forceUpdate] = useState({});
 
     // Modal states
     const [batchModalOpened, batchModalHandlers] = useDisclosure(false);
-
-
 
     // Marking State
     const handleStartMonthChange = (date: Date | null) => {
@@ -35,7 +38,6 @@ export function Step4EnrollmentAcademic({
         const date = form.getValues().marking_start_date;
         if (!date) return;
 
-        const currentMarkings = form.getValues().markings || [];
         const newMarkings: any[] = [];
 
         let currentDate = dayjs(date);
@@ -43,20 +45,15 @@ export function Step4EnrollmentAcademic({
             const year = currentDate.year();
             const month = currentDate.month() + 1;
 
-            const existing = currentMarkings.find((m: any) => m.year === year && m.month === month);
-            if (existing) {
-                newMarkings.push(existing);
-            } else {
-                newMarkings.push({
-                    year,
-                    month,
-                    total_days: null,
-                    class_hours: "",
-                    present: null,
-                    absent: null,
-                    attendance_percent: "",
-                });
-            }
+            newMarkings.push({
+                year,
+                month,
+                total_days: null,
+                class_hours: "",
+                present: null,
+                absent: null,
+                attendance_percent: "",
+            });
             currentDate = currentDate.add(1, 'month');
         }
 
@@ -162,7 +159,16 @@ export function Step4EnrollmentAcademic({
         label: batch.name,
     }));
 
-
+    // Update default_class_hours when batch is selected or pre-filled from URL
+    useEffect(() => {
+        const values = form.getValues();
+        if (values.batch && batchesData) {
+            const selectedBatch = batchesData.find((b: any) => String(b.id) === String(values.batch));
+            if (selectedBatch?.per_class_hours && !values.default_class_hours) {
+                form.setFieldValue("default_class_hours", selectedBatch.per_class_hours);
+            }
+        }
+    }, [batchesData, form]);
 
     const values = form.getValues();
     const totals = calculateTotals();
@@ -170,6 +176,20 @@ export function Step4EnrollmentAcademic({
     return (
         <>
             <Stack gap="xl">
+                {onSave && (
+                    <Group justify="flex-end">
+                        <Button
+                            size="xs"
+                            loading={isSaving}
+                            onClick={onSave}
+                            leftSection={<FloppyDiskIcon size={14} />}
+                            disabled={disabled}
+                        >
+                            Save Changes
+                        </Button>
+                    </Group>
+                )}
+
                 <Stack gap="md">
                     <SelectWithCreate
                         label="Batch"
@@ -178,7 +198,17 @@ export function Step4EnrollmentAcademic({
                         disabled={disabled}
                         onAddNew={batchModalHandlers.open}
                         value={values.batch ? String(values.batch) : null}
-                        onChange={(value) => { form.setFieldValue("batch", value ? Number(value) : null); forceUpdate({}); }}
+                        onChange={(value) => {
+                            form.setFieldValue("batch", value ? Number(value) : null);
+                            // Get per_class_hours from selected batch
+                            if (value) {
+                                const selectedBatch = batchesData?.find((b: any) => String(b.id) === value);
+                                if (selectedBatch?.per_class_hours) {
+                                    form.setFieldValue("default_class_hours", selectedBatch.per_class_hours);
+                                }
+                            }
+                            forceUpdate({});
+                        }}
                         error={form.errors.batch as string}
                     />
 
@@ -195,6 +225,7 @@ export function Step4EnrollmentAcademic({
                             placeholder="Select completion date"
                             disabled={disabled}
                             valueFormat="YYYY-MM-DD"
+                            error={form.errors.date_of_completion as string}
                             {...form.getInputProps("date_of_completion")}
                         />
                     </Group>
@@ -210,37 +241,37 @@ export function Step4EnrollmentAcademic({
                     <Group grow>
                         <Select data={GRADE_OPTIONS} clearable label="Listening" placeholder="Grade" {...form.getInputProps("grading_listening")} disabled={disabled} />
                         <Select data={GRADE_OPTIONS} clearable label="Reading" placeholder="Grade" {...form.getInputProps("grading_reading")} disabled={disabled} />
-                        <TextInput label="Remarks" placeholder="Remarks" {...form.getInputProps("grading_remarks")} disabled={disabled} />
                     </Group>
                 </Stack>
 
                 <Stack gap="md" mt="md">
                     <Text fw={600} size="sm">Marking (Attendance) Information</Text>
-                    <MonthPickerInput
-                        label="Marking Start Month"
-                        placeholder="Pick start month to auto-generate 12 months"
-                        disabled={disabled}
-                        value={values.marking_start_date ? new Date(values.marking_start_date) : null}
-                        onChange={(val: any) => handleStartMonthChange(val)}
-                    />
 
-                    {values.marking_start_date && (
-                        <Stack gap="md">
-                            <TextInput
-                                label="Default Class Hours"
-                                placeholder="Enter default class hours"
-                                disabled={disabled}
-                                value={values.default_class_hours ?? ""}
-                                onChange={(e) => form.setFieldValue("default_class_hours", e.currentTarget.value)}
-                            />
-                            <Button
-                                onClick={handleGenerateMarkings}
-                                disabled={disabled}
-                                variant="default"
-                            >
-                                Generate 12 Months
-                            </Button>
-                        </Stack>
+                    <Group grow>
+                        <MonthPickerInput
+                            label="Marking Start Month"
+                            placeholder="Pick start month to auto-generate 12 months"
+                            disabled={disabled || !values.batch}
+                            value={values.marking_start_date ? new Date(values.marking_start_date) : null}
+                            onChange={(val: any) => handleStartMonthChange(val)}
+                        />
+                        <TextInput
+                            label="Default Class Hours"
+                            placeholder="Auto-filled from batch"
+                            disabled
+                            readOnly
+                            value={values.default_class_hours ?? ""}
+                        />
+                    </Group>
+
+                    {values.marking_start_date && values.batch && (
+                        <Button
+                            onClick={handleGenerateMarkings}
+                            disabled={disabled}
+                            variant="default"
+                        >
+                            {values.markings && values.markings.length > 0 ? "Re-generate 12 Months" : "Generate 12 Months"}
+                        </Button>
                     )}
 
                     {values.markings && values.markings.length > 0 && (
@@ -250,8 +281,8 @@ export function Step4EnrollmentAcademic({
                                     <Table.Tr>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Month</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Tot. Days</Table.Th>
-                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Class Hrs</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Present Days</Table.Th>
+                                        <Table.Th style={{ whiteSpace: 'nowrap' }}>Class Hrs</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Absent Days</Table.Th>
                                         <Table.Th style={{ whiteSpace: 'nowrap' }}>Attend. %</Table.Th>
                                     </Table.Tr>
@@ -273,14 +304,6 @@ export function Step4EnrollmentAcademic({
                                                 />
                                             </Table.Td>
                                             <Table.Td>
-                                                <TextInput
-                                                    size="xs"
-                                                    placeholder="Hrs"
-                                                    readOnly
-                                                    value={values.markings[index]?.class_hours ?? ""}
-                                                />
-                                            </Table.Td>
-                                            <Table.Td>
                                                 <NumberInput
                                                     size="xs"
                                                     placeholder="Days"
@@ -288,6 +311,14 @@ export function Step4EnrollmentAcademic({
                                                     value={values.markings[index]?.present ?? ""}
                                                     onChange={(val) => updateMarkingFieldValue(index, "present", val)}
                                                     onBlur={() => handleMarkingBlur(index, "present")}
+                                                />
+                                            </Table.Td>
+                                            <Table.Td>
+                                                <TextInput
+                                                    size="xs"
+                                                    placeholder="Hrs"
+                                                    readOnly
+                                                    value={String(values.markings[index]?.class_hours || "")}
                                                 />
                                             </Table.Td>
                                             <Table.Td>
@@ -317,8 +348,8 @@ export function Step4EnrollmentAcademic({
                                     <Table.Tr>
                                         <Table.Th>Totals</Table.Th>
                                         <Table.Th>{totals.total_days || "-"}</Table.Th>
-                                        <Table.Th>{totals.class_hours || "-"}</Table.Th>
                                         <Table.Th>{totals.present || "-"}</Table.Th>
+                                        <Table.Th>{totals.class_hours || "-"}</Table.Th>
                                         <Table.Th>{totals.absent || "-"}</Table.Th>
                                         <Table.Th>{totals.attendPercent}%</Table.Th>
                                     </Table.Tr>

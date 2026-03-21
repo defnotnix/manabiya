@@ -26,7 +26,7 @@ export function QuickActionButtons() {
       <Group gap={4}>
         <Button
           size="sm"
-          color="dark"
+          color="indigo"
           leftSection={<PlusIcon />}
           onClick={() => router.push("/admin/students/new")}
         >
@@ -34,13 +34,15 @@ export function QuickActionButtons() {
         </Button>
 
 
-        <Menu>
+        <Menu >
           <Menu.Target>
             <Button
+              visibleFrom="lg"
+              disabled
               size="sm"
               leftSection={<PlusIcon />}
               rightSection={<CaretDownIcon />}
-          
+
             >
               Document
             </Button>

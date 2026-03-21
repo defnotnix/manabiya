@@ -536,20 +536,13 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
                     });
                 }
 
-                // If studentId is present, pre-add student certificate and CV templates
+                // If studentId is present, pre-add student certificate template
                 if (studentId) {
                     // Add student certificate template
                     newDocuments.unshift({
                         id: `student-cert-${studentId}`,
                         type: "student-certificate",
                         label: DOC_TYPE_LABELS["student-certificate"],
-                    });
-
-                    // Add student CV template
-                    newDocuments.unshift({
-                        id: `student-cv-${studentId}`,
-                        type: "student-cv",
-                        label: DOC_TYPE_LABELS["student-cv"],
                     });
                 }
 
@@ -621,6 +614,7 @@ export function DocContextProvider({ children }: { children: ReactNode }) {
                             reading: firstGrading?.reading || "A",
                             composition: firstGrading?.composition || "A",
                             studyType: 0,
+                            image: studentData.image || undefined,
                             batch: {
                                 course: {
                                     name: studentData.batch_detail?.name || "",

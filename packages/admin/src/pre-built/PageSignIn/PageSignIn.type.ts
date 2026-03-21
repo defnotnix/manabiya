@@ -120,4 +120,18 @@ export interface PageSignInProps {
    * Should handle magic link flow
    */
   onMagicLinkLogin?: (email: string) => void;
+
+  /**
+   * Disable Sign Up link rendering
+   * When true, hides the "Sign up" link from the form
+   * @default false
+   */
+  disableSignUp?: boolean;
+
+  /**
+   * Disable Forgot Password link rendering
+   * When true, hides the "Forgot Password?" link from the form
+   * @default false
+   */
+  disableForgotPassword?: boolean;
 }

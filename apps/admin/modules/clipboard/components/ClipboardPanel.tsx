@@ -283,11 +283,11 @@ export function ClipboardPanel({ opened, onClose }: ClipboardPanelProps) {
           <ClipboardEntryForm
             category={selectedCategory}
             entry={editingEntry}
-            onSubmit={(data) => {
+            onSubmit={async (data) => {
               if (editingEntry) {
-                handleUpdateEntry(editingEntry.id, data);
+                await handleUpdateEntry(editingEntry.id, data);
               } else {
-                handleCreateEntry(data);
+                await handleCreateEntry(data);
               }
             }}
             onCancel={() => {
@@ -314,7 +314,7 @@ export function ClipboardPanel({ opened, onClose }: ClipboardPanelProps) {
           </Badge>
         </Group>
       }
-      classNames={{ drawer: styles.clipboardDrawer }}
+      classNames={{ content: styles.clipboardDrawer }}
     >
       <Stack gap="md">
         {/* Add New Button */}
@@ -462,7 +462,7 @@ function ClipboardEntriesList({
                 </Text>
 
                 {entry.notes && (
-                  <Text size="xs" c="blue" italic>
+                  <Text size="xs" c="blue" fs="italic">
                     {entry.notes}
                   </Text>
                 )}

@@ -1,21 +1,48 @@
 "use client";
 
-import { navItems } from "@/config/nav";
+import { getNavItems } from "@/config/nav";
 import { ActionIcon, Menu, Text } from "@mantine/core";
-import { PlusIcon } from "@phosphor-icons/react";
 import { AdminShell, AutoBreadcrumb } from "@settle/admin";
 import { usePathname, useRouter } from "next/navigation";
-import { PropsWithChildren } from "react";
+import { PropsWithChildren, useEffect, useMemo, forwardRef } from "react";
 import { DocContextProvider } from "@/context/DocumentContext";
+import { useUser, useIsAdmin } from "@/context/UserContext";
+import logoWhite from "@/assets/logowhite.png";
+
+const LogoComponent = forwardRef<SVGSVGElement, { size?: string | number }>(({ size }, ref) => {
+  const numSize = typeof size === "string" ? parseInt(size, 10) : (size || 16);
+  return (
+    <svg ref={ref} width={numSize} height={numSize} viewBox="0 0 16 16">
+      <image href={logoWhite.src} width={numSize} height={numSize} />
+    </svg>
+  );
+});
 
 export function LayoutAdmin({ children }: PropsWithChildren) {
   const Pathname = usePathname();
   const router = useRouter();
+  const { fetchCurrentUser } = useUser();
+  const isAdmin = useIsAdmin();
+
+  // Fetch user data on mount
+  useEffect(() => {
+    fetchCurrentUser();
+  }, [fetchCurrentUser]);
+
+  // Get filtered nav items based on user role
+  const filteredNavItems = useMemo(() => getNavItems(isAdmin), [isAdmin]);
 
   return (
     <DocContextProvider>
       <AdminShell
-        navItems={navItems}
+        navItems={filteredNavItems}
+        disableNavRightPanel
+        disableSetAway={true}
+        disablePauseNotifications={true}
+        disableHelp={true}
+        disableSettings={true}
+        disableTheme={true}
+        navIcon={LogoComponent}
         asideProps={
           {
             width: 400,
@@ -27,7 +54,7 @@ export function LayoutAdmin({ children }: PropsWithChildren) {
         {children}
 
 
-        <Menu withArrow>
+        {/* <Menu withArrow>
           <Menu.Target>
             <ActionIcon size="lg" pos="fixed" bottom={16} right={16}>
               <PlusIcon weight="bold" color="white" />
@@ -55,7 +82,7 @@ export function LayoutAdmin({ children }: PropsWithChildren) {
             </Menu.Item>
 
           </Menu.Dropdown>
-        </Menu>
+        </Menu> */}
 
       </AdminShell>
     </DocContextProvider>

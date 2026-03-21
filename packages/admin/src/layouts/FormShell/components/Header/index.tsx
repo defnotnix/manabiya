@@ -67,7 +67,7 @@ export function FormShellHeader({
             </Text>
           </Group>
 
-          <Text fw={800} size="xs" c="dimmed">
+          <Text fw={800} size="xs" c="dimmed" visibleFrom="lg">
             Please make sure all fields are fielld with proper values.
           </Text>
 

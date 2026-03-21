@@ -8,7 +8,6 @@ import {
   Group,
   Button,
   NumberInput,
-  Switch,
   LoadingOverlay,
 } from "@mantine/core";
 import { useForm, zodResolver } from "@mantine/form";
@@ -27,8 +26,7 @@ const batchValidationSchema = z.object({
   books: z.string().min(1, "Books is required"),
   instructor: z.string().min(1, "Instructor is required"),
   total_days: z.coerce.number().min(1, "Total days must be at least 1"),
-  per_class_hours: z.string().min(1, "Per class hours is required"),
-  is_active: z.boolean().default(true),
+  per_class_hours: z.coerce.number().min(0.5, "Class hours per session must be at least 0.5").max(99.99, "Class hours per session must not exceed 99.99"),
 });
 
 interface BatchModalProps {
@@ -146,18 +144,17 @@ export function BatchModal({
               required
               {...form.getInputProps("total_days")}
             />
-            <TextInput
+            <NumberInput
               label="Per Class Hours"
               placeholder="e.g., 1.50"
               required
+              min={0.5}
+              max={99.99}
+              step={0.5}
+              decimalScale={2}
               {...form.getInputProps("per_class_hours")}
             />
           </Group>
-
-          <Switch
-            label="Active"
-            {...form.getInputProps("is_active", { type: "checkbox" })}
-          />
 
           <Group justify="flex-end" mt="md">
             <Button

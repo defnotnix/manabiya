@@ -19,8 +19,8 @@ const step1Schema = z.object({
   last_name: z.string().min(1, "Last name is required"),
   date_of_birth: z.any().optional(),
   gender: z.string().optional(),
-  current_address: z.string().optional(),
-  permanent_address: z.string().optional(),
+  current_address: z.string().min(1, "Current address is required"),
+  permanent_address: z.string().min(1, "Permanent address is required"),
   jp_first_name: z.string().optional(),
   jp_middle_name: z.string().optional(),
   jp_last_name: z.string().optional(),
@@ -32,9 +32,8 @@ const step1Schema = z.object({
 
 // Step 2: Contact Info validation
 const step2Schema = z.object({
-  email: z.string().email("Invalid email").optional().or(z.literal("")),
-  contact: z.string().optional(),
-  phone_number: z.string().optional(),
+  email: z.string().min(1, "Email is required").email("Email must be a valid email format"),
+  contact: z.string().min(1, "Contact number is required").regex(/^\+?[0-9]{7,20}$/, "Use phone format with 7-20 digits, optional leading +."),
   emergency_contact_name: z.string().optional(),
   emergency_contact_relation: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
@@ -57,10 +56,20 @@ const step4Schema = z.object({
   grading_composition: z.string().optional(),
   grading_listening: z.string().optional(),
   grading_reading: z.string().optional(),
-  grading_remarks: z.string().optional(),
   marking_start_date: z.any().optional(),
   markings: z.array(z.any()).optional(),
-});
+}).refine(
+  (data) => {
+    if (!data.date_of_admission || !data.date_of_completion) {
+      return true;
+    }
+    return new Date(data.date_of_completion) > new Date(data.date_of_admission);
+  },
+  {
+    message: "Date of completion must be after date of admission",
+    path: ["date_of_completion"],
+  }
+);
 
 // Step 5: Review (no validation needed)
 const step5Schema = z.object({});
@@ -73,8 +82,7 @@ const batchSchema = z.object({
   books: z.string().min(1, "Books is required"),
   instructor: z.string().min(1, "Instructor is required"),
   total_days: z.coerce.number().min(1, "Total days must be at least 1"),
-  per_class_hours: z.string().min(1, "Per class hours is required"),
-  is_active: z.boolean().default(true),
+  per_class_hours: z.coerce.number().min(0.5, "Class hours per session must be at least 0.5").max(99.99, "Class hours per session must not exceed 99.99"),
 });
 
 export const studentFormConfig = {
@@ -100,7 +108,6 @@ export const studentFormConfig = {
     // Contact Info (Step 2)
     email: "",
     contact: "",
-    phone_number: "",
     emergency_contact_name: "",
     emergency_contact_relation: "",
     emergency_contact_phone: "",
@@ -112,6 +119,7 @@ export const studentFormConfig = {
 
     // Enrollment (Step 4)
     batch: null,
+    default_class_hours: null,
     date_of_admission: null,
     date_of_completion: null,
     grading_grammar: "",
@@ -119,7 +127,6 @@ export const studentFormConfig = {
     grading_composition: "",
     grading_listening: "",
     grading_reading: "",
-    grading_remarks: "",
     marking_start_date: null,
     markings: [],
   },
@@ -144,8 +151,7 @@ export const batchFormConfig = {
     books: "",
     instructor: "",
     total_days: null,
-    per_class_hours: "",
-    is_active: true,
+    per_class_hours: 1.5,
   },
   validation: zodResolver(batchSchema),
 };
@@ -178,7 +184,6 @@ export const gradingFormConfig = {
     composition: "",
     listening: "",
     reading: "",
-    remarks: "",
   },
 };
 
